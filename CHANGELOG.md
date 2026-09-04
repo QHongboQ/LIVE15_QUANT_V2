@@ -10,7 +10,7 @@ This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every me
 
 **Validation / evidence:** Initial root files only; no V1 code copied, no implementation performed, and no Production changes.
 
-**Commit or PR:** Initial commit to be recorded by Git history.
+**Commit or PR:** Initial commit recorded by Git history.
 
 **Next step:** Blueprint discussion and architecture/design work.
 
@@ -26,7 +26,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Validation / evidence:** `uv` environment and lockfile created; `kalshi-sdk==13.0.0`, pytest, ruff, and mypy installed; complete current `mattpocock/skills` set installed under V2; foundation checks passed; no business implementation or Production action.
 
-**Commit or PR:** To be recorded by Git history.
+**Commit or PR:** PR #1.
 
 **Next step:** Foundation review, then approved blueprint discussion.
 
@@ -38,18 +38,18 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Validation / evidence:** AGENTS routing, approved Brain routes, V2-only plan, and reference-only policy checked; foundation tests/lint/type checks remain green; no code, dependencies, skills, runtime, Production, or V1 changes.
 
-**Commit or PR:** PR #1; commit recorded by Git history.
+**Commit or PR:** PR #1.
 
 **Next step:** Foundation review before any business module implementation.
 
 ## 2026-09-04 — LIVE15-V2-V1-PROVEN-PATHS-AUDIT-001
 
-**Summary:** Independently audited the initial V1 proven-path reference against V1 merged PRs, resulting `main` authorities, and acceptance evidence; expanded it from four examples into a bounded inventory of ten proven capability references plus partial/research-only and explicitly-not-proven sections.
+**Summary:** Independently audited and corrected the V1 proven-path reference inventory against merged V1 PRs, resulting main authorities, and acceptance evidence.
 
-**Why:** Prevent V2 from treating a merged V1 PR, POC, historical implementation, or later-broken host state as proof that an entire subsystem was stable.
+**Why:** Prevent V2 from mistaking merged experiments, later-broken runtime states, partial POCs, or V1 bug workarounds for stable success paths.
 
-**Validation / evidence:** Verified representative merged evidence for Kalshi SDK transport, Production GAP recovery, Research Data Authority, Project Brain/context recovery, Nomad lifecycle, immutable release/runtime identity, React Admin/MUI Web, Parquet+ZSTD packaging, and COLD-to-research isolation; preserved explicit boundaries for Pyth, ControlCenter host state, Production archive activation, H2, Vector, models, WTI, and holdout history.
+**Validation / evidence:** Main proven references expanded to bounded Kalshi SDK/WS recovery, Recorder truth contracts, Research Data Authority, Project Brain/context recovery, Nomad lifecycle, immutable release/runtime identity, React Admin/MUI Web implementation, Parquet+ZSTD packaging, and verified COLD-to-research flow; partial/research-only and explicitly-not-proven paths are separated.
 
-**Commit or PR:** PR #1; audit correction begins at commit `77592d078289fe68ecaf9b476cbf412bddd0d181`.
+**Commit or PR:** PR #1.
 
-**Next step:** Re-run final PR #1 foundation review before merge.
+**Next step:** Final independent foundation review and single authorized squash merge if PASS.
