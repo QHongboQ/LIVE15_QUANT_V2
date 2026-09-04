@@ -71,7 +71,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Why:** Establish a clean Kalshi-only ingress boundary before any concrete asset mapping, storage, data truth, model, or trading work.
 
-**Validation / evidence:** Review closeout adds scope-owned immutable bindings, close-time heuristic-only candidates, bounded official close-time discovery, structured same-market strike facts, a single Market Identity resolver, and corrected Data System routing. Official docs and installed `kalshi-sdk==13.0.0` APIs rechecked; focused offline regressions pass. The concrete LIVE15 Market Scope map remains deferred.
+**Validation / evidence:** Final closeout records official series-query provenance, removes candidate authorization and ticker-prefix truth assumptions, completes Data System routing/current plan, and documents the stable public interface and usage. Official docs and installed `kalshi-sdk==13.0.0` APIs rechecked; local and hosted validation pass. The concrete LIVE15 Market Scope map remains deferred.
 
 **Commit or PR:** PR #4.
 

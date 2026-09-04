@@ -1,46 +1,49 @@
 # Kalshi Gateway
 
-Kalshi Gateway is the implemented Market Ingress child. Its composition point
-resolves an asset through the future-owned Market Scope Port, Window Mechanics,
-Candidate Predictor, official discovery, verification, and shadow comparison.
-It exposes only verified official identity facts upward.
+## Responsibility
 
-The concrete LIVE15 nine-asset mapping is deliberately deferred. The next task
-may provide one `MarketScopePort` implementation; no Gateway, window,
-candidate, discovery, verification, or shadow leaf needs its own mapping.
+This Market Ingress child owns bounded official Kalshi market discovery and
+fail-closed market identity verification. It has no storage or trading side
+effects.
 
-## Official API and SDK boundary
+## Public interface
 
-The current official [Get Market](https://docs.kalshi.com/api-reference/market/get-market)
-and [Get Markets](https://docs.kalshi.com/api-reference/market/get-markets)
-documentation is the authority. The installed `kalshi-sdk==13.0.0` provides the
-public `KalshiClient.markets.get` and `list_all` integration surface. Discovery
-passes only documented `series_ticker`, `min_close_ts`, and `max_close_ts`, with
-an empty status filter; the official compatibility table permits close-time
-filters with empty status or `closed`, not active statuses. The bounded envelope
-is only a retrieval heuristic: exact UTC open/close verification remains truth.
-The SDK continues to own pagination, transport, authentication, WebSocket
-transport, subscriptions, reconnect, and resubscribe.
+Callers may import `KalshiGateway`, `MarketScopePort`, `MarketScopeBinding`,
+`MarketWindow`, `MarketIdentityResolver`, `MarketIdentityResolution`, and
+`VerifiedMarketIdentity` from `live15_quant_v2.data.market_ingress.kalshi_gateway`.
 
-`floor_strike` and `cap_strike` stay Decimal-compatible structured facts from
-the same official Market object, alongside `strike_type` and `yes_sub_title`.
-`functional_strike` is retained only as distinct official metadata; it never
-becomes generic target truth. No title parsing, sibling borrowing, first-open
-selection, first-market strike, TBD acceptance, or ambiguous selection exists.
+## Composition flow
 
-Candidate ticker formatting is not an official Kalshi API contract. The
-candidate is therefore a non-authoritative heuristic only for the observed
-`KX*15M` shape, derived from the window close in America/New_York and including
-the observed minute suffix. Other series omit a candidate. A candidate miss
-always continues to bounded official series discovery and verification.
+`MarketScopePort -> MarketWindow -> Candidate heuristic -> official bounded
+series discovery -> verification -> shadow result`. Candidate/shadow results
+are diagnostic only; `verification.verified` and its `VerifiedMarketIdentity`
+are authoritative.
 
-## Behavioral reference
+## How to use
 
-`juanjo1997/kalshi-poly-arb` at
-`a1d27c6f6e620edbfacc2fcef7dc33da16529f86` was consulted only for the
-close-time ticker heuristic and shadow concept where official documentation is
-silent. Its pinned repository has no explicit license; no source was copied,
-vendored, or translated.
+```python
+from kalshi import KalshiClient
+from live15_quant_v2.data.market_ingress.kalshi_gateway import KalshiGateway, MarketIdentityResolver
+from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.candidate import CandidateTickerPredictor
+from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.discovery import OfficialMarketDiscovery
+from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.shadow import ShadowValidator
+from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.verification import OfficialMarketVerifier
+from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.window import current
 
-Storage, Data Truth, runtime scheduling, alerts, datasets, models, trading,
-Nomad, Web, and Production actions are deferred and unimplemented here.
+client = KalshiClient()  # caller owns and closes this SDK client
+resolver = MarketIdentityResolver(scope, CandidateTickerPredictor(), OfficialMarketDiscovery(KalshiGateway.from_sdk(client)), OfficialMarketVerifier(), ShadowValidator())
+resolution = resolver.resolve(asset_id, current(now))
+if resolution.verification.verified:
+    identity = resolution.verification.identity
+client.close()
+```
+
+Official discovery uses documented `series_ticker`, `min_close_ts`, and
+`max_close_ts` with no status filter; its query provenance is compared to the
+expected binding. Ticker strings are not used as series-membership truth.
+
+## Next extension
+
+A future concrete `MarketScopeConfig` implements `MarketScopePort` and owns
+`asset_id <-> approved series_ticker` exactly once. Adding the nine-asset map
+must not edit gateway, windows, candidate, discovery, verification, or shadow.

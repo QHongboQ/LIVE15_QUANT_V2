@@ -1,8 +1,10 @@
 # Data System
 
-Data System owns V2 data responsibilities and routes their future children. This
-PR implements only its [Market Ingress](market-ingress/README.md) child, which
-composes provider-specific gateways behind narrow read-only interfaces and
-exposes verified provider facts upward. Storage, canonical Data Truth, datasets,
-research, models, execution, and operations are deferred responsibilities: they
-are not implemented by this task. Market Ingress itself does not own them.
+Data System future responsibilities are Market Ingress (implemented now),
+Storage, Data Truth, Replay & As-Of, and Canonical Dataset (all future and not
+implemented). Their exact subtrees are not frozen here. Market Ingress is the
+narrow implemented child and does not own those deferred responsibilities.
+
+Research & Model System, Decision & Trading System, Operations & Interface
+System, and Engineering Foundation are separate top-level sibling systems, not
+Data System children.

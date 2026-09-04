@@ -38,6 +38,6 @@ class MarketIdentityResolver:
             verification=VerificationResult(VerificationStatus.INVALID,reason="unknown asset")
             return MarketIdentityResolution(None,verification,self._shadow.compare(candidate=None,verification=verification))
         candidate=self._predictor.predict(binding,window)
-        markets=self._discovery.discover(binding=binding,window=window,candidate=candidate)
+        markets=self._discovery.discover(binding=binding, window=window)
         verification=self._verifier.verify(scope=self._scope,binding=binding,window=window,markets=markets)
         return MarketIdentityResolution(candidate,verification,self._shadow.compare(candidate=candidate,verification=verification))
