@@ -1,12 +1,11 @@
-"""LIVE15-owned ports; concrete market scope configuration is intentionally deferred."""
-
-from __future__ import annotations
-
+"""Scope owns the future asset-to-series mapping in one swappable port."""
 from typing import Protocol
+
+from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.models import (
+    MarketScopeBinding,
+)
 
 
 class MarketScopePort(Protocol):
-    """Answer whether a supplied Kalshi series is approved for LIVE15."""
-
-    def approves_series(self, series_ticker: str) -> bool:
-        """Return approval for exactly one externally supplied series ticker."""
+    def binding_for_asset(self, asset_id: str) -> MarketScopeBinding | None: ...
+    def binding_for_series(self, series_ticker: str) -> MarketScopeBinding | None: ...

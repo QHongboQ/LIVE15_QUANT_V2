@@ -1,46 +1,46 @@
 # Kalshi Gateway
 
-Kalshi Gateway owns the first V2 Market Ingress capability tree:
+Kalshi Gateway is the implemented Market Ingress child. Its composition point
+resolves an asset through the future-owned Market Scope Port, Window Mechanics,
+Candidate Predictor, official discovery, verification, and shadow comparison.
+It exposes only verified official identity facts upward.
 
-```text
-Market Scope Port -> Window Mechanics -> Candidate Predictor
-                                      -> Kalshi Gateway -> kalshi-sdk
-                                      -> Official Discovery -> Official Verification
-Candidate and verified official identity -> Shadow Validation
-```
+The concrete LIVE15 nine-asset mapping is deliberately deferred. The next task
+may provide one `MarketScopePort` implementation; no Gateway, window,
+candidate, discovery, verification, or shadow leaf needs its own mapping.
 
-The parent package composes and exports the thin gateway and identity leaves.
-The leaves expose a future-swappable `MarketScopePort`, immutable UTC
-quarter-hour windows, a New York calendar candidate hint, official discovery,
-fail-closed verification, and pure shadow comparison. The concrete LIVE15
-nine-asset Market Scope mapping is intentionally deferred; no asset/series map
-belongs to this task.
+## Official API and SDK boundary
 
-## Upstream and reference boundaries
+The current official [Get Market](https://docs.kalshi.com/api-reference/market/get-market)
+and [Get Markets](https://docs.kalshi.com/api-reference/market/get-markets)
+documentation is the authority. The installed `kalshi-sdk==13.0.0` provides the
+public `KalshiClient.markets.get` and `list_all` integration surface. Discovery
+passes only documented `series_ticker`, `min_close_ts`, and `max_close_ts`, with
+an empty status filter; the official compatibility table permits close-time
+filters with empty status or `closed`, not active statuses. The bounded envelope
+is only a retrieval heuristic: exact UTC open/close verification remains truth.
+The SDK continues to own pagination, transport, authentication, WebSocket
+transport, subscriptions, reconnect, and resubscribe.
 
-- `kalshi-sdk==13.0.0` owns REST transport, authentication, pagination,
-  WebSocket transport, subscriptions, SID routing, reconnect, resubscribe, and
-  typed Kalshi models. LIVE15 calls its public `KalshiClient.markets.get`,
-  `list_all`, and future `AsyncKalshiClient.ws` seams; it does not vendor or
-  recreate any transport behavior.
-- `juanjo1997/kalshi-poly-arb` at
-  `a1d27c6f6e620edbfacc2fcef7dc33da16529f86` was read only as behavioral
-  evidence for UTC quarter-hour rotation, New York ticker calendar mechanics,
-  and candidate-versus-official shadow comparison. The pinned repository has
-  no explicit license, so no source was copied, vendored, or translated.
-- The bounded V1 reference is the proven Kalshi official SDK transport boundary
-  and fail-closed market-fact semantics. V2 does not inherit Robinhood mapping
-  assumptions, direct non-Kalshi providers, Recorder runtime, or V1 code.
+`floor_strike` and `cap_strike` stay Decimal-compatible structured facts from
+the same official Market object, alongside `strike_type` and `yes_sub_title`.
+`functional_strike` is retained only as distinct official metadata; it never
+becomes generic target truth. No title parsing, sibling borrowing, first-open
+selection, first-market strike, TBD acceptance, or ambiguous selection exists.
 
-## Verification boundary
+Candidate ticker formatting is not an official Kalshi API contract. The
+candidate is therefore a non-authoritative heuristic only for the observed
+`KX*15M` shape, derived from the window close in America/New_York and including
+the observed minute suffix. Other series omit a candidate. A candidate miss
+always continues to bounded official series discovery and verification.
 
-Candidates are optimization hints, never authorization. Official series
-lookup is authoritative. Verification requires one approved-series market with
-exact UTC open/close boundaries, coherent event/ticker identity, and a
-published valid target from that same official market. It rejects zero or
-ambiguous matches, fuzzy titles, first-open selection, first-market strike,
-sibling target borrowing, and TBD/unpublished targets.
+## Behavioral reference
 
-WebSocket runtime composition, persistent storage, canonical data truth,
-datasets, background shadow scheduling, alerting, models, and trading are out
-of scope.
+`juanjo1997/kalshi-poly-arb` at
+`a1d27c6f6e620edbfacc2fcef7dc33da16529f86` was consulted only for the
+close-time ticker heuristic and shadow concept where official documentation is
+silent. Its pinned repository has no explicit license; no source was copied,
+vendored, or translated.
+
+Storage, Data Truth, runtime scheduling, alerts, datasets, models, trading,
+Nomad, Web, and Production actions are deferred and unimplemented here.
