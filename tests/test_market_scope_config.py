@@ -1,4 +1,3 @@
-from dataclasses import FrozenInstanceError
 from datetime import UTC, datetime
 
 import pytest
@@ -72,7 +71,7 @@ def test_nine_asset_bijective_scope_is_immutable_and_public() -> None:
     assert config.binding_for_series("UNKNOWN") is None
     assert _accept_scope_port(config) is config
 
-    with pytest.raises(FrozenInstanceError):
+    with pytest.raises(AttributeError):
         config.bindings = ()  # type: ignore[misc]
     with pytest.raises(TypeError):
         Live15MarketScopeConfig(bindings=())  # type: ignore[call-arg]
