@@ -143,6 +143,12 @@ def test_zero_scope_matrix_is_empty(tmp_path: Path) -> None:
 
 
 
+def test_zero_registered_scopes_fails_closed(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    (root / "ci" / "scopes").mkdir(parents=True)
+
+    with pytest.raises(RouterError, match="no registered scopes"):
+        discover_scopes(root)
 def test_empty_scope_name_fails_closed(tmp_path: Path) -> None:
     root = make_root(tmp_path)
     write_scope(root, "", paths=["a.py"], filename="empty")

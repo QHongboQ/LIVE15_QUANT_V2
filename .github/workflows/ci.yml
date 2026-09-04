@@ -26,15 +26,17 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.route.outputs.matrix }}
+      python_version: ${{ steps.python_authority.outputs.version }}
     steps:
       - name: Checkout full history
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-      - name: Install pinned Python
+      - name: Resolve Python authority
+        id: python_authority
         shell: bash
         run: |
           set -euo pipefail
@@ -42,13 +44,13 @@ jobs:
             echo ".python-version is missing" >&2
             exit 1
           fi
-          UV_PYTHON_VERSION="$(<.python-version)"
-          if [[ -z "${UV_PYTHON_VERSION//[[:space:]]/}" ]]; then
-            echo ".python-version is empty" >&2
+          python_version="$(<.python-version)"
+          if [[ -z "${python_version//[[:space:]]/}" || "$python_version" == *$'\n'* || "$python_version" == *$'\r'* ]]; then
+            echo ".python-version must contain one non-empty line" >&2
             exit 1
           fi
-          uv python install "$UV_PYTHON_VERSION"
-          echo "UV_PYTHON_VERSION=$UV_PYTHON_VERSION" >> "$GITHUB_ENV"
+          uv python install "$python_version"
+          echo "version=$python_version" >> "$GITHUB_OUTPUT"
       - name: Resolve changed files and route scopes
         id: route
         shell: bash
@@ -84,7 +86,7 @@ jobs:
           if [[ "$mode" == "SCOPE" ]]; then
             route_args+=(--scope "${DISPATCH_SCOPE:-}")
           fi
-          matrix="$(uv run --no-project --python "$UV_PYTHON_VERSION" python ci/router.py "${route_args[@]}")"
+          matrix="$(uv run --no-project --python "${{ steps.python_authority.outputs.version }}" python ci/router.py "${route_args[@]}")"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   scopes:
@@ -98,29 +100,16 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout full history
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Install pinned Python
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ ! -f .python-version ]]; then
-            echo ".python-version is missing" >&2
-            exit 1
-          fi
-          UV_PYTHON_VERSION="$(<.python-version)"
-          if [[ -z "${UV_PYTHON_VERSION//[[:space:]]/}" ]]; then
-            echo ".python-version is empty" >&2
-            exit 1
-          fi
-          uv python install "$UV_PYTHON_VERSION"
-          echo "UV_PYTHON_VERSION=$UV_PYTHON_VERSION" >> "$GITHUB_ENV"
+        run: uv python install "${{ needs.route.outputs.python_version }}"
       - name: Run selected scope
-        run: uv run --no-project --python "$UV_PYTHON_VERSION" python -m ci.run_scope "${{ matrix.scope }}"
+        run: uv run --no-project --python "${{ needs.route.outputs.python_version }}" python -m ci.run_scope "${{ matrix.scope }}"
 
   ci-gate:
     name: CI Gate

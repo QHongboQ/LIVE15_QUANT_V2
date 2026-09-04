@@ -121,6 +121,9 @@ def discover_scopes(root: Path | str = ".") -> tuple[ScopeDescriptor, ...]:
     except OSError as exc:
         raise RouterError("malformed scope directory") from exc
 
+    if not descriptor_paths:
+        raise RouterError("no registered scopes")
+
     scopes = tuple(_parse_scope(path, root_path) for path in descriptor_paths)
     names = [scope.name for scope in scopes]
     duplicates = sorted({name for name in names if names.count(name) > 1})

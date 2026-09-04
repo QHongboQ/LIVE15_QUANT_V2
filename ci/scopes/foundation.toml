@@ -6,6 +6,7 @@ paths = [
   ".python-version",
   "pyproject.toml",
   "uv.lock",
+  "uv.toml",
   "src/live15_quant_v2/__init__.py",
   "tests/test_foundation.py",
   "tests/test_router.py",
