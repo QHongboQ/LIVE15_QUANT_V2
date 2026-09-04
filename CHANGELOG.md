@@ -76,3 +76,14 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #4.
 
 **Next step:** Concrete LIVE15 Market Scope Config only after review and merge.
+## 2026-09-04 — LIVE15-V2-MARKET-SCOPE-CONFIG-001
+
+**Summary:** Added the concrete nine-asset LIVE15 Market Scope Config.
+
+**Why:** Completes Ingress Boundary asset mapping.
+
+**Validation / evidence:** Official read-only Kalshi Get Series verification found all nine mapped series with `fifteen_min` frequency; offline scope tests validate bijection, immutability, public export, MarketScopePort compatibility, resolver integration, and fail-closed unknowns.
+
+**Commit or PR:** PR #5.
+
+**Next step:** Independent review and merge authorization; then Market Stream design unless priority changes.
