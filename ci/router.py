@@ -114,6 +114,8 @@ def discover_scopes(root: Path | str = ".") -> tuple[ScopeDescriptor, ...]:
     root_path = Path(root).resolve()
     scope_directory, _ = _load_config(root_path)
     descriptor_dir = root_path / scope_directory
+    if not descriptor_dir.is_dir():
+        raise RouterError("malformed scope directory")
     try:
         descriptor_paths = sorted(descriptor_dir.glob("*.toml"))
     except OSError as exc:
