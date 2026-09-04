@@ -3,10 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.models import (
     MarketScopeBinding,
 )
+
+if TYPE_CHECKING:
+    from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.ports import (
+        MarketScopePort,
+    )
 
 _BINDINGS = (
     MarketScopeBinding("BTC", "KXBTC15M"),
@@ -40,3 +46,7 @@ class Live15MarketScopeConfig:
             (binding for binding in self.bindings if binding.series_ticker == series_ticker),
             None,
         )
+
+
+if TYPE_CHECKING:
+    _market_scope_port_check: MarketScopePort = Live15MarketScopeConfig()
