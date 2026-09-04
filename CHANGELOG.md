@@ -29,3 +29,15 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** To be recorded by Git history.
 
 **Next step:** Foundation review, then approved blueprint discussion.
+
+## 2026-09-04 — LIVE15-V2-BRAIN-BOOTSTRAP-FINALIZATION-001
+
+**Summary:** Finalized the minimal V2 Project Brain routing, approved current-plan, and reference-only V1 proven-paths document.
+
+**Why:** Establish V2-owned governance and planning without importing V1 current state, roadmap, bugs, or implementation assumptions.
+
+**Validation / evidence:** AGENTS routing, approved Brain routes, V2-only plan, and reference-only policy checked; foundation tests/lint/type checks remain green; no code, dependencies, skills, runtime, Production, or V1 changes.
+
+**Commit or PR:** PR #1; commit recorded by Git history.
+
+**Next step:** Foundation review before any business module implementation.
