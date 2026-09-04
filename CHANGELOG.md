@@ -62,6 +62,6 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Validation / evidence:** Router and runner tests cover routing, dependency closure, fail-closed topology validation, manual modes, deterministic matrices, and empty selection; foundation scope execution, pytest, Ruff, mypy, and diff checks passed.
 
-**Commit or PR:** To be recorded by Git history and the new PR.
+**Commit or PR:** PR #2; implementation commits `0840b59` and `6c1607a` are recorded in Git history.
 
 **Next step:** Independent review; continue foundation discussion before the first business module.
