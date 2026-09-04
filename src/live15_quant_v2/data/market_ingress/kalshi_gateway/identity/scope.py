@@ -36,14 +36,16 @@ if len({binding.asset_id for binding in _BINDINGS}) != 9 or len(
 class Live15MarketScopeConfig:
     """Immutable exact LIVE15 asset-to-Kalshi-series scope."""
 
-    bindings: tuple[MarketScopeBinding, ...] = _BINDINGS
+    @property
+    def bindings(self) -> tuple[MarketScopeBinding, ...]:
+        return _BINDINGS
 
     def binding_for_asset(self, asset_id: str) -> MarketScopeBinding | None:
-        return next((binding for binding in self.bindings if binding.asset_id == asset_id), None)
+        return next((binding for binding in _BINDINGS if binding.asset_id == asset_id), None)
 
     def binding_for_series(self, series_ticker: str) -> MarketScopeBinding | None:
         return next(
-            (binding for binding in self.bindings if binding.series_ticker == series_ticker),
+            (binding for binding in _BINDINGS if binding.series_ticker == series_ticker),
             None,
         )
 
