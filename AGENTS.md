@@ -6,7 +6,9 @@ Parents route and summarize; children own narrower details. Split broad scopes d
 
 Code uses the same modular tree: bounded modules, clear interfaces, and upper-layer composition. Keep implementation details behind interfaces; connect cross-module behavior at composition points. A narrow module change should stay local to that module, its interface, composition point, and relevant tests. Prefer composition over arbitrary inheritance or monkey-patching.
 
-There is no Rule 3 and no Rule 9. Do not add an Upstream-First rule or a separate task-bounded-scope rule.
+For generic infrastructure, tooling, frameworks, integration plumbing, and other solved engineering components, prefer official or mature upstream implementations; pin the exact source revision, copy/adapt minimally, and preserve provenance and license requirements. Custom infrastructure requires a concrete explanation of why suitable upstream implementations do not fit. This does not override LIVE15-owned domain semantics such as market-data truth, research/data authority, feature/model logic, prediction, trading decisions, or risk policy.
+
+There is no Rule 9. Do not add a separate task-bounded-scope rule.
 
 Human authorization is required before Production, irreversible/destructive data changes, real trading, critical safety/risk policy, frozen holdout access, or unauthorized deployment/restart/stop. Formal changes use bounded branches, clear Git history, and no force-push or history erasure. Formal code changes require independent review that reports PASS, FAIL, or WARNING and checks scope, interfaces, regressions, coupling, artifacts, and evidence.
 
