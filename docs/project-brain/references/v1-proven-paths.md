@@ -82,7 +82,7 @@ Prefer `merged PR + resulting main + acceptance evidence`. Do not use abandoned/
 
 **Status:** PROVEN WEB IMPLEMENTATION REFERENCE.
 
-**Evidence:** [PRs #131-#139](https://github.com/QHongboQ/LIVE15_QUANT/pulls?q=is%3Apr+is%3Aclosed+131+132+133+134+135+136+137+138+139), with production-verified Web-owner closeout in [PR #142](https://github.com/QHongboQ/LIVE15_QUANT/pull/142).
+**Evidence:** merged PRs [#131](https://github.com/QHongboQ/LIVE15_QUANT/pull/131), [#132](https://github.com/QHongboQ/LIVE15_QUANT/pull/132), [#133](https://github.com/QHongboQ/LIVE15_QUANT/pull/133), [#134](https://github.com/QHongboQ/LIVE15_QUANT/pull/134), [#135](https://github.com/QHongboQ/LIVE15_QUANT/pull/135), [#136](https://github.com/QHongboQ/LIVE15_QUANT/pull/136), [#137](https://github.com/QHongboQ/LIVE15_QUANT/pull/137), [#138](https://github.com/QHongboQ/LIVE15_QUANT/pull/138), [#139](https://github.com/QHongboQ/LIVE15_QUANT/pull/139), with production-verified Web-owner closeout in [PR #142](https://github.com/QHongboQ/LIVE15_QUANT/pull/142).
 
 **What proved useful:** React Admin + Material UI + Vite packaged as the sole Web shell; typed/read-only FastAPI boundaries; immutable bundle delivery; local HTTP/WebSocket browser boundary; no browser-direct third-party market-data connections; bounded realtime/history projections.
 
