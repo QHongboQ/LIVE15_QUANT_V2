@@ -9,6 +9,8 @@ paths = [
   "src/live15_quant_v2/__init__.py",
   "tests/test_foundation.py",
   "tests/test_router.py",
+  "tests/test_run_scope.py",
+  "tests/test_ci_contract.py",
   "ci/router.py",
   "ci/run_scope.py",
   "ci/config.toml",
@@ -17,7 +19,8 @@ paths = [
 ]
 
 commands = [
-  ["uv", "run", "--frozen", "python", "-m", "pytest", "tests/test_foundation.py", "tests/test_router.py", "tests/test_run_scope.py", "-q"],
-  ["uv", "run", "--frozen", "ruff", "check", "ci/router.py", "ci/run_scope.py", "tests/test_foundation.py", "tests/test_router.py", "src/live15_quant_v2/__init__.py"],
+  ["uv", "sync", "--locked", "--dev"],
+  ["uv", "run", "--frozen", "python", "-m", "pytest", "tests/test_foundation.py", "tests/test_router.py", "tests/test_run_scope.py", "tests/test_ci_contract.py", "-q"],
+  ["uv", "run", "--frozen", "ruff", "check", "ci/router.py", "ci/run_scope.py", "tests/test_foundation.py", "tests/test_router.py", "tests/test_run_scope.py", "tests/test_ci_contract.py", "src/live15_quant_v2/__init__.py"],
   ["uv", "run", "--frozen", "mypy", "ci/router.py", "ci/run_scope.py", "src/live15_quant_v2/__init__.py"],
 ]

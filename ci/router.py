@@ -156,31 +156,33 @@ def _path_matches(changed: str, owned: str) -> bool:
     return changed == owned or changed.startswith(f"{owned.rstrip('/')}/")
 
 
-def _expand_graph(selected: set[str], scopes: tuple[ScopeDescriptor, ...]) -> set[str]:
+def _dependency_closure(selected: set[str], scopes: tuple[ScopeDescriptor, ...]) -> set[str]:
     dependencies = {scope.name: set(scope.depends_on) for scope in scopes}
+    found = set(selected)
+    pending = list(selected)
+    while pending:
+        name = pending.pop()
+        for dependency in dependencies[name]:
+            if dependency not in found:
+                found.add(dependency)
+                pending.append(dependency)
+    return found
+
+
+def _downstream_closure(selected: set[str], scopes: tuple[ScopeDescriptor, ...]) -> set[str]:
     dependents: dict[str, set[str]] = {scope.name: set() for scope in scopes}
     for scope in scopes:
         for dependency in scope.depends_on:
             dependents[dependency].add(scope.name)
-    direct = set(selected)
-
-    def walk(start: str, edges: dict[str, set[str]]) -> set[str]:
-        found = {start}
-        pending = [start]
-        while pending:
-            name = pending.pop()
-            for neighbour in edges[name]:
-                if neighbour not in found:
-                    found.add(neighbour)
-                    pending.append(neighbour)
-        return found
-
-    selected.clear()
-    for name in direct:
-        selected.update(walk(name, dependencies))
-        selected.update(walk(name, dependents))
-    return selected
-
+    found = set(selected)
+    pending = list(selected)
+    while pending:
+        name = pending.pop()
+        for dependent in dependents[name]:
+            if dependent not in found:
+                found.add(dependent)
+                pending.append(dependent)
+    return found
 
 def route_scopes(
     root: Path | str = ".",
@@ -203,7 +205,7 @@ def route_scopes(
     elif mode_upper == "SCOPE":
         if not requested_scope or requested_scope not in scope_by_name:
             raise RouterError(f"unknown scope: {requested_scope or ''}".rstrip())
-        selected = {requested_scope}
+        selected = _dependency_closure({requested_scope}, scopes)
     else:
         _, control_paths = _load_config(root_path)
         changed = {_normalise_path(path, label="changed file") for path in changed_files}
@@ -218,8 +220,17 @@ def route_scopes(
                 or any(_path_matches(changed_path, owned_path) for changed_path in changed for owned_path in scope.paths)
             }
             selected.update(descriptor_by_path[path] for path in changed if path in descriptor_by_path)
-
-    selected = _expand_graph(selected, scopes)
+            scope_directory, _ = _load_config(root_path)
+            scope_prefix = f"{scope_directory.rstrip('/')}/"
+            deleted_descriptor = any(
+                path == scope_directory or path.startswith(scope_prefix)
+                for path in changed
+                if path not in descriptor_by_path
+            )
+            if deleted_descriptor:
+                selected = set(scope_by_name)
+            else:
+                selected = _dependency_closure(selected, scopes) | _downstream_closure(selected, scopes)
     ordered = tuple(sorted(selected))
     return RouteResult(ordered, [{"scope": name, "runner": scope_by_name[name].runner} for name in ordered])
 

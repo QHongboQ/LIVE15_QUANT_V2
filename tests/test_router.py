@@ -30,7 +30,7 @@ def make_root(tmp_path: Path) -> Path:
     (tmp_path / "ci").mkdir()
     (tmp_path / "ci" / "config.toml").write_text(
         'scope_directory = "ci/scopes"\n'
-        'control_plane_paths = ["ci/router.py", "ci/run_scope.py", "ci/config.toml", ".github/workflows/ci.yml"]\n',
+        'control_plane_paths = ["ci/__init__.py", "ci/router.py", "ci/run_scope.py", "ci/config.toml", ".github/workflows/ci.yml"]\n',
         encoding="utf-8",
     )
     return tmp_path
@@ -85,6 +85,35 @@ def test_full_and_manual_scope_modes(tmp_path: Path) -> None:
     assert route_scopes(root, changed_files=[], mode="SCOPE", requested_scope="web").scope_names == ("web",)
     with pytest.raises(RouterError, match="unknown scope"):
         route_scopes(root, changed_files=[], mode="SCOPE", requested_scope="missing")
+
+
+
+def test_scope_mode_selects_requested_scope_and_dependencies_only(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    write_scope(root, "foundation", paths=["foundation.py"])
+    write_scope(root, "market-data", paths=["market.py"], depends_on=["foundation"])
+    write_scope(root, "recorder", paths=["recorder.py"], depends_on=["market-data"])
+    write_scope(root, "web", paths=["web.py"], depends_on=["foundation"])
+
+    assert route_scopes(root, changed_files=[], mode="SCOPE", requested_scope="foundation").scope_names == ("foundation",)
+    assert route_scopes(root, changed_files=[], mode="SCOPE", requested_scope="market-data").scope_names == ("foundation", "market-data")
+    assert route_scopes(root, changed_files=[], mode="SCOPE", requested_scope="recorder").scope_names == ("foundation", "market-data", "recorder")
+
+
+def test_deleted_descriptor_selects_all_current_scopes(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    write_scope(root, "foundation", paths=["foundation.py"])
+    write_scope(root, "web", paths=["web.py"])
+
+    assert route_scopes(root, changed_files=["ci/scopes/deleted.toml"]).scope_names == ("foundation", "web")
+
+
+def test_ci_init_is_control_plane_path(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    write_scope(root, "foundation", paths=["foundation.py"])
+    write_scope(root, "web", paths=["web.py"])
+
+    assert route_scopes(root, changed_files=["ci/__init__.py"]).scope_names == ("foundation", "web")
 
 
 def test_descriptor_change_selects_its_scope(tmp_path: Path) -> None:

@@ -71,7 +71,7 @@ jobs:
           if [[ "$mode" == "SCOPE" ]]; then
             route_args+=(--scope "${DISPATCH_SCOPE:-}")
           fi
-          matrix="$(uv run --frozen python ci/router.py "${route_args[@]}")"
+          matrix="$(uv run --no-project --python 3.12.14 python ci/router.py "${route_args[@]}")"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   scopes:
@@ -93,10 +93,8 @@ jobs:
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Install pinned Python
         run: uv python install
-      - name: Install locked foundation
-        run: uv sync --locked --dev
       - name: Run selected scope
-        run: uv run --frozen python -m ci.run_scope "${{ matrix.scope }}"
+        run: uv run --no-project --python 3.12.14 python -m ci.run_scope "${{ matrix.scope }}"
 
   ci-gate:
     name: CI Gate

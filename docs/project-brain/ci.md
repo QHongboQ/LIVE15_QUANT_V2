@@ -4,9 +4,9 @@ V2 CI is a modular, dependency-aware control plane. `ci/router.py` discovers
 registered leaf descriptors and selects impacted scopes; each descriptor owns
 its scope-specific checks, while `ci/run_scope.py` executes one selected scope.
 
-GitHub Actions is a thin orchestrator that supplies the changed-file range,
-installs the approved foundation, runs the Router, expands its matrix, and
-publishes one stable `CI Gate` above the changing internal scope jobs.
+GitHub Actions is a thin, generic orchestrator that supplies the changed-file range,
+installs the pinned Python runtime, runs the Router without project synchronization, expands its matrix, and
+publishes one stable `CI Gate` above the changing internal scope jobs. Each selected leaf descriptor owns its own environment setup and checks; SCOPE mode includes only the requested scope and its upstream dependencies, while AUTO preserves downstream impact propagation.
 
 The only registered business-independent scope is `foundation`. New CI scopes
 are added only when their corresponding V2 module exists and its descriptor and
