@@ -74,6 +74,8 @@ def test_nine_asset_bijective_scope_is_immutable_and_public() -> None:
 
     with pytest.raises(FrozenInstanceError):
         config.bindings = ()  # type: ignore[misc]
+    with pytest.raises(TypeError):
+        Live15MarketScopeConfig(bindings=())  # type: ignore[call-arg]
 
 
 def test_concrete_scope_plugs_into_existing_resolver_without_framework_changes() -> None:
