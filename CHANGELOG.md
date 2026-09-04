@@ -82,8 +82,8 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Why:** Completes Ingress Boundary asset mapping.
 
-**Validation / evidence:** Official read-only Kalshi Get Series verification found all nine mapped series with `fifteen_min` frequency; offline scope tests validate bijection and fail-closed unknowns.
+**Validation / evidence:** Official read-only Kalshi Get Series verification found all nine mapped series with `fifteen_min` frequency; offline scope tests validate bijection, immutability, public export, MarketScopePort compatibility, resolver integration, and fail-closed unknowns.
 
-**Commit or PR:** Pending PR.
+**Commit or PR:** PR #5.
 
 **Next step:** Independent review and merge authorization; then Market Stream design unless priority changes.
