@@ -139,6 +139,30 @@ def test_runtime_authority_changes_select_all_registered_scopes(tmp_path: Path) 
 
     assert route_scopes(root, changed_files=[".python-version"]).scope_names == ("foundation", "web")
     assert route_scopes(root, changed_files=["uv.toml"]).scope_names == ("foundation", "web")
+def test_control_plane_paths_select_all_registered_scopes(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    write_scope(root, "foundation", paths=["foundation.py"])
+    write_scope(root, "web", paths=["web.py"])
+
+    control_plane_paths = [
+        ".python-version",
+        "uv.toml",
+        "ci/__init__.py",
+        "ci/router.py",
+        "ci/run_scope.py",
+        "ci/config.toml",
+        ".github/workflows/ci.yml",
+    ]
+    for path in control_plane_paths:
+        assert route_scopes(root, changed_files=[path]).scope_names == ("foundation", "web")
+
+
+def test_foundation_descriptor_change_targets_foundation(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    write_scope(root, "foundation", paths=["foundation.py"])
+    write_scope(root, "web", paths=["web.py"])
+
+    assert route_scopes(root, changed_files=["ci/scopes/foundation.toml"]).scope_names == ("foundation",)
 def test_zero_scope_matrix_is_empty(tmp_path: Path) -> None:
     root = make_root(tmp_path)
     write_scope(root, "foundation", paths=["foundation.py"])

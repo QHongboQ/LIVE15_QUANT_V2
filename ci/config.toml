@@ -5,6 +5,5 @@ control_plane_paths = [
   "ci/__init__.py",
   "ci/router.py",
   "ci/run_scope.py",
-  "ci/config.toml",
   ".github/workflows/ci.yml",
 ]

@@ -10,11 +10,6 @@ paths = [
   "tests/test_router.py",
   "tests/test_run_scope.py",
   "tests/test_ci_contract.py",
-  "ci/router.py",
-  "ci/run_scope.py",
-  "ci/config.toml",
-  "ci/scopes/foundation.toml",
-  ".github/workflows/ci.yml",
 ]
 
 commands = [

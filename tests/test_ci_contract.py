@@ -4,7 +4,7 @@ import re
 import tomllib
 from pathlib import Path
 
-from ci.router import discover_scopes
+from ci.router import _load_config, discover_scopes
 
 ROOT = Path(__file__).resolve().parents[1]
 CI_FILES = (
@@ -85,6 +85,11 @@ def test_foundation_descriptor_owns_setup_and_all_foundation_paths() -> None:
     assert "ci/__init__.py" in config
 
 
+def test_control_plane_and_foundation_routing_ownership_do_not_overlap() -> None:
+    _, control_plane_paths = _load_config(ROOT)
+    foundation = next(scope for scope in discover_scopes(ROOT) if scope.name == "foundation")
+
+    assert not (set(control_plane_paths) & set(foundation.paths))
 def test_python_authority_change_does_not_require_workflow_edit(tmp_path: Path) -> None:
     workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     authority = tmp_path / ".python-version"
