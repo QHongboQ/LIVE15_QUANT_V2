@@ -2,48 +2,22 @@
 
 ## Responsibility
 
-This Market Ingress child owns bounded official Kalshi market discovery and
-fail-closed market identity verification. It has no storage or trading side
-effects.
+This Market Ingress child owns only provider access through the pinned `kalshi-sdk==13.0.0` public APIs. It exposes narrow read-only market query primitives and typed WebSocket access. The SDK owns transport, authentication, pagination, reconnect/resubscribe, SID management, and generic sequence/gap mechanics.
+
+Kalshi Gateway does **not** own LIVE15 asset scope, market/window semantics, candidate authorization, identity verification, shadow comparison, storage, or trading decisions.
 
 ## Public interface
 
-Callers may import `KalshiGateway`, `MarketScopePort`, `MarketScopeBinding`,
-`MarketWindow`, `MarketIdentityResolver`, `MarketIdentityResolution`, and
-`VerifiedMarketIdentity` from `live15_quant_v2.data.market_ingress.kalshi_gateway`.
+Callers import only `KalshiGateway` from:
 
-## Composition flow
+`live15_quant_v2.data.market_ingress.kalshi_gateway`
 
-`MarketScopePort -> MarketWindow -> Candidate heuristic -> official bounded
-series discovery -> verification -> shadow result`. Candidate/shadow results
-are diagnostic only; `verification.verified` and its `VerifiedMarketIdentity`
-are authoritative.
+`KalshiGateway.subscription_access()` returns the SDK `KalshiWebSocket` type, not an untyped `object`.
 
-## How to use
+## Dependency rule
 
-```python
-from kalshi import KalshiClient
-from live15_quant_v2.data.market_ingress.kalshi_gateway import KalshiGateway, MarketIdentityResolver
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.candidate import CandidateTickerPredictor
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.discovery import OfficialMarketDiscovery
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.shadow import ShadowValidator
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.verification import OfficialMarketVerifier
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.window import current
+Kalshi Gateway is a provider leaf. It must not import the sibling Ingress Boundary. The allowed composition direction is:
 
-client = KalshiClient()  # caller owns and closes this SDK client
-resolver = MarketIdentityResolver(scope, CandidateTickerPredictor(), OfficialMarketDiscovery(KalshiGateway.from_sdk(client)), OfficialMarketVerifier(), ShadowValidator())
-resolution = resolver.resolve(asset_id, current(now))
-if resolution.verification.verified:
-    identity = resolution.verification.identity
-client.close()
-```
+`Ingress Boundary -> Kalshi Gateway -> kalshi-sdk`
 
-Official discovery uses documented `series_ticker`, `min_close_ts`, and
-`max_close_ts` with no status filter; its query provenance is compared to the
-expected binding. Ticker strings are not used as series-membership truth.
-
-## Next extension
-
-A future concrete `MarketScopeConfig` implements `MarketScopePort` and owns
-`asset_id <-> approved series_ticker` exactly once. Adding the nine-asset map
-must not edit gateway, windows, candidate, discovery, verification, or shadow.
+Market Stream may use SDK WebSocket capabilities through the approved provider-access surface, but stream semantics belong to the future Market Stream child.

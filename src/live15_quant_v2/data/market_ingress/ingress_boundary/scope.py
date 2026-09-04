@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.models import (
+from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
     MarketScopeBinding,
 )
 
 if TYPE_CHECKING:
-    from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.ports import (
-        MarketScopePort,
-    )
+    from live15_quant_v2.data.market_ingress.ingress_boundary.ports import MarketScopePort
 
 _BINDINGS = (
     MarketScopeBinding("BTC", "KXBTC15M"),
