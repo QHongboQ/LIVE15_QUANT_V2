@@ -60,7 +60,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Why:** Keep CI aligned with the V2 responsibility tree so future modules can register bounded checks without turning Foundation CI into a whole-repository runner.
 
-**Validation / evidence:** Authority-routing closeout adds explicit `uv.toml` version-file enforcement, control-plane ownership for `.python-version` and `uv.toml`, zero-registry fail-closed routing, runner-neutral forwarding, immutable action pins, and focused authority-routing regressions; 28 tests, foundation-owned setup, Ruff, mypy, and diff checks passed.
+**Validation / evidence:** Ownership closeout removes duplicated Foundation routing ownership for CI control-plane files and its descriptor, retains CI test coverage, and adds synthetic regressions for every control-plane path, runtime-authority routing, generic descriptor targeting, and effective ownership intersection; 31 tests, foundation-owned setup, Ruff, mypy, and diff checks passed.
 
 **Commit or PR:** PR #2; implementation commits `0840b59` and `6c1607a`, followed by the correction commit, are recorded in Git history.
 
