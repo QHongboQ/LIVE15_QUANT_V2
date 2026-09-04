@@ -98,6 +98,6 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Validation / evidence:** Existing market identity behavior is preserved under `market_ingress/ingress_boundary`; the old `kalshi_gateway/identity` subtree is removed; tests assert the provider-only Gateway surface, typed WebSocket return, unchanged fail-closed verification, immutable nine-asset scope, and resolver composition. Hosted CI required before merge.
 
-**Commit or PR:** Pending PR.
+**Commit or PR:** PR #6.
 
 **Next step:** Independent review; then Market Stream design after explicit merge authorization.
