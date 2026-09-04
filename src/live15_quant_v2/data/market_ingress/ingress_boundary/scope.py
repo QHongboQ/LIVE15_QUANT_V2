@@ -9,7 +9,9 @@ from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
 )
 
 if TYPE_CHECKING:
-    from live15_quant_v2.data.market_ingress.ingress_boundary.ports import MarketScopePort
+    from live15_quant_v2.data.market_ingress.ingress_boundary.ports import (
+        MarketScopePort,
+    )
 
 _BINDINGS = (
     MarketScopeBinding("BTC", "KXBTC15M"),
