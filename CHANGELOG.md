@@ -60,7 +60,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Why:** Keep CI aligned with the V2 responsibility tree so future modules can register bounded checks without turning Foundation CI into a whole-repository runner.
 
-**Validation / evidence:** Correction tests cover dependency-only SCOPE routing, preserved AUTO downstream impact, deleted-descriptor fail-safe selection, `ci/__init__.py` control-plane routing, and generic no-project workflow bootstrap; foundation-owned setup, pytest, Ruff, mypy, and diff checks passed.
+**Validation / evidence:** Final hardening covers single-owner `.python-version` resolution with missing/empty authority guards, dependency-only SCOPE routing, preserved AUTO downstream impact, deleted-descriptor fail-safe selection, `ci/__init__.py` control-plane routing, generic no-project workflow bootstrap, and future-version adaptability; 24 tests, foundation-owned setup, Ruff, mypy, and diff checks passed.
 
 **Commit or PR:** PR #2; implementation commits `0840b59` and `6c1607a`, followed by the correction commit, are recorded in Git history.
 

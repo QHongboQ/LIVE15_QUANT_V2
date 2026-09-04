@@ -35,7 +35,20 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Install pinned Python
-        run: uv python install
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f .python-version ]]; then
+            echo ".python-version is missing" >&2
+            exit 1
+          fi
+          UV_PYTHON_VERSION="$(<.python-version)"
+          if [[ -z "${UV_PYTHON_VERSION//[[:space:]]/}" ]]; then
+            echo ".python-version is empty" >&2
+            exit 1
+          fi
+          uv python install "$UV_PYTHON_VERSION"
+          echo "UV_PYTHON_VERSION=$UV_PYTHON_VERSION" >> "$GITHUB_ENV"
       - name: Resolve changed files and route scopes
         id: route
         shell: bash
@@ -71,7 +84,7 @@ jobs:
           if [[ "$mode" == "SCOPE" ]]; then
             route_args+=(--scope "${DISPATCH_SCOPE:-}")
           fi
-          matrix="$(uv run --no-project --python 3.12.14 python ci/router.py "${route_args[@]}")"
+          matrix="$(uv run --no-project --python "$UV_PYTHON_VERSION" python ci/router.py "${route_args[@]}")"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   scopes:
@@ -92,9 +105,22 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
       - name: Install pinned Python
-        run: uv python install
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f .python-version ]]; then
+            echo ".python-version is missing" >&2
+            exit 1
+          fi
+          UV_PYTHON_VERSION="$(<.python-version)"
+          if [[ -z "${UV_PYTHON_VERSION//[[:space:]]/}" ]]; then
+            echo ".python-version is empty" >&2
+            exit 1
+          fi
+          uv python install "$UV_PYTHON_VERSION"
+          echo "UV_PYTHON_VERSION=$UV_PYTHON_VERSION" >> "$GITHUB_ENV"
       - name: Run selected scope
-        run: uv run --no-project --python 3.12.14 python -m ci.run_scope "${{ matrix.scope }}"
+        run: uv run --no-project --python "$UV_PYTHON_VERSION" python -m ci.run_scope "${{ matrix.scope }}"
 
   ci-gate:
     name: CI Gate
