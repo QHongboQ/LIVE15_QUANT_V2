@@ -65,3 +65,14 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #3.
 
 **Next step:** Independent review before any business module implementation.
+## 2026-09-04 — LIVE15-V2-DATA-KALSHI-GATEWAY-TREE-001
+
+**Summary:** Created the V2 Data System / Market Ingress / Kalshi Gateway responsibility tree, with a thin read-only `kalshi-sdk` adapter and Market Identity leaves for scope, windows, candidate hints, official discovery, verification, and shadow comparison.
+
+**Why:** Establish a clean Kalshi-only ingress boundary before any concrete asset mapping, storage, data truth, model, or trading work.
+
+**Validation / evidence:** Final closeout records official series-query provenance, removes candidate authorization and ticker-prefix truth assumptions, completes Data System routing/current plan, and documents the stable public interface and usage. Official docs and installed `kalshi-sdk==13.0.0` APIs rechecked; local and hosted validation pass. The concrete LIVE15 Market Scope map remains deferred.
+
+**Commit or PR:** PR #4.
+
+**Next step:** Concrete LIVE15 Market Scope Config only after review and merge.
