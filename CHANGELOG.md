@@ -41,3 +41,15 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #1; commit recorded by Git history.
 
 **Next step:** Foundation review before any business module implementation.
+
+## 2026-09-04 — LIVE15-V2-V1-PROVEN-PATHS-AUDIT-001
+
+**Summary:** Independently audited the initial V1 proven-path reference against V1 merged PRs, resulting `main` authorities, and acceptance evidence; expanded it from four examples into a bounded inventory of ten proven capability references plus partial/research-only and explicitly-not-proven sections.
+
+**Why:** Prevent V2 from treating a merged V1 PR, POC, historical implementation, or later-broken host state as proof that an entire subsystem was stable.
+
+**Validation / evidence:** Verified representative merged evidence for Kalshi SDK transport, Production GAP recovery, Research Data Authority, Project Brain/context recovery, Nomad lifecycle, immutable release/runtime identity, React Admin/MUI Web, Parquet+ZSTD packaging, and COLD-to-research isolation; preserved explicit boundaries for Pyth, ControlCenter host state, Production archive activation, H2, Vector, models, WTI, and holdout history.
+
+**Commit or PR:** PR #1; audit correction begins at commit `77592d078289fe68ecaf9b476cbf412bddd0d181`.
+
+**Next step:** Re-run final PR #1 foundation review before merge.
