@@ -8,6 +8,8 @@ GitHub Actions is a thin, generic orchestrator that supplies the changed-file ra
 installs the pinned Python runtime, runs the Router without project synchronization, expands its matrix, and
 publishes one stable `CI Gate` above the changing internal scope jobs. CI consumes authoritative project and module configuration rather than duplicating derived concrete values. Each selected leaf descriptor owns its own environment setup and checks; SCOPE mode includes only the requested scope and its upstream dependencies, while AUTO preserves downstream impact propagation. A registry with zero descriptors is invalid and fails closed.
 
+The CI Control Plane owns generic runtime authorities (`.python-version`, `uv.toml`), Router, and workflow configuration; leaf scopes own module paths, runners, setup, and checks.
+
 The only registered business-independent scope is `foundation`. New CI scopes
 are added only when their corresponding V2 module exists and its descriptor and
 checks are approved.

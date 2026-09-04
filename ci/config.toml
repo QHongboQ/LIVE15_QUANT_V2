@@ -1,5 +1,7 @@
 scope_directory = "ci/scopes"
 control_plane_paths = [
+  ".python-version",
+  "uv.toml",
   "ci/__init__.py",
   "ci/router.py",
   "ci/run_scope.py",

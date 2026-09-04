@@ -30,7 +30,7 @@ def make_root(tmp_path: Path) -> Path:
     (tmp_path / "ci").mkdir()
     (tmp_path / "ci" / "config.toml").write_text(
         'scope_directory = "ci/scopes"\n'
-        'control_plane_paths = ["ci/__init__.py", "ci/router.py", "ci/run_scope.py", "ci/config.toml", ".github/workflows/ci.yml"]\n',
+        'control_plane_paths = [".python-version", "uv.toml", "ci/__init__.py", "ci/router.py", "ci/run_scope.py", "ci/config.toml", ".github/workflows/ci.yml"]\n',
         encoding="utf-8",
     )
     return tmp_path
@@ -132,6 +132,13 @@ def test_control_plane_change_selects_all_registered_scopes(tmp_path: Path) -> N
     assert route_scopes(root, changed_files=["ci/router.py"]).scope_names == ("foundation", "web")
 
 
+def test_runtime_authority_changes_select_all_registered_scopes(tmp_path: Path) -> None:
+    root = make_root(tmp_path)
+    write_scope(root, "foundation", paths=["foundation.py"])
+    write_scope(root, "web", paths=["web.py"])
+
+    assert route_scopes(root, changed_files=[".python-version"]).scope_names == ("foundation", "web")
+    assert route_scopes(root, changed_files=["uv.toml"]).scope_names == ("foundation", "web")
 def test_zero_scope_matrix_is_empty(tmp_path: Path) -> None:
     root = make_root(tmp_path)
     write_scope(root, "foundation", paths=["foundation.py"])

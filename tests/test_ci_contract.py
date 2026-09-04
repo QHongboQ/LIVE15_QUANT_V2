@@ -30,6 +30,7 @@ def test_workflow_is_runner_neutral_and_uses_python_authority() -> None:
     assert "UV_PYTHON_VERSION" not in workflow
     assert "$env:" not in workflow
     assert workflow.count("id: python_authority") == 1
+    assert workflow.count("version-file: uv.toml") == workflow.count("uses: astral-sh/setup-uv@")
     assert workflow.count("python_version: ${{ steps.python_authority.outputs.version }}") == 1
     assert workflow.count('uv python install "$python_version"') == 1
     assert workflow.count('uv run --no-project --python "${{ steps.python_authority.outputs.version }}"') == 1
@@ -73,11 +74,15 @@ def test_checkout_and_setup_uv_are_immutable_sha_pins() -> None:
 
 def test_foundation_descriptor_owns_setup_and_all_foundation_paths() -> None:
     foundation = next(scope for scope in discover_scopes(ROOT) if scope.name == "foundation")
+    config = (ROOT / "ci" / "config.toml").read_text(encoding="utf-8")
+    foundation_paths = (ROOT / "ci" / "scopes" / "foundation.toml").read_text(encoding="utf-8")
 
     assert foundation.commands[0] == ("uv", "sync", "--locked", "--dev")
     assert "tests/test_run_scope.py" in foundation.paths
-    assert "uv.toml" in foundation.paths
-    assert "ci/__init__.py" in (ROOT / "ci" / "config.toml").read_text(encoding="utf-8")
+    assert ".python-version" in config and "uv.toml" in config
+    assert ".python-version" not in foundation_paths
+    assert "uv.toml" not in foundation_paths
+    assert "ci/__init__.py" in config
 
 
 def test_python_authority_change_does_not_require_workflow_edit(tmp_path: Path) -> None:
