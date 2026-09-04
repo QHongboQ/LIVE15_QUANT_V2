@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.models import (
@@ -32,9 +31,10 @@ if len({binding.asset_id for binding in _BINDINGS}) != 9 or len(
     raise RuntimeError("LIVE15 market-scope bindings must be bijective")
 
 
-@dataclass(frozen=True, slots=True)
 class Live15MarketScopeConfig:
     """Immutable exact LIVE15 asset-to-Kalshi-series scope."""
+
+    __slots__ = ()
 
     @property
     def bindings(self) -> tuple[MarketScopeBinding, ...]:
