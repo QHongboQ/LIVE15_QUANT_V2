@@ -8,6 +8,8 @@ Code uses the same modular tree: bounded modules, clear interfaces, and upper-la
 
 For generic infrastructure, tooling, frameworks, integration plumbing, and other solved engineering components, prefer official or mature upstream implementations; pin the exact source revision, copy/adapt minimally, and preserve provenance and license requirements. Custom infrastructure requires a concrete explanation of why suitable upstream implementations do not fit. This does not override LIVE15-owned domain semantics such as market-data truth, research/data authority, feature/model logic, prediction, trading decisions, or risk policy.
 
+There is no Rule 9. Do not add a separate task-bounded-scope rule.
+
 Human authorization is required before Production, irreversible/destructive data changes, real trading, critical safety/risk policy, frozen holdout access, or unauthorized deployment/restart/stop. Formal changes use bounded branches, clear Git history, and no force-push or history erasure. Formal code changes require independent review that reports PASS, FAIL, or WARNING and checks scope, interfaces, regressions, coupling, artifacts, and evidence.
 
 For V2, local repository/workspace and actual local running state are CURRENT; Git/GitHub provide history, backup, review, and rollback. V1 is reference only, not V2 authority. Root `CHANGELOG.md` is the V2 timeline and records date, task ID, change, reason, validation/result, commit/PR, and next step without copying V1 history. Every user-facing task states Model (Luna, Terra, or Sol) and Reasoning (低, 中, 高, 超高, or 极高); choose the least expensive adequate level.

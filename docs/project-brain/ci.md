@@ -10,7 +10,7 @@ routing, or path filtering.
 - Upstream repository: `OvertureMaps/overturemaps-py`
 - Source file: `.github/workflows/test-run.yml`
 - Pinned source commit: `9410974885ab5e9de107b15c0ba000a248c36a36`
-- License: MIT
+- License: MIT; complete third-party notice: [`THIRD_PARTY_NOTICES.md`](../../THIRD_PARTY_NOTICES.md)
 - Adopted: 2026-09-04
 - Local adaptations: replaced the upstream multi-Python matrix with the current
   Ubuntu/Windows matrix; rely on repository `.python-version`; use locked V2

@@ -60,7 +60,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Why:** Apply the approved Upstream First principle to generic CI infrastructure while retaining V2-owned domain semantics.
 
-**Validation / evidence:** MIT provenance is recorded in the Project Brain; the workflow has an Ubuntu/Windows matrix, SHA-pinned actions, locked dependency sync, pytest, Ruff, mypy, and a stable CI Gate. Local checks passed; hosted PR validation is recorded with PR #3.
+**Validation / evidence:** Closeout adds one repository-owned uv version authority, restores the separate Rule 9 rejection, and records the complete upstream MIT third-party notice. The workflow retains its Ubuntu/Windows matrix, SHA-pinned actions, locked dependency sync, pytest, Ruff, mypy, and CI Gate; local and hosted PR validation pass.
 
 **Commit or PR:** PR #3.
 
