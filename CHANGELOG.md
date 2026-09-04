@@ -53,3 +53,15 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #1.
 
 **Next step:** Final independent foundation review and single authorized squash merge if PASS.
+
+## 2026-09-04 — LIVE15-V2-MODULAR-CI-ROUTER-001
+
+**Summary:** Added the modular CI Router, declarative foundation scope, single-scope runner, thin GitHub Actions workflow, and CI Brain owner.
+
+**Why:** Keep CI aligned with the V2 responsibility tree so future modules can register bounded checks without turning Foundation CI into a whole-repository runner.
+
+**Validation / evidence:** Router and runner tests cover routing, dependency closure, fail-closed topology validation, manual modes, deterministic matrices, and empty selection; foundation scope execution, pytest, Ruff, mypy, and diff checks passed.
+
+**Commit or PR:** To be recorded by Git history and the new PR.
+
+**Next step:** Independent review; continue foundation discussion before the first business module.

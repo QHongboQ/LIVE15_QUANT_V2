@@ -1,0 +1,7 @@
+scope_directory = "ci/scopes"
+control_plane_paths = [
+  "ci/router.py",
+  "ci/run_scope.py",
+  "ci/config.toml",
+  ".github/workflows/ci.yml",
+]

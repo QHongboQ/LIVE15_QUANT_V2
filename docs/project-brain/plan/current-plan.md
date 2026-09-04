@@ -8,5 +8,6 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - The current upstream `kalshi-sdk` supports CF Benchmarks natively. Kalshi exposes Gold/Silver `pyth_value`, but the current upstream SDK lacks complete native `pyth_value` helper support.
 - Do not reintroduce direct Pyth, Coinbase, Binance, or Hyperliquid clients at this stage.
 - The development foundation is Python 3.12, uv, a project-local `.venv`, `kalshi-sdk`, pytest, ruff, mypy, and the complete current `mattpocock/skills` set. Business implementation has not started.
+- The modular CI Router foundation now exists: declarative scope discovery, dependency-aware routing, one oundation leaf, and a thin GitHub Actions orchestrator with a stable CI Gate.
 
 Next: continue blueprint/foundation discussion after foundation review, before implementing the first business module. No later phases are approved here.

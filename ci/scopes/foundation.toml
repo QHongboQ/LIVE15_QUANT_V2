@@ -1,0 +1,23 @@
+name = "foundation"
+runner = "windows-latest"
+depends_on = []
+
+paths = [
+  ".python-version",
+  "pyproject.toml",
+  "uv.lock",
+  "src/live15_quant_v2/__init__.py",
+  "tests/test_foundation.py",
+  "tests/test_router.py",
+  "ci/router.py",
+  "ci/run_scope.py",
+  "ci/config.toml",
+  "ci/scopes/foundation.toml",
+  ".github/workflows/ci.yml",
+]
+
+commands = [
+  ["uv", "run", "--frozen", "python", "-m", "pytest", "tests/test_foundation.py", "tests/test_router.py", "tests/test_run_scope.py", "-q"],
+  ["uv", "run", "--frozen", "ruff", "check", "ci/router.py", "ci/run_scope.py", "tests/test_foundation.py", "tests/test_router.py", "src/live15_quant_v2/__init__.py"],
+  ["uv", "run", "--frozen", "mypy", "ci/router.py", "ci/run_scope.py", "src/live15_quant_v2/__init__.py"],
+]

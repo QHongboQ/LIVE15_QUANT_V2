@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Routing mode
+        required: true
+        default: AUTO
+        type: choice
+        options: [AUTO, FULL, SCOPE]
+      scope:
+        description: Scope name when mode is SCOPE
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  route:
+    name: CI Router
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.route.outputs.matrix }}
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - name: Resolve changed files and route scopes
+        id: route
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_BEFORE: ${{ github.event.before }}
+          EVENT_SHA: ${{ github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DISPATCH_MODE: ${{ inputs.mode }}
+          DISPATCH_SCOPE: ${{ inputs.scope }}
+        run: |
+          set -euo pipefail
+          mode="${DISPATCH_MODE:-AUTO}"
+          changed_file_list="$RUNNER_TEMP/changed-files.txt"
+          if [[ "$mode" == "FULL" || "$mode" == "SCOPE" ]]; then
+            : > "$changed_file_list"
+          else
+            base_sha="$EVENT_BEFORE"
+            head_sha="$EVENT_SHA"
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              base_sha="$PR_BASE_SHA"
+              head_sha="$PR_HEAD_SHA"
+            fi
+            if [[ -z "$base_sha" || "$base_sha" =~ ^0+$ ]] || ! git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
+              echo "Unable to prove change range; selecting all registered scopes" >&2
+              printf '%s\n' ci/router.py > "$changed_file_list"
+            else
+              git diff --name-only "$base_sha" "$head_sha" > "$changed_file_list"
+            fi
+          fi
+          route_args=(--mode "$mode" --changed-files-file "$changed_file_list")
+          if [[ "$mode" == "SCOPE" ]]; then
+            route_args+=(--scope "${DISPATCH_SCOPE:-}")
+          fi
+          matrix="$(uv run --frozen python ci/router.py "${route_args[@]}")"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  scopes:
+    name: ${{ matrix.scope }}
+    needs: route
+    if: ${{ needs.route.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.route.outputs.matrix) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - name: Install locked foundation
+        run: uv sync --locked --dev
+      - name: Run selected scope
+        run: uv run --frozen python -m ci.run_scope "${{ matrix.scope }}"
+
+  ci-gate:
+    name: CI Gate
+    if: ${{ always() }}
+    needs: [route, scopes]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish stable gate result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ needs.route.result }}" != "success" ]]; then
+            echo "CI Router failed" >&2
+            exit 1
+          fi
+          case "${{ needs.scopes.result }}" in
+            success|skipped) exit 0 ;;
+            *) echo "One or more selected CI scopes failed" >&2; exit 1 ;;
+          esac
