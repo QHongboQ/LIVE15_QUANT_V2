@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "live15-quant-v2"
+version = "0.1.0"
+description = "Clean rebuild of LIVE15_QUANT."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "kalshi-sdk==13.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+    "ruff>=0.8,<1",
+    "mypy>=1.13,<2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/live15_quant_v2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
