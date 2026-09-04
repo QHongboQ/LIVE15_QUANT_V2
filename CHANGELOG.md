@@ -53,3 +53,15 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #1.
 
 **Next step:** Final independent foundation review and single authorized squash merge if PASS.
+
+## 2026-09-04 — LIVE15-V2-UPSTREAM-CI-BASELINE-001
+
+**Summary:** Closed the unmerged custom CI Router exploration in PR #2 and adopted an upstream-derived static Foundation CI workflow from `OvertureMaps/overturemaps-py` at pinned commit `9410974885ab5e9de107b15c0ba000a248c36a36`.
+
+**Why:** Apply the approved Upstream First principle to generic CI infrastructure while retaining V2-owned domain semantics.
+
+**Validation / evidence:** MIT provenance is recorded in the Project Brain; the workflow has an Ubuntu/Windows matrix, SHA-pinned actions, locked dependency sync, pytest, Ruff, mypy, and a stable CI Gate. Local checks passed; hosted PR validation is recorded with PR #3.
+
+**Commit or PR:** PR #3.
+
+**Next step:** Independent review before any business module implementation.
