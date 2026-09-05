@@ -6,7 +6,9 @@ from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import (
 from live15_quant_v2.data.market_ingress.ingress_boundary.discovery import (
     OfficialMarketDiscovery,
 )
-from live15_quant_v2.data.market_ingress.ingress_boundary.ports import MarketDiscoveryPort
+from live15_quant_v2.data.market_ingress.ingress_boundary.ports import (
+    MarketDiscoveryPort,
+)
 from live15_quant_v2.data.market_ingress.ingress_boundary.resolver import (
     MarketIdentityResolver,
 )
