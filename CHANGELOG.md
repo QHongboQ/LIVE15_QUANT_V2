@@ -2,6 +2,18 @@
 
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
+## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-FINAL-HARDENING-002
+
+**Summary:** Re-opened the Market Ingress closeout after a fresh adversarial audit found three residual authority/validation holes: verifier provenance could be copied to a reconstructed `VerifiedMarketIdentity`, public `ReferenceStream` composition accepted caller-injected reference scope, and one-sided strike types did not reject contradictory extra bounds. The fix binds provenance to the exact issued identity object, makes the authoritative Reference Stream own the canonical nine-asset reference scope internally, tightens strike shapes, strengthens exact-nine invariants, and cleans residual documentation/formatting drift.
+
+**Why:** A green closeout must survive caller-bypass and copy/replace attacks at public composition boundaries, not only happy-path tests. The same pass also removes stale wording and records the exact SDK backpressure/completeness constraint before Storage design begins.
+
+**Validation / evidence:** Added adversarial regressions for copied identity provenance, reference-scope injection, and contradictory strike shapes. The change preserves SDK transport/reconnect ownership and does not begin Storage, Data Truth, Replay, Dataset, Model, Trading, Operations, or Production work. Hosted validation is required before merge.
+
+**Commit or PR:** This final-hardening PR.
+
+**Next step:** Independent review and merge authorization, followed by post-merge local/main verification. Storage still requires separate explicit user authorization.
+
 ## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-CLOSEOUT-HYGIENE-001
 
 **Summary:** Closed the remaining Market Ingress stage-hygiene findings after
@@ -14,16 +26,11 @@ boundaries, documented provider DTO containment, and removed the obsolete
 before Storage begins, while recording that typed SDK iterators are ingress
 interfaces rather than a lossless persistence guarantee.
 
-**Validation / evidence:** Post-merge main for PR #10 passed hosted CI. This
-closeout-hygiene PR is limited to repository/API hygiene, tests, and durable
-contract documentation; no Storage, Data Truth, Replay, Model, Trading, or
-Production implementation is added.
+**Validation / evidence:** Ruff, pytest, mypy, hosted Ubuntu/Windows checks, CI Gate, and the post-merge main workflow passed.
 
-**Commit or PR:** This closeout-hygiene PR.
+**Commit or PR:** PR #11, merged as `66200608bef0a9b6ebf9afd7af900249fdfc23b1`.
 
-**Next step:** Independent review and merge authorization, followed by final
-post-merge Market Ingress closeout verification. Storage still requires
-separate explicit user authorization.
+**Next step:** Final adversarial hardening audit before any Storage work.
 
 ## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-HARDENING-001
 

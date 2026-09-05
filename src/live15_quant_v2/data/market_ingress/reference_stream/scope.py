@@ -35,10 +35,11 @@ _BINDINGS = (
 )
 
 if (
-    len({binding.asset_id for binding in _BINDINGS}) != 9
+    len(_BINDINGS) != 9
+    or len({binding.asset_id for binding in _BINDINGS}) != 9
     or len({binding.provider_id for binding in _BINDINGS}) != 9
 ):
-    raise RuntimeError("LIVE15 reference bindings must be bijective")
+    raise RuntimeError("LIVE15 reference bindings must be exactly nine and bijective")
 
 
 class Live15ReferenceScopeConfig:

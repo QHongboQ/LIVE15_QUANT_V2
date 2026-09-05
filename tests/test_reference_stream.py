@@ -74,9 +74,7 @@ def test_reference_scope_is_exact_and_fails_closed() -> None:
 
 def test_cfbenchmarks_uses_native_helper_for_only_approved_scope_ids() -> None:
     socket = FakeSocket()
-    result = asyncio.run(
-        ReferenceStream(Live15ReferenceScopeConfig(), socket).cfbenchmarks()
-    )
+    result = asyncio.run(ReferenceStream(socket).cfbenchmarks())
 
     assert result is socket.cf_result
     assert socket.cf_index_ids == [
@@ -88,6 +86,13 @@ def test_cfbenchmarks_uses_native_helper_for_only_approved_scope_ids() -> None:
         "DOGEUSD_RTI",
         "BNBUSD_RTI",
     ]
+
+
+def test_reference_stream_scope_cannot_be_injected() -> None:
+    socket = FakeSocket()
+
+    with pytest.raises(TypeError):
+        ReferenceStream(Live15ReferenceScopeConfig(), socket)  # type: ignore[call-arg]
 
 
 def test_pyth_models_parse_official_asyncapi_examples_with_exact_decimal() -> None:
@@ -144,6 +149,7 @@ def test_pyth_models_reject_messages_missing_required_seq() -> None:
                 "msg": {"underlying_tickers": ["Metal.XAG/USD", "Metal.XAU/USD"]},
             }
         )
+
 
 def test_pyth_compat_is_idempotent_and_uses_existing_sdk_subscription_dispatch() -> (
     None
@@ -210,6 +216,7 @@ def test_pyth_compat_requires_the_exact_pinned_sdk_version(
     with pytest.raises(RuntimeError, match="kalshi-sdk==13.0.0"):
         install_pyth_sdk_compat()
 
+
 def test_pyth_compat_fails_closed_on_unexpected_sdk_registry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -252,9 +259,7 @@ def test_pyth_compat_conflict_leaves_all_registries_unchanged(
 
 def test_pyth_stream_uses_only_approved_metal_scope_and_generic_sdk_subscribe() -> None:
     socket = FakeSocket()
-    result = asyncio.run(
-        ReferenceStream(Live15ReferenceScopeConfig(), socket).pyth_values()
-    )
+    result = asyncio.run(ReferenceStream(socket).pyth_values())
 
     assert result is socket.pyth_result
     assert socket.pyth_call == (

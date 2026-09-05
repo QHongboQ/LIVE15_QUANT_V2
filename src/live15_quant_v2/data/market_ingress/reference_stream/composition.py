@@ -27,10 +27,8 @@ from live15_quant_v2.data.market_ingress.reference_stream.scope import (
 class ReferenceStream:
     """Expose typed reference streams selected exclusively by LIVE15 scope."""
 
-    def __init__(
-        self, scope: Live15ReferenceScopeConfig, websocket: KalshiWebSocket
-    ) -> None:
-        self._scope = scope
+    def __init__(self, websocket: KalshiWebSocket) -> None:
+        self._scope = Live15ReferenceScopeConfig()
         self._cfbenchmarks = CFBenchmarksStream(websocket)
         self._pyth_value = PythValueStream(websocket)
 

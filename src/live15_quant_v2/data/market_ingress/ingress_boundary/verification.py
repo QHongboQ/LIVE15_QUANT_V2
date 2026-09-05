@@ -8,7 +8,7 @@ from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
     MarketWindow,
     VerificationResult,
     VerificationStatus,
-    VerifiedMarketIdentity,
+    _issue_verified_market_identity,
 )
 from live15_quant_v2.data.market_ingress.ingress_boundary.ports import MarketScopePort
 
@@ -55,7 +55,7 @@ class OfficialMarketVerifier:
             )
         return VerificationResult(
             VerificationStatus.VERIFIED,
-            VerifiedMarketIdentity._from_official_verification(
+            _issue_verified_market_identity(
                 binding,
                 market.ticker,
                 market.event_ticker,

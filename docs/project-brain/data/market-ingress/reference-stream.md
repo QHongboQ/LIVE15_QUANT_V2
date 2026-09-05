@@ -41,6 +41,11 @@ read-only `subscribe_cfbenchmarks_value(index_ids=["all"])` discovery on
 2026-09-04. Gold and Silver identifiers are from the pinned upstream AsyncAPI
 at commit `16c0b8368cc27991311d513a8dc5a0814dd786e0`.
 
+The authoritative public `ReferenceStream` composition constructs
+`Live15ReferenceScopeConfig()` internally. Callers may inspect the public scope
+model, but they cannot inject an alternate scope into the authoritative stream
+composition path.
+
 ## CF Benchmarks
 
 CF Benchmarks uses the SDK-native
@@ -69,15 +74,18 @@ Pyth Value support, delete this compatibility leaf and use the native helper.
 ## Queue and completeness boundary
 
 Reference Stream preserves the pinned SDK queue semantics. The native CF
-Benchmarks helper uses the SDK's bounded latest-wins queue behavior, while the
-Pyth compatibility leaf explicitly requests `OverflowStrategy.ERROR`.
-Reference Stream therefore does not claim that every upstream reference frame
-is durably captured merely because an iterator exists.
+Benchmarks helper uses a bounded `OverflowStrategy.DROP_OLDEST` queue, and the
+pinned CF message models expose optional sequence fields. A local CF queue
+eviction is therefore not guaranteed to be inferable downstream from a sequence
+gap. The Pyth compatibility leaf instead requests `OverflowStrategy.ERROR`,
+and its pinned official message schema requires sequence numbers.
 
-Future Storage / Data Truth work must define the authoritative capture,
-completeness, freshness, and gap contract for reference facts. That downstream
-contract must not be implemented here by duplicating SDK transport, reconnect,
-SID, or sequence machinery.
+Reference Stream therefore does not claim that every upstream reference frame
+is durably captured merely because an iterator exists. Future Storage / Data
+Truth work must explicitly define authoritative capture completeness, freshness,
+gap semantics, and immutable reference facts. If that later contract requires a
+different fail-visible capture policy, it must be designed explicitly without
+duplicating SDK transport, authentication, reconnect, or SID machinery here.
 
 ## Public interface and session ownership
 
@@ -88,16 +96,13 @@ from:
 
 `ReferenceStream` requires an already-active SDK WebSocket session/capability.
 The caller owns session lifecycle; `cfbenchmarks()` and `pyth_values()` only
-start the approved typed subscriptions for the fixed scope.
+start the approved typed subscriptions for the fixed internal scope.
 
 ```python
-from live15_quant_v2.data.market_ingress.reference_stream import (
-    Live15ReferenceScopeConfig,
-    ReferenceStream,
-)
+from live15_quant_v2.data.market_ingress.reference_stream import ReferenceStream
 
 async with websocket.connect() as session:
-    references = ReferenceStream(Live15ReferenceScopeConfig(), session)
+    references = ReferenceStream(session)
     cf_messages = await references.cfbenchmarks()
     pyth_messages = await references.pyth_values()
 ```
@@ -109,5 +114,6 @@ responsible for consuming them while it owns the SDK session.
 
 The SDK owns testing of transport, authentication, sessions, reconnect,
 resubscribe, SID mapping, generic queue behavior, and sequence machinery.
-LIVE15 tests only its exact scope, native/helper delegation, isolated
-compatibility registration, typed dispatcher routing, and public composition.
+LIVE15 tests only its exact scope, canonical composition, native/helper
+delegation, isolated compatibility registration, typed dispatcher routing, and
+public composition.
