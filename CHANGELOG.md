@@ -2,6 +2,30 @@
 
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
+## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-HARDENING-001
+
+**Summary:** Hardened Market Ingress authority boundaries found during the stage
+closeout audit: Market Stream now requires verifier-issued identity provenance,
+the public Market Ingress composition path always uses the sole concrete
+nine-asset LIVE15 scope, and structured strike validation follows the documented
+`greater` / `less` / `between` field semantics. Missing official market identity
+also fails closed.
+
+**Why:** Prevent callers from bypassing the approved nine-asset authority by
+supplying an arbitrary scope or a merely type-correct `VerifiedMarketIdentity`,
+and prevent malformed or unknown strike shapes from being promoted to verified
+market truth.
+
+**Validation / evidence:** Regression tests cover forged identity rejection,
+parent-scope enforcement, exact structured-strike semantics, and missing event
+identity. Ruff, pytest, mypy, and hosted CI Gate must pass before merge.
+
+**Commit or PR:** Pending hardening PR.
+
+**Next step:** Independent review and merge authorization; Market Ingress
+closeout remains blocked until hardening is merged and post-merge verification
+passes.
+
 ## 2026-09-04 — LIVE15-V2-REFERENCE-STREAM-001
 
 **Summary:** Added the fixed nine-asset Reference Stream with SDK-native CF

@@ -74,70 +74,19 @@ class HandoffScope:
     def binding_for_series(self, series_ticker: str) -> MarketScopeBinding | None:
         return self._binding if series_ticker == self._binding.series_ticker else None
 
-def verified_identity() -> VerifiedMarketIdentity:
-    window = MarketWindow(
-        datetime(2026, 9, 4, 22, 15, tzinfo=UTC),
-        datetime(2026, 9, 4, 22, 30, tzinfo=UTC),
-    )
-    return VerifiedMarketIdentity(
-        MarketScopeBinding("BTC", "KXBTC15M"),
-        "KXBTC15M-26SEP042215-99",
-        "KXBTC15M-26SEP042215",
-        window,
-        OfficialStrike("greater", Decimal(99), None, "BTC above"),
-    )
 
-
-def test_orderbook_delegates_verified_ticker_and_preserves_sdk_result() -> None:
-    socket = FakeSocket()
-    result = asyncio.run(MarketStream(socket).orderbook(verified_identity()))
-
-    assert result is socket.orderbook_result
-    assert socket.calls == [("orderbook", [verified_identity().ticker])]
-
-
-def test_ticker_delegates_verified_ticker_and_preserves_sdk_result() -> None:
-    socket = FakeSocket()
-    result = asyncio.run(MarketStream(socket).ticker(verified_identity()))
-
-    assert result is socket.ticker_result
-    assert socket.calls == [("ticker", [verified_identity().ticker])]
-
-
-def test_trade_delegates_verified_ticker_and_preserves_sdk_result() -> None:
-    socket = FakeSocket()
-    result = asyncio.run(MarketStream(socket).trades(verified_identity()))
-
-    assert result is socket.trade_result
-    assert socket.calls == [("trade", [verified_identity().ticker])]
-
-
-def test_lifecycle_delegates_verified_ticker_and_preserves_sdk_result() -> None:
-    socket = FakeSocket()
-    result = asyncio.run(MarketStream(socket).lifecycle(verified_identity()))
-
-    assert result is socket.lifecycle_result
-    assert socket.calls == [("lifecycle", [verified_identity().ticker])]
-
-
-def test_candidate_or_asset_input_fails_closed_without_subscription() -> None:
-    socket = FakeSocket()
-    stream = MarketStream(socket)
-
-    with pytest.raises(TypeError, match="VerifiedMarketIdentity"):
-        asyncio.run(stream.ticker("KXBTC15M-candidate"))  # type: ignore[arg-type]
-    with pytest.raises(TypeError, match="VerifiedMarketIdentity"):
-        asyncio.run(stream.trades("BTC"))  # type: ignore[arg-type]
-
-    assert socket.calls == []
-
-
-def test_verified_identity_handoff_delegates_official_ticker_to_market_stream() -> None:
+def _identity_parts() -> tuple[MarketScopeBinding, MarketWindow, OfficialStrike]:
     binding = MarketScopeBinding("BTC", "KXBTC15M")
     window = MarketWindow(
         datetime(2026, 9, 4, 22, 15, tzinfo=UTC),
         datetime(2026, 9, 4, 22, 30, tzinfo=UTC),
     )
+    strike = OfficialStrike("greater", Decimal(99), None, "BTC above")
+    return binding, window, strike
+
+
+def verified_identity() -> VerifiedMarketIdentity:
+    binding, window, strike = _identity_parts()
     verification = OfficialMarketVerifier().verify(
         scope=HandoffScope(binding),
         binding=binding,
@@ -149,18 +98,86 @@ def test_verified_identity_handoff_delegates_official_ticker_to_market_stream() 
                 "KXBTC15M-26SEP042215",
                 window.open_time,
                 window.close_time,
-                OfficialStrike("greater", Decimal(99), None, "BTC above"),
+                strike,
             )
         ],
     )
     assert verification.verified
     assert verification.identity is not None
+    return verification.identity
 
+
+def forged_identity() -> VerifiedMarketIdentity:
+    binding, window, strike = _identity_parts()
+    return VerifiedMarketIdentity(
+        binding,
+        "KXBTC15M-FORGED",
+        "KXBTC15M-FORGED-EVENT",
+        window,
+        strike,
+        object(),
+    )
+
+
+def test_orderbook_delegates_verified_ticker_and_preserves_sdk_result() -> None:
     socket = FakeSocket()
-    result = asyncio.run(MarketStream(socket).ticker(verification.identity))
+    identity = verified_identity()
+    result = asyncio.run(MarketStream(socket).orderbook(identity))
+
+    assert result is socket.orderbook_result
+    assert socket.calls == [("orderbook", [identity.ticker])]
+
+
+def test_ticker_delegates_verified_ticker_and_preserves_sdk_result() -> None:
+    socket = FakeSocket()
+    identity = verified_identity()
+    result = asyncio.run(MarketStream(socket).ticker(identity))
 
     assert result is socket.ticker_result
-    assert socket.calls == [("ticker", [verification.identity.ticker])]
+    assert socket.calls == [("ticker", [identity.ticker])]
+
+
+def test_trade_delegates_verified_ticker_and_preserves_sdk_result() -> None:
+    socket = FakeSocket()
+    identity = verified_identity()
+    result = asyncio.run(MarketStream(socket).trades(identity))
+
+    assert result is socket.trade_result
+    assert socket.calls == [("trade", [identity.ticker])]
+
+
+def test_lifecycle_delegates_verified_ticker_and_preserves_sdk_result() -> None:
+    socket = FakeSocket()
+    identity = verified_identity()
+    result = asyncio.run(MarketStream(socket).lifecycle(identity))
+
+    assert result is socket.lifecycle_result
+    assert socket.calls == [("lifecycle", [identity.ticker])]
+
+
+def test_candidate_asset_or_forged_identity_fails_closed_without_subscription() -> None:
+    socket = FakeSocket()
+    stream = MarketStream(socket)
+
+    with pytest.raises(TypeError, match="VerifiedMarketIdentity"):
+        asyncio.run(stream.ticker("KXBTC15M-candidate"))  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="VerifiedMarketIdentity"):
+        asyncio.run(stream.trades("BTC"))  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="verifier-issued"):
+        asyncio.run(stream.orderbook(forged_identity()))
+
+    assert socket.calls == []
+
+
+def test_verified_identity_handoff_delegates_official_ticker_to_market_stream() -> None:
+    identity = verified_identity()
+    socket = FakeSocket()
+    result = asyncio.run(MarketStream(socket).ticker(identity))
+
+    assert result is socket.ticker_result
+    assert socket.calls == [("ticker", [identity.ticker])]
+
+
 def test_pinned_sdk_subscription_contract_is_typed_and_async() -> None:
     expected = {
         "subscribe_orderbook_delta": {

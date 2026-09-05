@@ -43,6 +43,11 @@ class OfficialMarketVerifier:
                 VerificationStatus.AMBIGUOUS, reason="multiple exact official markets"
             )
         market = exact[0]
+        if not market.ticker or not market.event_ticker:
+            return VerificationResult(
+                VerificationStatus.INVALID,
+                reason="missing official market identity",
+            )
         if not market.strike.usable:
             return VerificationResult(
                 VerificationStatus.INVALID,
@@ -50,7 +55,11 @@ class OfficialMarketVerifier:
             )
         return VerificationResult(
             VerificationStatus.VERIFIED,
-            VerifiedMarketIdentity(
-                binding, market.ticker, market.event_ticker or "", window, market.strike
+            VerifiedMarketIdentity._from_official_verification(
+                binding,
+                market.ticker,
+                market.event_ticker,
+                window,
+                market.strike,
             ),
         )
