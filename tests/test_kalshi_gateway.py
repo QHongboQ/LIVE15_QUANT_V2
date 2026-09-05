@@ -80,10 +80,10 @@ def window():
     return current(datetime(2026, 3, 23, 20, 15, tzinfo=UTC))
 
 
-def raw(w, floor=Decimal(1), cap=None):
+def raw(w, floor=Decimal(1), cap=None, *, event_ticker="official-event"):
     return SimpleNamespace(
         ticker="official-ticker",
-        event_ticker="official-event",
+        event_ticker=event_ticker,
         open_time=w.open_time,
         close_time=w.close_time,
         strike_type="greater",
@@ -94,11 +94,11 @@ def raw(w, floor=Decimal(1), cap=None):
     )
 
 
-def discovered(w, series="KXDOGE15M", strike=None):
+def discovered(w, series="KXDOGE15M", strike=None, *, event_ticker="official-event"):
     return DiscoveredMarket(
         series,
         "official-ticker",
-        "official-event",
+        event_ticker,
         w.open_time,
         w.close_time,
         strike or OfficialStrike("greater", Decimal(1), None, "official", "x**2"),
@@ -147,28 +147,53 @@ def test_wrong_official_series_rejected_even_with_exact_time_and_strike():
     assert result.status is VerificationStatus.NO_MATCH
 
 
-def test_functional_strike_never_authorizes_and_structured_strikes_do():
+def test_structured_strike_semantics_fail_closed() -> None:
     w = window()
     verifier = OfficialMarketVerifier()
     scope = Scope(binding())
-    result = verifier.verify(
-        scope=scope,
-        binding=binding(),
-        window=w,
-        markets=[discovered(w, strike=OfficialStrike("x", None, None, "yes", "x**2"))],
+
+    invalid = (
+        OfficialStrike("x", Decimal(1), None, "yes", "x**2"),
+        OfficialStrike("greater", None, Decimal(2), "yes"),
+        OfficialStrike("less", Decimal(1), None, "yes"),
+        OfficialStrike("between", Decimal(1), None, "yes"),
+        OfficialStrike("between", None, Decimal(2), "yes"),
     )
-    assert result.status is VerificationStatus.INVALID
-    for strike in (
-        OfficialStrike("x", Decimal(1), None, "yes"),
-        OfficialStrike("x", None, Decimal(2), "yes"),
-        OfficialStrike("x", Decimal(1), Decimal(2), "yes"),
-    ):
-        assert verifier.verify(
+    for strike in invalid:
+        result = verifier.verify(
             scope=scope,
             binding=binding(),
             window=w,
             markets=[discovered(w, strike=strike)],
-        ).verified
+        )
+        assert result.status is VerificationStatus.INVALID
+
+    valid = (
+        OfficialStrike("greater", Decimal(1), None, "yes"),
+        OfficialStrike("less", None, Decimal(2), "yes"),
+        OfficialStrike("between", Decimal(1), Decimal(2), "yes"),
+    )
+    for strike in valid:
+        result = verifier.verify(
+            scope=scope,
+            binding=binding(),
+            window=w,
+            markets=[discovered(w, strike=strike)],
+        )
+        assert result.verified
+        assert result.identity is not None
+        assert result.identity.has_verified_provenance
+
+
+def test_missing_official_event_identity_fails_closed() -> None:
+    w = window()
+    result = OfficialMarketVerifier().verify(
+        scope=Scope(binding()),
+        binding=binding(),
+        window=w,
+        markets=[discovered(w, event_ticker=None)],
+    )
+    assert result.status is VerificationStatus.INVALID
 
 
 def test_adjacent_ambiguous_and_sibling_strike_fail_closed():
@@ -181,7 +206,7 @@ def test_adjacent_ambiguous_and_sibling_strike_fail_closed():
         "e",
         w.open_time,
         w.close_time + timedelta(minutes=15),
-        OfficialStrike("x", Decimal(1), None, "yes"),
+        OfficialStrike("greater", Decimal(1), None, "yes"),
     )
     assert (
         verifier.verify(
@@ -228,16 +253,18 @@ def test_resolver_candidate_shadow_is_diagnostic_not_truth():
     assert out.shadow.status is ShadowStatus.MISMATCH
 
 
-def test_market_ingress_parent_composes_sibling_public_interfaces_offline():
+def test_market_ingress_parent_enforces_live15_scope_offline():
     w = window()
-    resolver = market_identity_resolver(
-        Scope(binding()), KalshiGateway(Client(Markets([raw(w)])))
-    )
+    resolver = market_identity_resolver(KalshiGateway(Client(Markets([raw(w)]))))
 
-    result = resolver.resolve("asset", w)
+    approved = resolver.resolve("DOGE", w)
+    rejected = resolver.resolve("asset", w)
 
-    assert result.verification.verified
-    assert result.shadow.status is ShadowStatus.MISMATCH
+    assert approved.verification.verified
+    assert approved.verification.identity is not None
+    assert approved.verification.identity.binding.asset_id == "DOGE"
+    assert rejected.verification.status is VerificationStatus.INVALID
+
 
 def test_installed_sdk_has_documented_public_parameters():
     client = KalshiClient()

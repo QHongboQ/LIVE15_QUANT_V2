@@ -60,4 +60,6 @@ class MarketStream:
     def _require_verified(identity: VerifiedMarketIdentity) -> VerifiedMarketIdentity:
         if not isinstance(identity, VerifiedMarketIdentity):
             raise TypeError("Market Stream requires a VerifiedMarketIdentity")
+        if not identity.has_verified_provenance:
+            raise ValueError("Market Stream requires verifier-issued market identity")
         return identity

@@ -1,11 +1,12 @@
 """Immutable LIVE15-owned market-identity facts."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
 
 QUARTER_HOUR = timedelta(minutes=15)
+_VERIFIED_MARKET_IDENTITY_TOKEN = object()
 
 
 def as_utc(value: datetime) -> datetime:
@@ -56,7 +57,13 @@ class OfficialStrike:
 
     @property
     def usable(self) -> bool:
-        return self.floor_strike is not None or self.cap_strike is not None
+        if self.strike_type == "greater":
+            return self.floor_strike is not None
+        if self.strike_type == "less":
+            return self.cap_strike is not None
+        if self.strike_type == "between":
+            return self.floor_strike is not None and self.cap_strike is not None
+        return False
 
 
 @dataclass(frozen=True)
@@ -80,6 +87,29 @@ class VerifiedMarketIdentity:
     event_ticker: str
     window: MarketWindow
     strike: OfficialStrike
+    _verification_token: object = field(repr=False, compare=False)
+
+    @classmethod
+    def _from_official_verification(
+        cls,
+        binding: MarketScopeBinding,
+        ticker: str,
+        event_ticker: str,
+        window: MarketWindow,
+        strike: OfficialStrike,
+    ) -> "VerifiedMarketIdentity":
+        return cls(
+            binding,
+            ticker,
+            event_ticker,
+            window,
+            strike,
+            _VERIFIED_MARKET_IDENTITY_TOKEN,
+        )
+
+    @property
+    def has_verified_provenance(self) -> bool:
+        return self._verification_token is _VERIFIED_MARKET_IDENTITY_TOKEN
 
 
 class VerificationStatus(StrEnum):
@@ -97,7 +127,11 @@ class VerificationResult:
 
     @property
     def verified(self) -> bool:
-        return self.status is VerificationStatus.VERIFIED and self.identity is not None
+        return (
+            self.status is VerificationStatus.VERIFIED
+            and self.identity is not None
+            and self.identity.has_verified_provenance
+        )
 
 
 class ShadowStatus(StrEnum):
