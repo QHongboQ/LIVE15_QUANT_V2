@@ -156,11 +156,14 @@ def test_structured_strike_semantics_fail_closed() -> None:
         OfficialStrike("x", Decimal(1), None, "yes", "x**2"),
         OfficialStrike("greater", None, Decimal(2), "yes"),
         OfficialStrike("greater", Decimal(1), Decimal(2), "yes"),
+        OfficialStrike("greater_or_equal", None, Decimal(2), "yes"),
+        OfficialStrike("greater_or_equal", Decimal(1), Decimal(2), "yes"),
         OfficialStrike("less", Decimal(1), None, "yes"),
         OfficialStrike("less", Decimal(1), Decimal(2), "yes"),
+        OfficialStrike("less_or_equal", Decimal(1), None, "yes"),
+        OfficialStrike("less_or_equal", Decimal(1), Decimal(2), "yes"),
         OfficialStrike("between", Decimal(1), None, "yes"),
         OfficialStrike("between", None, Decimal(2), "yes"),
-        OfficialStrike("greater_or_equal", Decimal(1), None, "yes"),
     )
     for strike in invalid:
         result = verifier.verify(
@@ -173,7 +176,9 @@ def test_structured_strike_semantics_fail_closed() -> None:
 
     valid = (
         OfficialStrike("greater", Decimal(1), None, "yes"),
+        OfficialStrike("greater_or_equal", Decimal(1), None, "yes"),
         OfficialStrike("less", None, Decimal(2), "yes"),
+        OfficialStrike("less_or_equal", None, Decimal(2), "yes"),
         OfficialStrike("between", Decimal(1), Decimal(2), "yes"),
     )
     for strike in valid:
