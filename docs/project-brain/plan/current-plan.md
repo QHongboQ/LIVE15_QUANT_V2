@@ -18,8 +18,11 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Engineering Foundation is complete.
 - Market Ingress is complete and hardened; its authoritative child details are
   owned under `docs/project-brain/data/market-ingress/`.
-- Storage, Data Truth, Replay, Dataset, Model, Trading, and Operations
-  implementation have not begun.
+- Storage has begun only its Hot Store leaf: a provider-neutral interface and
+  QuestDB adapter with explicit 500-row write batches. All other Storage
+  responsibilities remain unimplemented.
+- Data Truth, Replay, Dataset, Model, Trading, and Operations implementation have
+  not begun.
 
-Next implementation stage: Storage. Its exact subtree is not frozen and its
-implementation requires separate explicit user authorization.
+Next implementation stage: independent review of the bounded Storage Hot Store
+implementation before any further upstream replacement.

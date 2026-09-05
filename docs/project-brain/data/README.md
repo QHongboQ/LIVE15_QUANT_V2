@@ -1,10 +1,9 @@
 # Data System
 
-Data System currently has one implemented child: Market Ingress.
+Data System has two implemented children: Market Ingress and Storage.
 
-Future Data System siblings/responsibilities are Storage, Data Truth, Replay &
-As-Of, and Canonical Dataset. They are not implemented, and their exact
-subtrees are not frozen here. Market Ingress does not own those deferred
+Storage currently routes only its implemented [Hot Store](storage/README.md) leaf. Data Truth, Replay &
+As-Of, and Canonical Dataset remain unimplemented. Market Ingress does not own those deferred
 responsibilities.
 
 Research & Model System, Decision & Trading System, Operations & Interface
