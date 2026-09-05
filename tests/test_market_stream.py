@@ -22,7 +22,11 @@ from live15_quant_v2.data.market_ingress.ingress_boundary import (
     VerifiedMarketIdentity,
 )
 from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
+    DiscoveredMarket,
     OfficialStrike,
+)
+from live15_quant_v2.data.market_ingress.ingress_boundary.verification import (
+    OfficialMarketVerifier,
 )
 from live15_quant_v2.data.market_ingress.market_stream import MarketStream
 
@@ -59,6 +63,16 @@ class FakeSocket:
         self.calls.append(("lifecycle", tickers))
         return self.lifecycle_result
 
+
+class HandoffScope:
+    def __init__(self, binding: MarketScopeBinding) -> None:
+        self._binding = binding
+
+    def binding_for_asset(self, asset_id: str) -> MarketScopeBinding | None:
+        return self._binding if asset_id == self._binding.asset_id else None
+
+    def binding_for_series(self, series_ticker: str) -> MarketScopeBinding | None:
+        return self._binding if series_ticker == self._binding.series_ticker else None
 
 def verified_identity() -> VerifiedMarketIdentity:
     window = MarketWindow(
@@ -118,6 +132,35 @@ def test_candidate_or_asset_input_fails_closed_without_subscription() -> None:
     assert socket.calls == []
 
 
+def test_verified_identity_handoff_delegates_official_ticker_to_market_stream() -> None:
+    binding = MarketScopeBinding("BTC", "KXBTC15M")
+    window = MarketWindow(
+        datetime(2026, 9, 4, 22, 15, tzinfo=UTC),
+        datetime(2026, 9, 4, 22, 30, tzinfo=UTC),
+    )
+    verification = OfficialMarketVerifier().verify(
+        scope=HandoffScope(binding),
+        binding=binding,
+        window=window,
+        markets=[
+            DiscoveredMarket(
+                binding.series_ticker,
+                "KXBTC15M-26SEP042215-99",
+                "KXBTC15M-26SEP042215",
+                window.open_time,
+                window.close_time,
+                OfficialStrike("greater", Decimal(99), None, "BTC above"),
+            )
+        ],
+    )
+    assert verification.verified
+    assert verification.identity is not None
+
+    socket = FakeSocket()
+    result = asyncio.run(MarketStream(socket).ticker(verification.identity))
+
+    assert result is socket.ticker_result
+    assert socket.calls == [("ticker", [verification.identity.ticker])]
 def test_pinned_sdk_subscription_contract_is_typed_and_async() -> None:
     expected = {
         "subscribe_orderbook_delta": {

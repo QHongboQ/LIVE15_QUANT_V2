@@ -33,6 +33,38 @@ async methods: `orderbook(identity)`, `ticker(identity)`, `trades(identity)`,
 or `lifecycle(identity)`. Each returns the corresponding SDK typed async
 iterator unchanged.
 
+## Session ownership
+
+`MarketStream` expects an already-active SDK WebSocket session/capability. The
+caller owns connection lifecycle and may compose it conceptually as:
+
+```python
+async with ws.connect() as session:
+    stream = MarketStream(session)
+    # consume a typed stream with an already verified identity
+```
+
+Market Stream does not own `connect()`, `close()`, authentication, reconnect,
+or session lifecycle.
+
+## Raw orderbook snapshot warning
+
+Market Stream preserves raw SDK typed orderbook messages unchanged. The raw
+`subscribe_orderbook_delta()` snapshot payload `yes` / `no` dictionaries may
+be mutated in place by later SDK delta processing. Therefore a typed raw
+`OrderbookSnapshotMessage` is not an immutable persistence or replay fact.
+Market Stream does not copy or freeze these values. The future immutable fact
+boundary in Storage / Data Truth must freeze or copy a snapshot before granting
+persistence or replay authority.
+
+## Test ownership
+
+The upstream SDK tests subscription helper commands, ticker forwarding,
+orderbook initial snapshots, trade receipt, market-lifecycle subscription,
+connection/session lifecycle, and reconnect/sequence machinery. LIVE15 tests
+only its verified-identity handoff, typed delegation boundary, and module
+ownership contract; it does not duplicate SDK transport tests.
+
 ## Dependency rule
 
 Market Stream is a direct Market Ingress sibling. It consumes the public

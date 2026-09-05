@@ -18,10 +18,12 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Market Ingress child #1 Kalshi Gateway is complete and owns provider access only.
 - Market Ingress child #4 Ingress Boundary is complete and owns LIVE15 market identity semantics and the concrete immutable nine-asset scope.
 - Kalshi Gateway and Ingress Boundary are physical sibling packages with no direct sibling dependency. The Market Ingress parent composes the Gateway's provider capability with the Boundary's public semantic interface; they do not share one implementation subtree.
-- Market Stream is complete as a thin, SDK-native typed subscription composition
-  over verified market identities. Reference Stream has not started. Storage,
-  Data Truth, Replay, Dataset, Model, Trading, and Operations implementation
-  have not begun.
+- Market Ingress currently has four responsibilities: Kalshi Gateway exposes
+  provider capability from `kalshi-sdk`; Ingress Boundary turns provider
+  discovery capability into `VerifiedMarketIdentity`; Market Stream turns
+  verified identities plus SDK streaming capability into typed SDK async
+  iterators; and Reference Stream has not started. Storage, Data Truth, Replay,
+  Dataset, Model, Trading, and Operations implementation have not begun.
 
 Next approved implementation target: Reference Stream, unless user priority
 changes.

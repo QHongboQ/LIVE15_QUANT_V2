@@ -2,6 +2,23 @@
 
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
+## 2026-09-04 — LIVE15-V2-MARKET-STREAM-REVIEW-CLOSEOUT-001
+
+**Summary:** Independent review closeout preserved Market Stream runtime code
+unchanged and added one offline Ingress Boundary verified-output to Market
+Stream handoff regression.
+
+**Why:** Record the actual recursive responsibility tree and durable downstream
+contracts without changing market behavior.
+
+**Validation / evidence:** Documents raw orderbook snapshot aliasing and active
+SDK session ownership. No market semantics changed; local and hosted validation
+pass.
+
+**Commit or PR:** PR #7.
+
+**Next step:** Independent review and merge authorization; then Reference
+Stream unless priority changes.
 ## 2026-09-04 — LIVE15-V2-MARKET-STREAM-SDK-001
 
 **Summary:** Added the Market Stream sibling as a thin composition of typed
