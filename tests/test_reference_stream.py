@@ -5,6 +5,7 @@ import pytest
 from kalshi.ws.backpressure import MessageQueue, OverflowStrategy
 from kalshi.ws.channels import Subscription
 from kalshi.ws.dispatch import MESSAGE_MODELS, MessageDispatcher
+from pydantic import ValidationError
 
 from live15_quant_v2.data.market_ingress.reference_stream import (
     Live15ReferenceScopeConfig,
@@ -119,6 +120,30 @@ def test_pyth_models_parse_official_asyncapi_examples_with_exact_decimal() -> No
         "Metal.XAU/USD",
     ]
 
+
+def test_pyth_models_reject_messages_missing_required_seq() -> None:
+    with pytest.raises(ValidationError):
+        PythValueMessage.model_validate(
+            {
+                "type": "pyth_value",
+                "sid": 1,
+                "msg": {
+                    "underlying_ticker": "Metal.XAU/USD",
+                    "value_usd": "2365.12345000",
+                    "source_ts_ms": 1710000000100,
+                    "received_at": 1710000000123,
+                },
+            }
+        )
+    with pytest.raises(ValidationError):
+        PythUnderlyingListMessage.model_validate(
+            {
+                "type": "pyth_value_underlying_list",
+                "id": 2,
+                "sid": 1,
+                "msg": {"underlying_tickers": ["Metal.XAG/USD", "Metal.XAU/USD"]},
+            }
+        )
 
 def test_pyth_compat_is_idempotent_and_uses_existing_sdk_subscription_dispatch() -> (
     None

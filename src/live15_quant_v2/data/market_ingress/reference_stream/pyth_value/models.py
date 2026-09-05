@@ -17,7 +17,7 @@ class PythValuePayload(BaseModel):
 class PythValueMessage(BaseModel):
     type: Literal["pyth_value"] = "pyth_value"
     sid: int
-    seq: int | None = None
+    seq: int
     msg: PythValuePayload
     model_config = {"extra": "allow", "populate_by_name": True}
 
@@ -31,6 +31,6 @@ class PythUnderlyingListMessage(BaseModel):
     type: Literal["pyth_value_underlying_list"] = "pyth_value_underlying_list"
     id: int | None = None
     sid: int
-    seq: int | None = None
+    seq: int
     msg: PythUnderlyingListPayload
     model_config = {"extra": "allow", "populate_by_name": True}

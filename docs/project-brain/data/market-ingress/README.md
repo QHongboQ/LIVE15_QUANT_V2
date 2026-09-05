@@ -21,7 +21,10 @@ Market Ingress
 │  ├─ down: MarketStreamSocket / SDK typed subscription capability
 │  └─ up: SDK typed async iterators
 └─ Reference Stream
-   └─ NOT STARTED
+   ├─ Reference Scope
+   ├─ CF Benchmarks
+   ├─ Pyth Value
+   └─ Public composition
 ```
 
 The parent owns this recursive responsibility tree, but current runtime parent
