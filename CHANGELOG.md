@@ -15,7 +15,7 @@ crypto IDs. The bounded demo Pyth probe was accepted but yielded no messages;
 typed Pyth parsing and SDK queue dispatch are proven offline. Local and hosted
 validation pass.
 
-**Commit or PR:** Pending PR.
+**Commit or PR:** `73e6a77` / PR #8.
 
 **Next step:** Independent review and merge authorization; then Storage/Data
 Truth design only if separately approved.
