@@ -1,4 +1,7 @@
-from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import CandidateTickerPredictor
+from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import (
+    CandidateTickerPredictor,
+)
+
 """Public LIVE15 Ingress Boundary interface."""
 
 from live15_quant_v2.data.market_ingress.ingress_boundary.composition import (
