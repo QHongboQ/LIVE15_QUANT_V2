@@ -4,9 +4,9 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
+from weakref import WeakValueDictionary
 
 QUARTER_HOUR = timedelta(minutes=15)
-_VERIFIED_MARKET_IDENTITY_TOKEN = object()
 
 
 def as_utc(value: datetime) -> datetime:
@@ -58,9 +58,9 @@ class OfficialStrike:
     @property
     def usable(self) -> bool:
         if self.strike_type == "greater":
-            return self.floor_strike is not None
+            return self.floor_strike is not None and self.cap_strike is None
         if self.strike_type == "less":
-            return self.cap_strike is not None
+            return self.floor_strike is None and self.cap_strike is not None
         if self.strike_type == "between":
             return self.floor_strike is not None and self.cap_strike is not None
         return False
@@ -89,27 +89,35 @@ class VerifiedMarketIdentity:
     strike: OfficialStrike
     _verification_token: object = field(repr=False, compare=False)
 
-    @classmethod
-    def _from_official_verification(
-        cls,
-        binding: MarketScopeBinding,
-        ticker: str,
-        event_ticker: str,
-        window: MarketWindow,
-        strike: OfficialStrike,
-    ) -> "VerifiedMarketIdentity":
-        return cls(
-            binding,
-            ticker,
-            event_ticker,
-            window,
-            strike,
-            _VERIFIED_MARKET_IDENTITY_TOKEN,
-        )
-
     @property
     def has_verified_provenance(self) -> bool:
-        return self._verification_token is _VERIFIED_MARKET_IDENTITY_TOKEN
+        return _VERIFIED_MARKET_IDENTITIES.get(self._verification_token) is self
+
+
+_VERIFIED_MARKET_IDENTITIES: WeakValueDictionary[
+    object, VerifiedMarketIdentity
+] = WeakValueDictionary()
+
+
+def _issue_verified_market_identity(
+    binding: MarketScopeBinding,
+    ticker: str,
+    event_ticker: str,
+    window: MarketWindow,
+    strike: OfficialStrike,
+) -> VerifiedMarketIdentity:
+    """Issue one identity-bound verifier provenance capability."""
+    token = object()
+    identity = VerifiedMarketIdentity(
+        binding,
+        ticker,
+        event_ticker,
+        window,
+        strike,
+        token,
+    )
+    _VERIFIED_MARKET_IDENTITIES[token] = identity
+    return identity
 
 
 class VerificationStatus(StrEnum):

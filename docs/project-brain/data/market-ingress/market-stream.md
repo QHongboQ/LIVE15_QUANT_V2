@@ -6,10 +6,11 @@ Market Stream is the Market Ingress child that selects already verified LIVE15
 markets and delegates typed orderbook, ticker, trade, and lifecycle
 subscriptions to the pinned `kalshi-sdk==13.0.0` WebSocket interface.
 
-Its public `MarketStream` interface accepts only `VerifiedMarketIdentity` and
-uses the verified official `identity.ticker`. Candidate tickers, raw asset IDs,
-and arbitrary ticker strings are not subscription authority; absent or invalid
-identity input fails closed before any SDK subscription is started.
+Its public `MarketStream` interface accepts only verifier-issued
+`VerifiedMarketIdentity` objects and uses the verified official
+`identity.ticker`. Candidate tickers, raw asset IDs, arbitrary ticker strings,
+and copied/reconstructed identity objects are not subscription authority;
+invalid identity input fails closed before any SDK subscription is started.
 
 ## Ownership
 
@@ -59,17 +60,26 @@ persistence or replay authority.
 
 ## SDK queue and backpressure boundary
 
-Market Stream deliberately preserves the pinned SDK queue policy rather than
-reimplementing reliability. The SDK uses fail-fast/error behavior for the
-stateful `orderbook_delta` stream, while latest-wins channels such as ticker,
-trade, and lifecycle may use bounded `DROP_OLDEST` queues.
+Market Stream deliberately preserves the pinned SDK helper behavior rather than
+reimplementing reliability. In `kalshi-sdk==13.0.0`, the typed
+`orderbook_delta` helper uses `OverflowStrategy.ERROR`, while the typed ticker,
+trade, and market-lifecycle helpers use bounded `OverflowStrategy.DROP_OLDEST`
+queues. The SDK describes `DROP_OLDEST` as appropriate for latest-wins channels
+such as ticker; Market Stream does not extend that claim to event-like trade or
+lifecycle data.
 
-Therefore these typed iterators are provider-ingress interfaces, not a promise
-of lossless persistence completeness. Future Storage / Data Truth work must
-establish its own explicit capture, completeness, freshness, and gap contract
-before persisted facts can be treated as authoritative. That downstream
-contract must not be implemented here by adding custom transport, reconnect,
-or sequence machinery.
+Ticker, trade, and market-lifecycle message sequence fields are optional in the
+pinned SDK models. Consequently, a local queue eviction on those
+`DROP_OLDEST` helpers is not guaranteed to be inferable downstream from a
+sequence gap. These iterators are therefore provider-ingress interfaces, not a
+promise of lossless persistence completeness.
+
+Before persisted facts can be authoritative, future Storage / Data Truth work
+must explicitly define capture completeness, freshness, gap semantics, and the
+immutable fact boundary. If that contract requires fail-visible capture for a
+channel whose typed SDK helper drops oldest frames, the later design must make
+that requirement explicit without duplicating SDK transport, authentication,
+or reconnect machinery here.
 
 ## Test ownership
 

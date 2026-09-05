@@ -34,3 +34,10 @@ def test_reference_stream_has_no_custom_transport_or_reliability_ownership() -> 
     assert "_connection" not in source
     assert "_recv_loop" not in source
     assert "_handle_reconnect" not in source
+
+
+def test_reference_stream_public_composition_owns_canonical_scope() -> None:
+    source = (REFERENCE_STREAM_ROOT / "composition.py").read_text(encoding="utf-8")
+
+    assert "self._scope = Live15ReferenceScopeConfig()" in source
+    assert "scope: Live15ReferenceScopeConfig" not in source

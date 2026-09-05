@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import get_args, get_origin, get_type_hints
@@ -166,6 +167,14 @@ def test_candidate_asset_or_forged_identity_fails_closed_without_subscription() 
     with pytest.raises(ValueError, match="verifier-issued"):
         asyncio.run(stream.orderbook(forged_identity()))
 
+    valid = verified_identity()
+    cloned = replace(valid, ticker="KXBTC15M-CLONED")
+    assert valid.has_verified_provenance
+    assert not cloned.has_verified_provenance
+    with pytest.raises(ValueError, match="verifier-issued"):
+        asyncio.run(stream.orderbook(cloned))
+
+    assert not hasattr(VerifiedMarketIdentity, "_from_official_verification")
     assert socket.calls == []
 
 

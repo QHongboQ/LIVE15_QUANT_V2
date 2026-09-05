@@ -25,10 +25,12 @@ _BINDINGS = (
     MarketScopeBinding("BNB", "KXBNB15M"),
 )
 
-if len({binding.asset_id for binding in _BINDINGS}) != 9 or len(
-    {binding.series_ticker for binding in _BINDINGS}
-) != 9:
-    raise RuntimeError("LIVE15 market-scope bindings must be bijective")
+if (
+    len(_BINDINGS) != 9
+    or len({binding.asset_id for binding in _BINDINGS}) != 9
+    or len({binding.series_ticker for binding in _BINDINGS}) != 9
+):
+    raise RuntimeError("LIVE15 market-scope bindings must be exactly nine and bijective")
 
 
 class Live15MarketScopeConfig:

@@ -34,4 +34,6 @@ The approved universe is exactly BTC, ETH, GOLD, SILVER, XRP, SOL, HYPE, DOGE, a
 
 ## Verification authority
 
-A market is promoted to `VerifiedMarketIdentity` only through exact official-series, exact-window, structured-strike, and non-empty official identity checks. The verified identity carries verifier-issued provenance; a merely type-correct caller-constructed instance is not accepted by Market Stream.
+A market is promoted to `VerifiedMarketIdentity` only through exact official-series, exact-window, strict structured-strike, and non-empty official identity checks. The verified identity carries verifier-issued, object-bound provenance. Reconstructing an identity, copying its fields, or replacing fields on a verified dataclass instance does not transfer that provenance to the new object. Market Stream accepts only the exact verifier-issued identity object.
+
+This is an internal domain-authority boundary, not a cryptographic security boundary against arbitrary Python reflection or private-module access.

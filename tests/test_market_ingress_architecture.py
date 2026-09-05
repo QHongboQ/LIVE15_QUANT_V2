@@ -35,6 +35,7 @@ def test_boundary_public_surface_is_semantic_and_candidate_is_internal() -> None
     assert "MarketIdentityResolver" in boundary_public.__all__
     assert "MarketScopePort" in boundary_public.__all__
     assert "build_market_identity_resolver" in boundary_public.__all__
+    assert "_issue_verified_market_identity" not in boundary_public.__all__
 
 
 def test_parent_composition_enforces_the_live15_scope_authority() -> None:
@@ -48,14 +49,17 @@ def test_parent_composition_enforces_the_live15_scope_authority() -> None:
     assert "scope:" not in parent
 
 
-def test_verified_identity_provenance_factory_is_contained_to_verifier() -> None:
+def test_verified_identity_provenance_issuer_is_contained_to_verifier() -> None:
     boundary_root = SOURCE_ROOT / "ingress_boundary"
+    models = (boundary_root / "models.py").read_text(encoding="utf-8")
     verification = (boundary_root / "verification.py").read_text(encoding="utf-8")
-    assert "._from_official_verification(" in verification
+
+    assert "def _issue_verified_market_identity(" in models
+    assert "_issue_verified_market_identity(" in verification
+    assert "_from_official_verification" not in models
 
     for path in SOURCE_ROOT.rglob("*.py"):
         if path.name in {"models.py", "verification.py"}:
             continue
         source = path.read_text(encoding="utf-8")
-        assert "_VERIFIED_MARKET_IDENTITY_TOKEN" not in source
-        assert "._from_official_verification(" not in source
+        assert "_issue_verified_market_identity(" not in source

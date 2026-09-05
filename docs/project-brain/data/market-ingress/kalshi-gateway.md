@@ -20,4 +20,4 @@ Kalshi Gateway is a provider leaf. It must not import the sibling Ingress Bounda
 
 `Market Ingress parent -> { Kalshi Gateway, Ingress Boundary } -> kalshi-sdk`
 
-Market Stream may use SDK WebSocket capabilities through the approved provider-access surface, but stream semantics belong to the future Market Stream child.
+Market Stream may use SDK WebSocket capabilities through the approved provider-access surface, while stream semantics remain owned by the Market Stream child.
