@@ -57,9 +57,9 @@ class OfficialStrike:
 
     @property
     def usable(self) -> bool:
-        if self.strike_type == "greater":
+        if self.strike_type in {"greater", "greater_or_equal"}:
             return self.floor_strike is not None and self.cap_strike is None
-        if self.strike_type == "less":
+        if self.strike_type in {"less", "less_or_equal"}:
             return self.floor_strike is None and self.cap_strike is not None
         if self.strike_type == "between":
             return self.floor_strike is not None and self.cap_strike is not None
