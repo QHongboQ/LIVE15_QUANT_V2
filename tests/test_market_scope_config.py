@@ -3,10 +3,12 @@ from datetime import UTC, datetime
 import pytest
 
 from live15_quant_v2.data.market_ingress.ingress_boundary import (
-    CandidateTickerPredictor,
     Live15MarketScopeConfig,
     MarketIdentityResolver,
     MarketScopePort,
+)
+from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import (
+    CandidateTickerPredictor,
 )
 from live15_quant_v2.data.market_ingress.ingress_boundary.discovery import (
     OfficialMarketDiscovery,

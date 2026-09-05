@@ -16,8 +16,8 @@ Callers import only `KalshiGateway` from:
 
 ## Dependency rule
 
-Kalshi Gateway is a provider leaf. It must not import the sibling Ingress Boundary. The allowed composition direction is:
+Kalshi Gateway is a provider leaf. It must not import the sibling Ingress Boundary, and Ingress Boundary must not import it concretely. The Market Ingress parent composes the Gateway's provider discovery capability with the Boundary's public resolver factory:
 
-`Ingress Boundary -> Kalshi Gateway -> kalshi-sdk`
+`Market Ingress parent -> { Kalshi Gateway, Ingress Boundary } -> kalshi-sdk`
 
 Market Stream may use SDK WebSocket capabilities through the approved provider-access surface, but stream semantics belong to the future Market Stream child.

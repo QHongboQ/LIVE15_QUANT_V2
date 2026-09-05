@@ -9,7 +9,7 @@ It owns:
 - `Live15MarketScopeConfig` as the sole exact nine-asset asset/series authority;
 - `MarketScopePort` / `MarketScopeBinding`;
 - UTC 15-minute `MarketWindow` mechanics;
-- official bounded discovery composition through `KalshiGateway`;
+- interpretation of official bounded discovery supplied through `MarketDiscoveryPort`;
 - fail-closed verification and `VerifiedMarketIdentity`;
 - candidate/shadow diagnostics that can never authorize truth;
 - `MarketIdentityResolver` and its output interface.
@@ -22,7 +22,7 @@ Callers import the stable LIVE15 semantic surface from:
 
 `live15_quant_v2.data.market_ingress.ingress_boundary`
 
-The provider gateway is injected into `OfficialMarketDiscovery`; therefore dependency flows one way from Ingress Boundary to Kalshi Gateway. Kalshi Gateway must never import this package.
+Ingress Boundary depends only on its narrow `MarketDiscoveryPort`, never on a concrete `KalshiGateway`. The Market Ingress parent composes the Gateway's provider capability with the Boundary's public resolver factory. This keeps the siblings independent while preserving one authoritative composition path.
 
 ## Scope authority
 

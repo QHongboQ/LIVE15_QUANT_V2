@@ -17,7 +17,7 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Engineering Foundation is complete.
 - Market Ingress child #1 Kalshi Gateway is complete and owns provider access only.
 - Market Ingress child #4 Ingress Boundary is complete and owns LIVE15 market identity semantics and the concrete immutable nine-asset scope.
-- Kalshi Gateway and Ingress Boundary are physical sibling packages with one-way dependency `Ingress Boundary -> Kalshi Gateway`; they must not share one implementation subtree.
+- Kalshi Gateway and Ingress Boundary are physical sibling packages with no direct sibling dependency. The Market Ingress parent composes the Gateway's provider capability with the Boundary's public semantic interface; they do not share one implementation subtree.
 - Market Stream and Reference Stream have not started. Storage, Data Truth, Replay, Dataset, Model, Trading, and Operations implementation have not begun.
 
 Next approved implementation target after the sibling-separation closeout and review: Market Stream, unless user priority changes.

@@ -1,7 +1,3 @@
-from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import (
-    CandidateTickerPredictor,
-)
-
 """Public LIVE15 Ingress Boundary interface."""
 
 from live15_quant_v2.data.market_ingress.ingress_boundary.composition import (
@@ -21,7 +17,7 @@ from live15_quant_v2.data.market_ingress.ingress_boundary.scope import (
     Live15MarketScopeConfig,
 )
 
-__all__ = ["CandidateTickerPredictor",
+__all__ = [
     "Live15MarketScopeConfig",
     "MarketIdentityResolution",
     "MarketIdentityResolver",

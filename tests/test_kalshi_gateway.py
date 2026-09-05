@@ -8,10 +8,13 @@ from kalshi import KalshiClient
 from kalshi.ws import KalshiWebSocket
 
 import live15_quant_v2.data.market_ingress.kalshi_gateway as gateway_public
+from live15_quant_v2.data.market_ingress import market_identity_resolver
 from live15_quant_v2.data.market_ingress.ingress_boundary import (
-    CandidateTickerPredictor,
     MarketIdentityResolver,
     MarketScopeBinding,
+)
+from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import (
+    CandidateTickerPredictor,
 )
 from live15_quant_v2.data.market_ingress.ingress_boundary.discovery import (
     OfficialMarketDiscovery,
@@ -224,6 +227,17 @@ def test_resolver_candidate_shadow_is_diagnostic_not_truth():
     assert out.verification.verified
     assert out.shadow.status is ShadowStatus.MISMATCH
 
+
+def test_market_ingress_parent_composes_sibling_public_interfaces_offline():
+    w = window()
+    resolver = market_identity_resolver(
+        Scope(binding()), KalshiGateway(Client(Markets([raw(w)])))
+    )
+
+    result = resolver.resolve("asset", w)
+
+    assert result.verification.verified
+    assert result.shadow.status is ShadowStatus.MISMATCH
 
 def test_installed_sdk_has_documented_public_parameters():
     client = KalshiClient()

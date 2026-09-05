@@ -96,7 +96,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 
 **Why:** Enforce the approved recursive responsibility tree before Market Stream starts. A sibling module must not be hidden inside another sibling, and future consumers must not depend on provider-specific identity paths.
 
-**Validation / evidence:** Existing market identity behavior is preserved under `market_ingress/ingress_boundary`; the old `kalshi_gateway/identity` subtree is removed; tests assert the provider-only Gateway surface, typed WebSocket return, unchanged fail-closed verification, immutable nine-asset scope, and resolver composition. Hosted CI required before merge.
+**Validation / evidence:** The structural-only final seam removes the old `kalshi_gateway/identity` subtree; Kalshi Gateway remains provider-only; and the Market Ingress parent composes the Gateway public capability with the Ingress Boundary public resolver factory through `MarketDiscoveryPort`. Offline tests prove parent composition and import ownership without a network dependency; final local and hosted Ubuntu, Windows, and CI Gate validation pass.
 
 **Commit or PR:** PR #6.
 
