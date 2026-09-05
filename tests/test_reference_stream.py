@@ -196,6 +196,35 @@ def test_pyth_compat_fails_closed_on_unexpected_sdk_registry(
         install_pyth_sdk_compat()
 
 
+def test_pyth_compat_conflict_leaves_all_registries_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from kalshi.ws import channels
+
+    baseline_forward_keys = sdk_compat._EXPECTED_FORWARD_KEYS
+    conflicting_model = object()
+    monkeypatch.setattr(channels, "_SUBSCRIBE_FORWARD_KEYS", baseline_forward_keys)
+    monkeypatch.delitem(channels._CHANNEL_PARAMS, "pyth_value", raising=False)
+    monkeypatch.delitem(MESSAGE_MODELS, "pyth_value", raising=False)
+    monkeypatch.setitem(
+        MESSAGE_MODELS, "pyth_value_underlying_list", conflicting_model
+    )
+
+    before_forward_keys = channels._SUBSCRIBE_FORWARD_KEYS
+    before_channel_params = channels._CHANNEL_PARAMS.get("pyth_value")
+    before_value_model = MESSAGE_MODELS.get("pyth_value")
+    before_list_model = MESSAGE_MODELS.get("pyth_value_underlying_list")
+
+    with pytest.raises(RuntimeError, match="pyth_value_underlying_list"):
+        install_pyth_sdk_compat()
+
+    assert channels._SUBSCRIBE_FORWARD_KEYS == before_forward_keys
+    assert channels._CHANNEL_PARAMS.get("pyth_value") is before_channel_params
+    assert "pyth_value" not in channels._CHANNEL_PARAMS
+    assert MESSAGE_MODELS.get("pyth_value") is before_value_model
+    assert MESSAGE_MODELS.get("pyth_value_underlying_list") is before_list_model
+
+
 def test_pyth_stream_uses_only_approved_metal_scope_and_generic_sdk_subscribe() -> None:
     socket = FakeSocket()
     result = asyncio.run(

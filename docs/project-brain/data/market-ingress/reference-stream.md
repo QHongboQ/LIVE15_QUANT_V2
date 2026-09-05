@@ -56,7 +56,9 @@ subscription mechanism. The isolated `pyth_value/sdk_compat.py` compatibility
 leaf is version-guarded to exactly v13.0.0, idempotently registers only
 `underlying_tickers` forwarding plus `pyth_value` and
 `pyth_value_underlying_list` message models, and fails closed on unexpected or
-conflicting SDK registry shape.
+conflicting SDK registry shape. It prechecks all four registry states before
+applying any missing registration, so a failed installation leaves them
+unchanged.
 
 After that registration, Pyth Value calls only the SDK public generic
 `subscribe("pyth_value", params={"underlying_tickers": [...]})` and preserves
