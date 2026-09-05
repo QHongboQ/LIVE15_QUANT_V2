@@ -2,6 +2,40 @@
 
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
+## 2026-09-04 — LIVE15-V2-MARKET-STREAM-REVIEW-CLOSEOUT-001
+
+**Summary:** Independent review closeout preserved Market Stream runtime code
+unchanged and added one offline Ingress Boundary verified-output to Market
+Stream handoff regression.
+
+**Why:** Record the actual recursive responsibility tree and durable downstream
+contracts without changing market behavior.
+
+**Validation / evidence:** Documents raw orderbook snapshot aliasing and active
+SDK session ownership. No market semantics changed; local and hosted validation
+pass.
+
+**Commit or PR:** PR #7.
+
+**Next step:** Independent review and merge authorization; then Reference
+Stream unless priority changes.
+## 2026-09-04 — LIVE15-V2-MARKET-STREAM-SDK-001
+
+**Summary:** Added the Market Stream sibling as a thin composition of typed
+`kalshi-sdk==13.0.0` orderbook, ticker, trade, and market-lifecycle
+subscriptions selected only by `VerifiedMarketIdentity`.
+
+**Why:** Complete Market Ingress child #2 without duplicating SDK transport,
+authentication, reconnect, sequence, routing, or message-decoding machinery.
+
+**Validation / evidence:** The installed SDK contract is inspected offline for
+the four async typed public helpers. Offline delegation and ownership tests,
+local validation, and hosted Ubuntu/Windows/CI Gate validation pass.
+
+**Commit or PR:** PR #7.
+
+**Next step:** Independent review and merge authorization; then Reference
+Stream unless priority changes.
 ## 2026-09-03 — LIVE15-V2-REPOSITORY-BOOTSTRAP-001
 
 **Summary:** Created the clean V2 repository and connected the local workspace to public GitHub on the `main` branch.

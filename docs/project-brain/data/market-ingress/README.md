@@ -3,12 +3,31 @@
 Market Ingress has four approved children, and code ownership must match this sibling tree:
 
 1. [Kalshi Gateway](kalshi-gateway.md) — DONE.
-2. Market Stream — NOT STARTED.
+2. [Market Stream](market-stream.md) — DONE.
 3. Reference Stream — NOT STARTED.
 4. [Ingress Boundary](ingress-boundary.md) — DONE.
 
-`Kalshi Gateway` owns only provider access: official SDK REST/WS/auth access and narrow read-only market-query primitives. It does not own LIVE15 market identity, asset scope, window semantics, verification, or downstream output facts.
+## Implemented responsibility tree
 
-`Ingress Boundary` owns SDK-to-LIVE15 meaning, asset mapping, market/window semantics, fail-closed identity verification, diagnostic shadow comparison, and the verified output interface. Its sole map authority is `Live15MarketScopeConfig`: BTC/KXBTC15M, ETH/KXETH15M, GOLD/KXGOLD15M, SILVER/KXSILVER15M, XRP/KXXRP15M, SOL/KXSOL15M, HYPE/KXHYPE15M, DOGE/KXDOGE15M, and BNB/KXBNB15M. WTI is absent. On 2026-09-04 each series was read-only verified through official Kalshi Get Series via `kalshi-sdk` with frequency `fifteen_min`.
+```text
+Market Ingress
+├─ Kalshi Gateway
+│  ├─ down: kalshi-sdk provider access
+│  └─ up: provider capability
+├─ Ingress Boundary
+│  ├─ down: provider discovery capability
+│  └─ up: VerifiedMarketIdentity
+├─ Market Stream
+│  ├─ down: MarketStreamSocket / SDK typed subscription capability
+│  └─ up: SDK typed async iterators
+└─ Reference Stream
+   └─ NOT STARTED
+```
 
-`Market Ingress` is the only composition point for these siblings. It combines the provider-only `KalshiGateway` with the public Ingress Boundary factory; Ingress Boundary consumes the narrow `MarketDiscoveryPort` capability rather than importing a concrete Gateway. Neither sibling owns or imports the other. Future Market Stream and Reference Stream code must use approved public interfaces rather than provider-specific identity paths.
+The parent owns this recursive responsibility tree, but current runtime parent
+composition is deliberately limited to Kalshi Gateway plus Ingress Boundary for
+market identity. Each child has its own public interface; Market Stream is
+intentionally public through `live15_quant_v2.data.market_ingress.market_stream`
+rather than a parent re-export. A caller combines the published
+`VerifiedMarketIdentity` output with an active SDK streaming capability at that
+child interface. No sibling owns another sibling.
