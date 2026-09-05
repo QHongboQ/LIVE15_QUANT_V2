@@ -2,6 +2,23 @@
 
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
+## 2026-09-04 — LIVE15-V2-REFERENCE-STREAM-001
+
+**Summary:** Added the fixed nine-asset Reference Stream with SDK-native CF
+Benchmarks and an isolated, version-guarded Pyth Value v13 compatibility leaf.
+
+**Why:** Complete Market Ingress reference subscriptions without introducing a
+direct Pyth client or replacing SDK transport/reliability machinery.
+
+**Validation / evidence:** Authorized read-only CF discovery verified all seven
+crypto IDs. The bounded demo Pyth probe was accepted but yielded no messages;
+typed Pyth parsing and SDK queue dispatch are proven offline. Local and hosted
+validation pass.
+
+**Commit or PR:** `73e6a77` / PR #8.
+
+**Next step:** Independent review and merge authorization; then Storage/Data
+Truth design only if separately approved.
 ## 2026-09-04 — LIVE15-V2-MARKET-STREAM-REVIEW-CLOSEOUT-001
 
 **Summary:** Independent review closeout preserved Market Stream runtime code

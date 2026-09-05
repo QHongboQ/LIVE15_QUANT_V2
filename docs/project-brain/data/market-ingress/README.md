@@ -4,7 +4,7 @@ Market Ingress has four approved children, and code ownership must match this si
 
 1. [Kalshi Gateway](kalshi-gateway.md) — DONE.
 2. [Market Stream](market-stream.md) — DONE.
-3. Reference Stream — NOT STARTED.
+3. [Reference Stream](reference-stream.md) — DONE.
 4. [Ingress Boundary](ingress-boundary.md) — DONE.
 
 ## Implemented responsibility tree
@@ -21,7 +21,10 @@ Market Ingress
 │  ├─ down: MarketStreamSocket / SDK typed subscription capability
 │  └─ up: SDK typed async iterators
 └─ Reference Stream
-   └─ NOT STARTED
+   ├─ Reference Scope
+   ├─ CF Benchmarks
+   ├─ Pyth Value
+   └─ Public composition
 ```
 
 The parent owns this recursive responsibility tree, but current runtime parent
