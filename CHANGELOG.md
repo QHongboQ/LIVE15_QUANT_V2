@@ -65,6 +65,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #3.
 
 **Next step:** Independent review before any business module implementation.
+
 ## 2026-09-04 — LIVE15-V2-DATA-KALSHI-GATEWAY-TREE-001
 
 **Summary:** Created the V2 Data System / Market Ingress / Kalshi Gateway responsibility tree, with a thin read-only `kalshi-sdk` adapter and Market Identity leaves for scope, windows, candidate hints, official discovery, verification, and shadow comparison.
@@ -76,6 +77,7 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #4.
 
 **Next step:** Concrete LIVE15 Market Scope Config only after review and merge.
+
 ## 2026-09-04 — LIVE15-V2-MARKET-SCOPE-CONFIG-001
 
 **Summary:** Added the concrete nine-asset LIVE15 Market Scope Config.
@@ -87,3 +89,15 @@ Each meaningful V2 task entry includes: Date, Task ID, Summary, Why, Validation 
 **Commit or PR:** PR #5.
 
 **Next step:** Independent review and merge authorization; then Market Stream design unless priority changes.
+
+## 2026-09-04 — LIVE15-V2-INGRESS-SIBLING-SEPARATION-001
+
+**Summary:** Physically separated Ingress Boundary from Kalshi Gateway so the two approved Market Ingress children no longer share one implementation subtree; narrowed the Kalshi Gateway public surface to provider access only and typed its WebSocket seam as the SDK `KalshiWebSocket`.
+
+**Why:** Enforce the approved recursive responsibility tree before Market Stream starts. A sibling module must not be hidden inside another sibling, and future consumers must not depend on provider-specific identity paths.
+
+**Validation / evidence:** The structural-only final seam removes the old `kalshi_gateway/identity` subtree; Kalshi Gateway remains provider-only; and the Market Ingress parent composes the Gateway public capability with the Ingress Boundary public resolver factory through `MarketDiscoveryPort`. Offline tests prove parent composition and import ownership without a network dependency; final local and hosted Ubuntu, Windows, and CI Gate validation pass.
+
+**Commit or PR:** PR #6.
+
+**Next step:** Independent review; then Market Stream design after explicit merge authorization.

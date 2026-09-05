@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.models import (
+from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
     CandidateTicker,
     ShadowResult,
     ShadowStatus,
@@ -26,7 +26,9 @@ class ShadowValidator:
         if verification.status is VerificationStatus.NO_MATCH:
             return ShadowResult(ShadowStatus.OFFICIAL_MISSING, candidate.ticker, None)
         if not verification.verified:
-            return ShadowResult(ShadowStatus.VERIFICATION_FAILED, candidate.ticker, official_ticker)
+            return ShadowResult(
+                ShadowStatus.VERIFICATION_FAILED, candidate.ticker, official_ticker
+            )
         if candidate.ticker == official_ticker:
             return ShadowResult(ShadowStatus.MATCH, candidate.ticker, official_ticker)
         return ShadowResult(ShadowStatus.MISMATCH, candidate.ticker, official_ticker)

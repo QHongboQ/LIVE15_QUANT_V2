@@ -1,16 +1,14 @@
 # Market Ingress
 
-Market Ingress has four approved children:
+Market Ingress has four approved children, and code ownership must match this sibling tree:
 
-1. Kalshi Gateway — DONE.
+1. [Kalshi Gateway](kalshi-gateway.md) — DONE.
 2. Market Stream — NOT STARTED.
 3. Reference Stream — NOT STARTED.
-4. Ingress Boundary — framework and concrete asset mapping DONE.
+4. [Ingress Boundary](ingress-boundary.md) — DONE.
 
-Ingress Boundary owns SDK-to-LIVE15 meaning, asset mapping, market/window
-mapping, and the output interface. Its sole map authority is
-`Live15MarketScopeConfig`: BTC/KXBTC15M, ETH/KXETH15M, GOLD/KXGOLD15M,
-SILVER/KXSILVER15M, XRP/KXXRP15M, SOL/KXSOL15M, HYPE/KXHYPE15M,
-DOGE/KXDOGE15M, and BNB/KXBNB15M. WTI is absent. On 2026-09-04 each series
-was read-only verified through official Kalshi Get Series via `kalshi-sdk`
-with frequency `fifteen_min`; current market access remains provider-owned.
+`Kalshi Gateway` owns only provider access: official SDK REST/WS/auth access and narrow read-only market-query primitives. It does not own LIVE15 market identity, asset scope, window semantics, verification, or downstream output facts.
+
+`Ingress Boundary` owns SDK-to-LIVE15 meaning, asset mapping, market/window semantics, fail-closed identity verification, diagnostic shadow comparison, and the verified output interface. Its sole map authority is `Live15MarketScopeConfig`: BTC/KXBTC15M, ETH/KXETH15M, GOLD/KXGOLD15M, SILVER/KXSILVER15M, XRP/KXXRP15M, SOL/KXSOL15M, HYPE/KXHYPE15M, DOGE/KXDOGE15M, and BNB/KXBNB15M. WTI is absent. On 2026-09-04 each series was read-only verified through official Kalshi Get Series via `kalshi-sdk` with frequency `fifteen_min`.
+
+`Market Ingress` is the only composition point for these siblings. It combines the provider-only `KalshiGateway` with the public Ingress Boundary factory; Ingress Boundary consumes the narrow `MarketDiscoveryPort` capability rather than importing a concrete Gateway. Neither sibling owns or imports the other. Future Market Stream and Reference Stream code must use approved public interfaces rather than provider-specific identity paths.

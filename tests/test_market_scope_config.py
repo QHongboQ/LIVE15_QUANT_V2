@@ -2,28 +2,26 @@ from datetime import UTC, datetime
 
 import pytest
 
-from live15_quant_v2.data.market_ingress.kalshi_gateway import (
-    KalshiGateway,
+from live15_quant_v2.data.market_ingress.ingress_boundary import (
     Live15MarketScopeConfig,
     MarketIdentityResolver,
     MarketScopePort,
 )
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.candidate import (
+from live15_quant_v2.data.market_ingress.ingress_boundary.candidate import (
     CandidateTickerPredictor,
 )
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.discovery import (
+from live15_quant_v2.data.market_ingress.ingress_boundary.discovery import (
     OfficialMarketDiscovery,
 )
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.models import (
+from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
     VerificationStatus,
 )
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.shadow import (
-    ShadowValidator,
-)
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.verification import (
+from live15_quant_v2.data.market_ingress.ingress_boundary.shadow import ShadowValidator
+from live15_quant_v2.data.market_ingress.ingress_boundary.verification import (
     OfficialMarketVerifier,
 )
-from live15_quant_v2.data.market_ingress.kalshi_gateway.identity.window import current
+from live15_quant_v2.data.market_ingress.ingress_boundary.window import current
+from live15_quant_v2.data.market_ingress.kalshi_gateway import KalshiGateway
 
 EXPECTED = {
     "BTC": "KXBTC15M",
