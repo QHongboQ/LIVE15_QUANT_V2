@@ -1,8 +1,6 @@
 """Official discovery through the Kalshi provider gateway."""
 
-from collections.abc import Iterable
 from decimal import Decimal
-from typing import Protocol
 
 from kalshi.models import Market
 
@@ -12,10 +10,9 @@ from live15_quant_v2.data.market_ingress.ingress_boundary.models import (
     MarketWindow,
     OfficialStrike,
 )
-
-
-class MarketDiscoveryPort(Protocol):
-    def discover_markets(self, *, series_ticker: str, min_close_ts: int, max_close_ts: int) -> Iterable[Market]: ...
+from live15_quant_v2.data.market_ingress.ingress_boundary.ports import (
+    MarketDiscoveryPort,
+)
 
 
 class OfficialMarketDiscovery:
