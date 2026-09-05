@@ -18,9 +18,9 @@ It preserves the SDK async iterators and message classes, including the
 lifecycle `MarketLifecycleMessage | EventFeeUpdateMessage` union.
 
 The SDK owns transport, authentication, reconnect/resubscribe, SID routing,
-generic sequence mechanics, and message decoding. Market Stream does not own
-discovery, identity verification, Reference Stream, Storage, Data Truth, or
-any downstream truth/freshness policy.
+generic sequence mechanics, message decoding, and per-subscription queue
+behavior. Market Stream does not own discovery, identity verification,
+Reference Stream, Storage, Data Truth, or any downstream truth/freshness policy.
 
 ## Public interface
 
@@ -56,6 +56,20 @@ be mutated in place by later SDK delta processing. Therefore a typed raw
 Market Stream does not copy or freeze these values. The future immutable fact
 boundary in Storage / Data Truth must freeze or copy a snapshot before granting
 persistence or replay authority.
+
+## SDK queue and backpressure boundary
+
+Market Stream deliberately preserves the pinned SDK queue policy rather than
+reimplementing reliability. The SDK uses fail-fast/error behavior for the
+stateful `orderbook_delta` stream, while latest-wins channels such as ticker,
+trade, and lifecycle may use bounded `DROP_OLDEST` queues.
+
+Therefore these typed iterators are provider-ingress interfaces, not a promise
+of lossless persistence completeness. Future Storage / Data Truth work must
+establish its own explicit capture, completeness, freshness, and gap contract
+before persisted facts can be treated as authoritative. That downstream
+contract must not be implemented here by adding custom transport, reconnect,
+or sequence machinery.
 
 ## Test ownership
 

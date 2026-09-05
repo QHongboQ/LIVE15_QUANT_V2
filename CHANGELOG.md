@@ -2,6 +2,29 @@
 
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
+## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-CLOSEOUT-HYGIENE-001
+
+**Summary:** Closed the remaining Market Ingress stage-hygiene findings after
+PR #10 hardening: removed the stale Data System root re-export, refreshed root
+and current-plan status, documented SDK queue/backpressure completeness
+boundaries, documented provider DTO containment, and removed the obsolete
+`tests/.gitkeep` placeholder.
+
+**Why:** Leave one accurate responsibility tree and one clean public API surface
+before Storage begins, while recording that typed SDK iterators are ingress
+interfaces rather than a lossless persistence guarantee.
+
+**Validation / evidence:** Post-merge main for PR #10 passed hosted CI. This
+closeout-hygiene PR is limited to repository/API hygiene, tests, and durable
+contract documentation; no Storage, Data Truth, Replay, Model, Trading, or
+Production implementation is added.
+
+**Commit or PR:** This closeout-hygiene PR.
+
+**Next step:** Independent review and merge authorization, followed by final
+post-merge Market Ingress closeout verification. Storage still requires
+separate explicit user authorization.
+
 ## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-HARDENING-001
 
 **Summary:** Hardened Market Ingress authority boundaries found during the stage
@@ -18,13 +41,13 @@ market truth.
 
 **Validation / evidence:** Regression tests cover forged identity rejection,
 parent-scope enforcement, exact structured-strike semantics, and missing event
-identity. Ruff, pytest, mypy, and hosted CI Gate must pass before merge.
+identity. Ruff, pytest, mypy, hosted Ubuntu/Windows checks, CI Gate, and the
+post-merge main workflow passed.
 
-**Commit or PR:** Pending hardening PR.
+**Commit or PR:** PR #10, merged as `7ec1dd59fcfae9870f5f07b6af9a6391735c654a`.
 
-**Next step:** Independent review and merge authorization; Market Ingress
-closeout remains blocked until hardening is merged and post-merge verification
-passes.
+**Next step:** Complete bounded stage-hygiene cleanup and final closeout
+verification before any Storage work.
 
 ## 2026-09-04 — LIVE15-V2-REFERENCE-STREAM-001
 
