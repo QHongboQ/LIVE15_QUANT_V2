@@ -16,14 +16,10 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Do not reintroduce direct Pyth, Coinbase, Binance, or Hyperliquid clients at
   this stage.
 - Engineering Foundation is complete.
-- Market Ingress child #1 Kalshi Gateway is complete and owns provider access only.
-- Market Ingress child #4 Ingress Boundary is complete and owns LIVE15 market identity semantics and the concrete immutable nine-asset scope.
-- Kalshi Gateway and Ingress Boundary are physical sibling packages with no direct sibling dependency. The Market Ingress parent composes the Gateway's provider capability with the Boundary's public semantic interface; they do not share one implementation subtree.
-- Market Ingress currently has four responsibilities: Kalshi Gateway exposes
-  provider capability from `kalshi-sdk`; Ingress Boundary turns provider
-  discovery capability into `VerifiedMarketIdentity`; Market Stream turns
-  verified identities plus SDK streaming capability into typed SDK async
-  iterators; and Reference Stream selects the fixed nine-asset Kalshi-hosted CF/Pyth scope into typed SDK iterators. Storage, Data Truth, Replay,
-  Dataset, Model, Trading, and Operations implementation have not begun.
+- Market Ingress is complete and hardened; its authoritative child details are
+  owned under `docs/project-brain/data/market-ingress/`.
+- Storage, Data Truth, Replay, Dataset, Model, Trading, and Operations
+  implementation have not begun.
 
-Next step: independent review and merge authorization for Reference Stream. Any subsequent implementation requires separate user approval.
+Next implementation stage: Storage. Its exact subtree is not frozen and its
+implementation requires separate explicit user authorization.

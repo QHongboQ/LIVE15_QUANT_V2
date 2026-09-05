@@ -4,11 +4,12 @@ Clean rebuild of LIVE15_QUANT.
 
 ## Current status
 
-- Repository initialized
-- Architecture/design work not yet frozen
-- No Production workload
-- No data migration
-- No trading authorization
-- Implementation intentionally not started
+- Engineering Foundation is complete.
+- Market Ingress is complete and hardened around the approved nine-asset LIVE15 scope.
+- Storage, Data Truth, Replay, Dataset, Model, Trading, and Operations implementation have not begun.
+- No Production workload.
+- No data migration.
+- No trading authorization.
+- The next implementation stage is Storage and requires separate explicit user approval.
 
-The V1 repository remains the reference implementation and evidence source while V2 is designed and rebuilt selectively.
+The V1 repository remains frozen legacy/reference material and an evidence source; it is not V2 runtime authority.

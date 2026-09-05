@@ -1,5 +1,6 @@
-"""V2 Data System composition root."""
+"""V2 Data System package root.
 
-from live15_quant_v2.data.market_ingress import KalshiGateway
+Concrete capabilities are imported from their owning child packages.
+"""
 
-__all__ = ["KalshiGateway"]
+__all__: list[str] = []

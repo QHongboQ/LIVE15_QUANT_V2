@@ -66,6 +66,19 @@ After that registration, Pyth Value calls only the SDK public generic
 transport/reliability machinery. When a future pinned SDK supplies native typed
 Pyth Value support, delete this compatibility leaf and use the native helper.
 
+## Queue and completeness boundary
+
+Reference Stream preserves the pinned SDK queue semantics. The native CF
+Benchmarks helper uses the SDK's bounded latest-wins queue behavior, while the
+Pyth compatibility leaf explicitly requests `OverflowStrategy.ERROR`.
+Reference Stream therefore does not claim that every upstream reference frame
+is durably captured merely because an iterator exists.
+
+Future Storage / Data Truth work must define the authoritative capture,
+completeness, freshness, and gap contract for reference facts. That downstream
+contract must not be implemented here by duplicating SDK transport, reconnect,
+SID, or sequence machinery.
+
 ## Public interface and session ownership
 
 Import `ReferenceStream`, `Live15ReferenceScopeConfig`, and the scope model
