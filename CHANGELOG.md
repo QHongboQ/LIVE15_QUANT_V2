@@ -15,7 +15,7 @@ authentication, reconnect, sequence, routing, or message-decoding machinery.
 the four async typed public helpers. Offline delegation and ownership tests,
 local validation, and hosted Ubuntu/Windows/CI Gate validation pass.
 
-**Commit or PR:** Pending PR.
+**Commit or PR:** PR #7.
 
 **Next step:** Independent review and merge authorization; then Reference
 Stream unless priority changes.
