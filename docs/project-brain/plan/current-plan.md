@@ -22,8 +22,7 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   provider capability from `kalshi-sdk`; Ingress Boundary turns provider
   discovery capability into `VerifiedMarketIdentity`; Market Stream turns
   verified identities plus SDK streaming capability into typed SDK async
-  iterators; and Reference Stream has not started. Storage, Data Truth, Replay,
+  iterators; and Reference Stream selects the fixed nine-asset Kalshi-hosted CF/Pyth scope into typed SDK iterators. Storage, Data Truth, Replay,
   Dataset, Model, Trading, and Operations implementation have not begun.
 
-Next approved implementation target: Reference Stream, unless user priority
-changes.
+Next step: independent review and merge authorization for Reference Stream. Any subsequent implementation requires separate user approval.
