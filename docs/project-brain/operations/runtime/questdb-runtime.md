@@ -1,6 +1,6 @@
 # QuestDB Runtime
 
-**Status:** PLATFORM DEPLOYED — VALIDATION CANDIDATE.
+**Status:** FINAL CLOSED.
 
 This leaf owns the canonical LIVE15 V2 QuestDB Runtime Platform:
 
@@ -15,6 +15,12 @@ This leaf owns the canonical LIVE15 V2 QuestDB Runtime Platform:
 
 **Target upstream:** QuestDB Server `10.0.1`; official `questdb` Python client
 `5.0.0`.
+
+Final closure required and passed independent review, PR #20, hosted Windows
+and Ubuntu CI, CI Gate, merge
+`b1d415aef1b1c2f3d1a8688e9d3358647ee836ab`, post-merge CI, and the final
+local runtime seal. That seal reconfirmed canonical health and metrics and the
+sealed Hot Store live integration.
 
 The canonical platform deployment evidence is:
 
