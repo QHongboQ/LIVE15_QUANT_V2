@@ -61,7 +61,7 @@ class QuestDBHotStore:
                         self._table_name,
                         columns={
                             "capture_id": fact.capture_id,
-                            "asset": fact.asset,
+                            "asset": fact.asset.value,
                             "provider": fact.provider,
                             "source_id": fact.source_id,
                             "channel": fact.channel,
@@ -138,8 +138,13 @@ class QuestDBHotStore:
                     ") TIMESTAMP(received_timestamp) PARTITION BY DAY WAL"
                 )
                 self._database.execute(
-                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS "
-                    "source_id VARCHAR, message_type VARCHAR, event_subtype VARCHAR"
+                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS source_id VARCHAR"
+                )
+                self._database.execute(
+                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS message_type VARCHAR"
+                )
+                self._database.execute(
+                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS event_subtype VARCHAR"
                 )
             except (OSError, questdb.QuestDBError) as error:
                 raise HotStoreUnavailableError("QuestDB schema is unavailable") from error
@@ -185,7 +190,7 @@ class QuestDBHotStore:
             source_id=source_id,
             channel=row["channel"],
             message_type=message_type,
-            event_subtype=row["event_subtype"],
+            event_subtype=QuestDBHotStore._optional_text(row, "event_subtype"),
             sid=row["sid"],
             seq=row["seq"],
             provider_timestamp=QuestDBHotStore._timestamp_ns(row["provider_timestamp"]),
@@ -200,6 +205,17 @@ class QuestDBHotStore:
         if not isinstance(value, str) or not value:
             raise StoredCaptureFactIncompatibleError(
                 f"stored capture row lacks required {field_name}"
+            )
+        return value
+
+    @staticmethod
+    def _optional_text(row: dict[str, Any], field_name: str) -> str | None:
+        value = row.get(field_name)
+        if value is None or pd.isna(value):
+            return None
+        if not isinstance(value, str):
+            raise StoredCaptureFactIncompatibleError(
+                f"stored capture row has an invalid {field_name}"
             )
         return value
 

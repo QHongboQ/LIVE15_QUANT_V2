@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-HOT-STORE-QUESTDB10-NULLABLE-TEXT-COMPAT-FIX-001
+
+**Summary:** Corrected three bounded QuestDB `10.0.1` provider-adapter
+compatibility details while preserving the FINAL CLOSED Hot Store contract.
+
+**Why:** The canonical official runtime exposed a guarded multi-column
+`ADD COLUMN` failure (`[86] column 'message_type' already exists`), then
+revealed that `questdb==5.0.0` requires the domain `AssetId` to cross the
+sender boundary as its plain-string `.value`, and that pandas materializes a
+nullable `event_subtype` as `NaN` rather than contract-required `None`.
+
+**Validation / evidence:** The migration now uses one independently guarded
+official `ADD COLUMN` statement per metadata column; the adapter writes the
+canonical asset string and maps nullable pandas text back to `None`, failing
+closed for non-string non-null values. Focused Hot Store tests and the existing
+official live integration against QuestDB `10.0.1` passed using only its
+disposable `hot_store_adapter_integration` table. No unrelated data was
+affected; no deduplication, Store-and-Forward application configuration, retry,
+or dependency was added.
+
+**Commit or PR:** Pending commit.
+
+**Status:** Hot Store = FINAL CLOSED — bounded compatibility fix candidate.
+
+**Next step:** Independent review of the bounded compatibility fix; QuestDB
+Runtime bootstrap remains blocked pending that review and seal.
+
 ## 2026-09-06 — LIVE15-V2-QUESTDB-RUNTIME-PROJECT-BRAIN-AUTHORITY-001
 
 **Summary:** Added the minimum Operations / Runtime Project Brain routing tree
