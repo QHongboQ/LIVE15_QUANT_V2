@@ -198,11 +198,18 @@ def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
 
     assert receipt.appended_count == 1
     assert hot_store.read_capture("capture-1") == expected
+    assert type(expected.asset) is AssetId
+    assert type(database.rows[0]["asset"]) is str
+    assert database.rows[0]["asset"] == expected.asset.value
     assert "DEDUP" not in database.executed[0]
-    assert database.executed[1] == (
-        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS "
-        "source_id VARCHAR, message_type VARCHAR, event_subtype VARCHAR"
-    )
+    assert "source_id VARCHAR" in database.executed[0]
+    assert "message_type VARCHAR" in database.executed[0]
+    assert "event_subtype VARCHAR" in database.executed[0]
+    assert database.executed[1:] == [
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS source_id VARCHAR",
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS message_type VARCHAR",
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS event_subtype VARCHAR",
+    ]
 
 
 def test_metadata_and_nullable_provider_time_round_trip_exactly(
@@ -225,6 +232,35 @@ def test_metadata_and_nullable_provider_time_round_trip_exactly(
 
     assert hot_store.read_capture(expected.capture_id) == expected
     assert database.rows[0]["provider_timestamp"] is None
+
+
+@pytest.mark.parametrize("physical_value", [float("nan"), None])
+def test_nullable_event_subtype_is_canonical_none(
+    database: FakeDatabase,
+    physical_value: object,
+) -> None:
+    expected = fact("nullable-event-subtype", event_subtype=None)
+    database.rows.append(stored_row(expected, event_subtype=physical_value))
+
+    actual = store().read_capture(expected.capture_id)
+
+    assert actual is not None
+    assert actual.event_subtype is None
+
+
+def test_event_subtype_text_is_preserved_exactly(database: FakeDatabase) -> None:
+    expected = fact("event-subtype-text", event_subtype="open")
+    database.rows.append(stored_row(expected))
+
+    assert store().read_capture(expected.capture_id) == expected
+
+
+def test_non_string_event_subtype_fails_closed(database: FakeDatabase) -> None:
+    expected = fact("invalid-event-subtype", event_subtype=None)
+    database.rows.append(stored_row(expected, event_subtype=7))
+
+    with pytest.raises(StoredCaptureFactIncompatibleError, match="event_subtype"):
+        store().read_capture(expected.capture_id)
 
 
 @pytest.mark.parametrize("missing_field", ["source_id", "message_type"])
@@ -360,6 +396,10 @@ def test_all_nine_assets_and_representative_channels_round_trip(
 
     hot_store.append_batch(facts)
 
+    assert [type(row["asset"]) for row in database.rows] == [str] * len(facts)
+    assert [row["asset"] for row in database.rows] == [
+        fact.asset.value for fact in facts
+    ]
     assert {hot_store.read_capture(item.capture_id) for item in facts} == set(facts)
 
 

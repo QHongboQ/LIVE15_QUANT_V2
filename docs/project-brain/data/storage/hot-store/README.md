@@ -18,6 +18,14 @@ does not semantically upgrade historical rows: no metadata or asset identity is
 backfilled, and rows missing required source/message metadata or carrying a
 non-canonical asset are incompatible with the shared contract and fail closed.
 
+**Status:** FINAL CLOSED — bounded compatibility fix candidate. Official
+QuestDB `10.0.1` integration corrected three provider-adapter details without
+changing the Hot Store semantic contract or `CaptureFact`: each legacy metadata
+column uses its own guarded `ADD COLUMN` statement; `AssetId` crosses the write
+boundary as its canonical plain-string `.value`; and pandas `NaN` for nullable
+`event_subtype` returns as canonical `None`. No deduplication, Store-and-
+Forward application configuration, retry behavior, or dependency was added.
+
 QuestDB reads materialize through the official `QueryResult.to_pandas()` path.
 Accordingly, pandas is an adapter-local runtime dependency: pandas values and
 types do not cross the `HotStore` port, whose reads return `CaptureFact` values.
