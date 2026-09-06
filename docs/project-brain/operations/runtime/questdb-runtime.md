@@ -27,8 +27,9 @@ The canonical platform deployment evidence is:
 - canonical distribution: `D:\LIVE15_V2_RUNTIME\questdb\dist\10.0.1`;
   canonical root: `D:\LIVE15_V2_RUNTIME\questdb\root`; canonical
   Store-and-Forward parent: `D:\LIVE15_V2_RUNTIME\questdb\sf`.
-- official Windows service `QuestDB:LIVE15_V2`, display tag
-  `QuestDB Server [LIVE15_V2]`, Running with AutoStart, using
+- official Windows service tag `LIVE15_V2`, service name
+  `QuestDB:LIVE15_V2`, and display name `QuestDB Server [LIVE15_V2]`, Running
+  with AutoStart, using
   `D:\LIVE15_V2_RUNTIME\questdb\root\conf\server.conf`.
 - `metrics.enabled=true`; the service listens on `0.0.0.0:9000` (HTTP/QWP),
   `0.0.0.0:8812` (PGWire), `0.0.0.0:9003` (min HTTP), and `0.0.0.0:9009`
