@@ -14,12 +14,15 @@ storage behavior, or any deferred Storage child.
 adapter integration test passed for both orderbook snapshot and orderbook delta,
 including stable capture-ID duplicate assertions. After runtime cleanup, Ruff,
 the local suite (55 passed, 1 expected live-test skip), MyPy, and
-`git diff --check` passed. Independent review passed after this entry was added.
+`git diff --check` passed. The independent re-review found no code or
+specification defect, but identified two changelog audit-trail defects; this
+correction addresses those audit defects.
 
-**Commit or PR:** This local commit; no PR opened.
+**Commit or PR:** Implementation evidence commit:
+`3f816806b7b534892b46fdd47578fca31d52f170`; no PR opened.
 
-**Next step:** Independent re-review of this immutable Hot Store commit only;
-do not begin another Storage child.
+**Next step:** Final independent re-review remains pending. PR, merge, and the
+next Storage child remain blocked until that re-review passes.
 
 ## 2026-09-05 — LIVE15-V2-STORAGE-HOT-STORE-QUESTDB-IMPLEMENTATION-001
 
