@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-09-05 — LIVE15-V2-STORAGE-SHARED-CAPTURE-CONTRACT-MIGRATION-001
+
+**Summary:** Moved the immutable shared `CaptureFact` contract to Storage,
+introduced the canonical nine-value Data System `AssetId`, and migrated the
+sealed Hot Store QuestDB adapter and bounded tests to preserve source,
+message-type, optional event-subtype, and nullable provider-time metadata.
+
+**Why:** Prepare the future Capture Boundary sibling to use a shared Storage
+contract without depending on Hot Store-private models, while preserving the
+existing physical raw-fact behavior.
+
+**Validation / evidence:** Initial implementation validation passed: Ruff,
+pytest (61 passed, 1 expected live-QuestDB skip), MyPy, and `git diff --check`.
+Independent review passed the architecture/shared-contract direction, but found
+that existing rows were not semantically upgraded by physical schema addition
+and that this entry's audit trail was stale. The bounded follow-up addresses
+those review defects. No Capture Boundary, new runtime, upstream dependency,
+QuestDB live test, Data Truth, or other Storage child was implemented.
+
+**Commit or PR:** Implementation evidence commit:
+`ac91a4404b6239c454fd2f50893e5d91332abf6a`; no PR opened.
+
+**Next step:** Final independent re-review remains pending. Capture Boundary,
+PR, merge, and the next Storage child remain blocked until it passes.
+
 ## 2026-09-05 — LIVE15-V2-HOT-STORE-VERIFY-CLEANUP-AND-COMMIT-001
 
 **Summary:** Removed the QuestDB adapter from the provider-neutral Hot Store

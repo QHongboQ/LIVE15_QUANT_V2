@@ -1,7 +1,9 @@
-"""Provider-neutral raw capture facts and physical retrieval filters."""
+"""Hot Store physical retrieval models."""
 
 from dataclasses import dataclass
 from enum import StrEnum
+
+from live15_quant_v2.data.asset import AssetId
 
 
 class TimestampOrder(StrEnum):
@@ -12,28 +14,12 @@ class TimestampOrder(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class CaptureFact:
-    """One immutable fact captured from an upstream market-data provider."""
-
-    capture_id: str
-    asset: str
-    channel: str
-    provider: str
-    sid: int
-    seq: int | None
-    provider_timestamp: int
-    received_timestamp: int
-    schema_version: str
-    payload: str
-
-
-@dataclass(frozen=True, slots=True)
 class CaptureRange:
     """A physical received-time range, optionally narrowed by raw metadata."""
 
     received_start: int
     received_end: int
-    asset: str | None = None
+    asset: AssetId | None = None
     channel: str | None = None
     order_by: TimestampOrder = TimestampOrder.RECEIVED
 

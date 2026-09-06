@@ -4,9 +4,12 @@ import re
 from collections.abc import Sequence
 from typing import Any
 
+import pandas as pd  # type: ignore[import-untyped]
 import questdb
 
-from live15_quant_v2.data.storage.hot_store.models import CaptureFact, CaptureRange
+from live15_quant_v2.data.asset import AssetId
+from live15_quant_v2.data.storage.capture import CaptureFact
+from live15_quant_v2.data.storage.hot_store.models import CaptureRange
 from live15_quant_v2.data.storage.hot_store.port import (
     AppendReceipt,
     BatchTooLargeError,
@@ -15,6 +18,10 @@ from live15_quant_v2.data.storage.hot_store.port import (
 )
 
 _TABLE_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+class StoredCaptureFactIncompatibleError(RuntimeError):
+    """Raised when a stored row cannot satisfy the shared CaptureFact contract."""
 
 
 class QuestDBHotStore:
@@ -55,12 +62,17 @@ class QuestDBHotStore:
                         columns={
                             "capture_id": fact.capture_id,
                             "asset": fact.asset,
-                            "channel": fact.channel,
                             "provider": fact.provider,
+                            "source_id": fact.source_id,
+                            "channel": fact.channel,
+                            "message_type": fact.message_type,
+                            "event_subtype": fact.event_subtype,
                             "sid": fact.sid,
                             "seq": fact.seq,
-                            "provider_timestamp": questdb.TimestampNanos(
-                                fact.provider_timestamp
+                            "provider_timestamp": (
+                                None
+                                if fact.provider_timestamp is None
+                                else questdb.TimestampNanos(fact.provider_timestamp)
                             ),
                             "schema_version": fact.schema_version,
                             "payload": fact.payload,
@@ -119,10 +131,15 @@ class QuestDBHotStore:
             try:
                 self._database.execute(
                     f"CREATE TABLE IF NOT EXISTS {self._table_name} ("
-                    "capture_id VARCHAR, asset SYMBOL, channel SYMBOL, provider SYMBOL, "
+                    "capture_id VARCHAR, asset SYMBOL, provider SYMBOL, source_id VARCHAR, "
+                    "channel SYMBOL, message_type VARCHAR, event_subtype VARCHAR, "
                     "sid LONG, seq LONG, provider_timestamp TIMESTAMP_NS, "
                     "schema_version VARCHAR, payload VARCHAR, received_timestamp TIMESTAMP_NS"
                     ") TIMESTAMP(received_timestamp) PARTITION BY DAY WAL"
+                )
+                self._database.execute(
+                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS "
+                    "source_id VARCHAR, message_type VARCHAR, event_subtype VARCHAR"
                 )
             except (OSError, questdb.QuestDBError) as error:
                 raise HotStoreUnavailableError("QuestDB schema is unavailable") from error
@@ -139,28 +156,60 @@ class QuestDBHotStore:
     @staticmethod
     def _columns() -> str:
         return (
-            "capture_id, asset, channel, provider, sid, seq, provider_timestamp, "
-            "received_timestamp, schema_version, payload"
+            "capture_id, asset, provider, source_id, channel, message_type, event_subtype, "
+            "sid, seq, provider_timestamp, received_timestamp, schema_version, payload"
         )
 
     @staticmethod
     def _capture_fact(row: dict[str, Any]) -> CaptureFact:
+        source_id = QuestDBHotStore._required_text(row, "source_id")
+        message_type = QuestDBHotStore._required_text(row, "message_type")
+        asset_value = row.get("asset")
+        if not isinstance(asset_value, str):
+            raise StoredCaptureFactIncompatibleError(
+                "stored capture row has a non-canonical asset"
+            )
+        try:
+            asset = AssetId(asset_value)
+        except (TypeError, ValueError) as error:
+            raise StoredCaptureFactIncompatibleError(
+                "stored capture row has a non-canonical asset"
+            ) from error
+        received_timestamp = QuestDBHotStore._timestamp_ns(row["received_timestamp"])
+        if received_timestamp is None:
+            raise TypeError("QuestDB returned a null received timestamp")
         return CaptureFact(
             capture_id=row["capture_id"],
-            asset=row["asset"],
-            channel=row["channel"],
+            asset=asset,
             provider=row["provider"],
+            source_id=source_id,
+            channel=row["channel"],
+            message_type=message_type,
+            event_subtype=row["event_subtype"],
             sid=row["sid"],
             seq=row["seq"],
             provider_timestamp=QuestDBHotStore._timestamp_ns(row["provider_timestamp"]),
-            received_timestamp=QuestDBHotStore._timestamp_ns(row["received_timestamp"]),
+            received_timestamp=received_timestamp,
             schema_version=row["schema_version"],
             payload=row["payload"],
         )
 
     @staticmethod
-    def _timestamp_ns(value: Any) -> int:
+    def _required_text(row: dict[str, Any], field_name: str) -> str:
+        value = row.get(field_name)
+        if not isinstance(value, str) or not value:
+            raise StoredCaptureFactIncompatibleError(
+                f"stored capture row lacks required {field_name}"
+            )
+        return value
+
+    @staticmethod
+    def _timestamp_ns(value: Any) -> int | None:
+        if value is None or pd.isna(value):
+            return None
         timestamp_value = getattr(value, "value", value)
+        if pd.isna(timestamp_value):
+            return None
         if not isinstance(timestamp_value, int):
             raise TypeError("QuestDB returned a non-nanosecond timestamp")
         return timestamp_value

@@ -3,7 +3,7 @@
 This document records only approved V2 direction. It is not a V1 roadmap.
 
 - V2 is a clean rebuild; V1 is frozen legacy/reference material, not a runtime.
-- The exact V2 asset universe is BTC, ETH, Gold, Silver, XRP, SOL, HYPE, DOGE,
+- The exact V2 asset universe is BTC, ETH, GOLD, SILVER, XRP, SOL, HYPE, DOGE,
   and BNB. WTI does not exist.
 - Initial external market-data direction is Kalshi-only:
   - Kalshi prediction-market data;
@@ -18,11 +18,12 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Engineering Foundation is complete.
 - Market Ingress is complete and hardened; its authoritative child details are
   owned under `docs/project-brain/data/market-ingress/`.
-- Storage has begun only its Hot Store leaf: a provider-neutral interface and
-  QuestDB adapter with explicit 500-row write batches. All other Storage
-  responsibilities remain unimplemented.
+- Storage owns the shared `CaptureFact` contract and has begun only its Hot
+  Store leaf: a provider-neutral interface and QuestDB adapter with explicit
+  500-row write batches. Capture Boundary and all other Storage responsibilities
+  remain unimplemented.
 - Data Truth, Replay, Dataset, Model, Trading, and Operations implementation have
   not begun.
 
-Next implementation stage: independent review of the bounded Storage Hot Store
-implementation before any further upstream replacement.
+Next implementation stage: independent review of the bounded shared Storage
+capture-contract migration before any Capture Boundary implementation.

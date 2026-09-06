@@ -4,19 +4,23 @@ from typing import Any, Self
 
 import pytest
 
+from live15_quant_v2.data.asset import AssetId
+from live15_quant_v2.data.storage.capture import CaptureFact
 from live15_quant_v2.data.storage.hot_store import (
     BatchTooLargeError,
-    CaptureFact,
     CaptureRange,
     HotStoreUnavailableError,
     HotStoreWriteRejectedError,
     TimestampOrder,
     questdb_adapter,
 )
-from live15_quant_v2.data.storage.hot_store.questdb_adapter import QuestDBHotStore
+from live15_quant_v2.data.storage.hot_store.questdb_adapter import (
+    QuestDBHotStore,
+    StoredCaptureFactIncompatibleError,
+)
 
 BASE_NS = 1_700_000_000_000_000_000
-LIVE15_ASSETS = ("BTC", "ETH", "Gold", "Silver", "XRP", "SOL", "HYPE", "DOGE", "BNB")
+LIVE15_ASSETS = tuple(AssetId)
 
 
 class FakeFrame:
@@ -51,7 +55,11 @@ class FakeSender:
         self._pending.append(
             {
                 **columns,
-                "provider_timestamp": columns["provider_timestamp"].value,
+                "provider_timestamp": (
+                    None
+                    if columns["provider_timestamp"] is None
+                    else columns["provider_timestamp"].value
+                ),
                 "received_timestamp": at.value,
             }
         )
@@ -98,34 +106,65 @@ class FakeDatabase:
                 selected = [row for row in selected if row["channel"] == binds[2]]
             if "channel = $4" in sql:
                 selected = [row for row in selected if row["channel"] == binds[3]]
-        order_column = "provider_timestamp" if "ORDER BY provider_timestamp" in sql else "received_timestamp"
+        order_column = (
+            "provider_timestamp"
+            if "ORDER BY provider_timestamp" in sql
+            else "received_timestamp"
+        )
         return FakeQueryResult(sorted(selected, key=lambda row: row[order_column]))
 
 
 def fact(
     capture_id: str,
     *,
-    asset: str = "BTC",
+    asset: AssetId = AssetId.BTC,
     channel: str = "orderbook",
     provider: str = "kalshi",
+    source_id: str = "KXBTC15M-TICKER",
+    message_type: str = "orderbook_snapshot",
+    event_subtype: str | None = None,
     sid: int = 1,
     seq: int | None = 1,
-    provider_offset: int = 0,
+    provider_offset: int | None = 0,
     received_offset: int = 0,
     payload: str = '{"raw":true}',
 ) -> CaptureFact:
     return CaptureFact(
         capture_id=capture_id,
         asset=asset,
-        channel=channel,
         provider=provider,
+        source_id=source_id,
+        channel=channel,
+        message_type=message_type,
+        event_subtype=event_subtype,
         sid=sid,
         seq=seq,
-        provider_timestamp=BASE_NS + provider_offset,
+        provider_timestamp=(
+            None if provider_offset is None else BASE_NS + provider_offset
+        ),
         received_timestamp=BASE_NS + received_offset,
         schema_version="market-ingress/v1",
         payload=payload,
     )
+
+
+def stored_row(capture_fact: CaptureFact, **overrides: Any) -> dict[str, Any]:
+    return {
+        "capture_id": capture_fact.capture_id,
+        "asset": capture_fact.asset.value,
+        "provider": capture_fact.provider,
+        "source_id": capture_fact.source_id,
+        "channel": capture_fact.channel,
+        "message_type": capture_fact.message_type,
+        "event_subtype": capture_fact.event_subtype,
+        "sid": capture_fact.sid,
+        "seq": capture_fact.seq,
+        "provider_timestamp": capture_fact.provider_timestamp,
+        "received_timestamp": capture_fact.received_timestamp,
+        "schema_version": capture_fact.schema_version,
+        "payload": capture_fact.payload,
+        **overrides,
+    }
 
 
 @pytest.fixture
@@ -142,9 +181,11 @@ def store() -> QuestDBHotStore:
 def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
     expected = fact(
         "capture-1",
-        asset="Gold",
+        asset=AssetId.GOLD,
         channel="pyth_value",
         provider="kalshi",
+        source_id="Metal.XAU/USD",
+        message_type="pyth_value",
         sid=41,
         seq=None,
         provider_offset=71,
@@ -158,6 +199,53 @@ def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
     assert receipt.appended_count == 1
     assert hot_store.read_capture("capture-1") == expected
     assert "DEDUP" not in database.executed[0]
+    assert database.executed[1] == (
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS "
+        "source_id VARCHAR, message_type VARCHAR, event_subtype VARCHAR"
+    )
+
+
+def test_metadata_and_nullable_provider_time_round_trip_exactly(
+    database: FakeDatabase,
+) -> None:
+    expected = fact(
+        "capture-metadata",
+        asset=AssetId.SOL,
+        channel="lifecycle",
+        source_id="KXSOL15M-TICKER",
+        message_type="market_lifecycle_v2",
+        event_subtype="open",
+        seq=None,
+        provider_offset=None,
+        payload='{"event":"open","note":"exact"}',
+    )
+
+    hot_store = store()
+    hot_store.append_batch([expected])
+
+    assert hot_store.read_capture(expected.capture_id) == expected
+    assert database.rows[0]["provider_timestamp"] is None
+
+
+@pytest.mark.parametrize("missing_field", ["source_id", "message_type"])
+def test_legacy_null_required_metadata_fails_closed(
+    database: FakeDatabase,
+    missing_field: str,
+) -> None:
+    legacy_row = stored_row(fact("legacy-null-metadata"), **{missing_field: None})
+    database.rows.append(legacy_row)
+
+    with pytest.raises(StoredCaptureFactIncompatibleError, match=missing_field):
+        store().read_capture("legacy-null-metadata")
+
+
+def test_legacy_noncanonical_asset_fails_closed_without_normalization(
+    database: FakeDatabase,
+) -> None:
+    database.rows.append(stored_row(fact("legacy-gold"), asset="Gold"))
+
+    with pytest.raises(StoredCaptureFactIncompatibleError, match="non-canonical asset"):
+        store().read_capture("legacy-gold")
 
 
 @pytest.mark.parametrize(
@@ -258,7 +346,7 @@ def test_all_nine_assets_and_representative_channels_round_trip(
     )
     facts = [
         fact(
-            f"capture-{asset.lower()}",
+            f"capture-{asset.value.lower()}",
             asset=asset,
             channel=channel,
             provider="kalshi",
@@ -278,16 +366,33 @@ def test_all_nine_assets_and_representative_channels_round_trip(
 def test_capture_and_filtered_range_reads(database: FakeDatabase) -> None:
     hot_store = store()
     facts = [
-        fact("btc-orderbook", asset="BTC", channel="orderbook", received_offset=10),
-        fact("btc-ticker", asset="BTC", channel="ticker", received_offset=20),
-        fact("eth-orderbook", asset="ETH", channel="orderbook", received_offset=30),
+        fact(
+            "btc-orderbook",
+            asset=AssetId.BTC,
+            channel="orderbook",
+            received_offset=10,
+        ),
+        fact(
+            "btc-ticker",
+            asset=AssetId.BTC,
+            channel="ticker",
+            received_offset=20,
+        ),
+        fact(
+            "eth-orderbook",
+            asset=AssetId.ETH,
+            channel="orderbook",
+            received_offset=30,
+        ),
     ]
     hot_store.append_batch(facts)
 
     assert hot_store.read_capture("missing") is None
-    assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, asset="BTC")) == facts[:2]
+    assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, asset=AssetId.BTC)) == facts[:2]
     assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, channel="orderbook")) == [facts[0], facts[2]]
-    assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, asset="BTC", channel="orderbook")) == [facts[0]]
+    assert hot_store.read_range(
+        CaptureRange(BASE_NS, BASE_NS + 100, asset=AssetId.BTC, channel="orderbook")
+    ) == [facts[0]]
 
 
 def test_batch_limit_is_explicit_and_does_not_split(database: FakeDatabase) -> None:
