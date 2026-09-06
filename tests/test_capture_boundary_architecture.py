@@ -36,3 +36,13 @@ def test_capture_boundary_consumes_the_existing_reference_scope_without_a_mappin
     assert "Live15ReferenceScopeConfig" in boundary_source
     assert "BRTI" not in boundary_source
     assert "Metal.XAU/USD" not in boundary_source
+
+
+def test_capture_boundary_uses_the_public_pyth_value_contract() -> None:
+    source_path = inspect.getsourcefile(CaptureBoundary)
+    assert source_path is not None
+    boundary_source = Path(source_path).read_text(encoding="utf-8")
+
+    assert "market_ingress.reference_stream import" in boundary_source
+    assert "PythValueMessage" in boundary_source
+    assert "pyth_value.models" not in boundary_source

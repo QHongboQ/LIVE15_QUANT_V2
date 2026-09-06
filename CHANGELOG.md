@@ -11,18 +11,23 @@ scope-approved ingress messages to captured facts without introducing a
 Recorder, persistence, or any Storage sibling composition.
 
 **Validation / evidence:** Ruff, pytest (82 passed, 1 expected live-QuestDB
-skip), MyPy, and `git diff --check` passed. Focused authority, exact-type,
-control-plane, metadata, timestamp, serialization/freeze, and architecture
-regressions pass. Independent review is pending before publication. No QuestDB
-runtime, Hot Store write, async runtime, I/O, queue, retry, WAL, Data Truth,
-replay, archive, retention, or new dependency was added.
+skip), MyPy, and `git diff --check` passed. Independent review found the
+Capture Boundary data path, authority, timestamp, freeze, and runtime boundaries
+sound, but identified one governance defect: the required Pyth exact type caused
+an undocumented public Reference Stream contract expansion. The bounded
+follow-up formalizes only the required public `PythValueMessage` contract; final
+independent re-review remains pending. No QuestDB runtime, Hot Store write,
+async runtime, I/O, queue, retry, WAL, Data Truth, replay, archive, retention,
+or new dependency was added.
 
-**Commit or PR:** Implementation candidate; no PR opened.
+**Commit or PR:** Implementation candidate:
+`713d9afefef0d6001c6c3e5c1f8ca2c06a17c1ea`; no PR opened.
 
 **Status:** Capture Boundary = implementation candidate / in progress; not
 FINAL CLOSED.
 
-**Next step:** Independent review of Capture Boundary only. Do not begin another
+**Next step:** Final independent re-review of the Capture Boundary candidate and
+its narrow Reference Stream public-contract evolution only. Do not begin another
 Storage child.
 
 ## 2026-09-05 — LIVE15-V2-SHARED-CAPTURE-CONTRACT-PROJECT-BRAIN-CLOSURE-001

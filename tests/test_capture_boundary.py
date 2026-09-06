@@ -35,8 +35,10 @@ from live15_quant_v2.data.market_ingress.ingress_boundary.verification import (
     OfficialMarketVerifier,
 )
 from live15_quant_v2.data.market_ingress.reference_stream import (
-    PythUnderlyingListMessage,
     PythValueMessage,
+)
+from live15_quant_v2.data.market_ingress.reference_stream.pyth_value.models import (
+    PythUnderlyingListMessage,
 )
 from live15_quant_v2.data.storage.capture_boundary import (
     CaptureAuthorityError,

@@ -94,6 +94,14 @@ from:
 
 `live15_quant_v2.data.market_ingress.reference_stream`
 
+`PythValueMessage` is also a public typed data contract at that package root.
+This narrow forward contract lets downstream Storage exact-type consume the
+already-public Pyth value stream without importing the private compatibility
+leaf. It changes no Reference Stream transport, reliability, scope, queue, or
+message behavior; Reference Stream remains FINAL CLOSED in behavior.
+`PythUnderlyingListMessage` remains a compatibility-leaf control-plane type and
+is intentionally not a package-root public export.
+
 `ReferenceStream` requires an already-active SDK WebSocket session/capability.
 The caller owns session lifecycle; `cfbenchmarks()` and `pyth_values()` only
 start the approved typed subscriptions for the fixed internal scope.
