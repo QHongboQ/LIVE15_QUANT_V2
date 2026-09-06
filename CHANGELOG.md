@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-09-05 — LIVE15-V2-HOT-STORE-VERIFY-CLEANUP-AND-COMMIT-001
+
+**Summary:** Removed the QuestDB adapter from the provider-neutral Hot Store
+package root, documented the adapter-local pandas and opaque payload boundary,
+and added regressions for exact text round trips, the public surface, and raw
+orderbook snapshot/delta fixture coverage.
+
+**Why:** Close the bounded Hot Store review findings without changing the port,
+storage behavior, or any deferred Storage child.
+
+**Validation / evidence:** A single disposable official QuestDB 10.0.1 live
+adapter integration test passed for both orderbook snapshot and orderbook delta,
+including stable capture-ID duplicate assertions. After runtime cleanup, Ruff,
+the local suite (55 passed, 1 expected live-test skip), MyPy, and
+`git diff --check` passed. The independent re-review found no code or
+specification defect, but identified two changelog audit-trail defects; this
+correction addresses those audit defects.
+
+**Commit or PR:** Implementation evidence commit:
+`3f816806b7b534892b46fdd47578fca31d52f170`; no PR opened.
+
+**Next step:** Final independent re-review remains pending. PR, merge, and the
+next Storage child remain blocked until that re-review passes.
+
+## 2026-09-05 — LIVE15-V2-STORAGE-HOT-STORE-QUESTDB-IMPLEMENTATION-001
+
+**Summary:** Added the first Storage leaf: a provider-neutral Hot Store interface and a thin QuestDB adapter using the pinned official Python client.
+
+**Why:** Preserve captured raw facts behind a replaceable seam while using the accepted QuestDB 10.0.1 upstream candidate for generic database mechanics.
+
+**Validation / evidence:** Unit contracts cover exact raw round trips, duplicate facts, optional sequence, out-of-order provider times, the nine-asset fixture set, physical range retrieval, explicit 500-row batching, unavailable databases, and rejected writes. The bounded official local QuestDB adapter integration suite passed. No Data Truth or other Storage child was implemented.
+
+**Commit or PR:** Pending independent review.
+
+**Next step:** Independent review of Hot Store only; do not begin another Storage child.
+
 This is the permanent, human-readable activity log for LIVE15_QUANT_V2. Every meaningful V2 task must update this file in the same commit or PR.
 
 ## 2026-09-04 — LIVE15-V2-MARKET-INGRESS-FINAL-HARDENING-002
