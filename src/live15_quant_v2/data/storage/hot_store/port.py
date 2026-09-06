@@ -4,7 +4,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from live15_quant_v2.data.storage.hot_store.models import CaptureFact, CaptureRange
+from live15_quant_v2.data.storage.capture import CaptureFact
+from live15_quant_v2.data.storage.hot_store.models import CaptureRange
 
 
 @dataclass(frozen=True, slots=True)

@@ -4,9 +4,10 @@ from typing import Any, Self
 
 import pytest
 
+from live15_quant_v2.data.asset import AssetId
+from live15_quant_v2.data.storage.capture import CaptureFact
 from live15_quant_v2.data.storage.hot_store import (
     BatchTooLargeError,
-    CaptureFact,
     CaptureRange,
     HotStoreUnavailableError,
     HotStoreWriteRejectedError,
@@ -16,7 +17,7 @@ from live15_quant_v2.data.storage.hot_store import (
 from live15_quant_v2.data.storage.hot_store.questdb_adapter import QuestDBHotStore
 
 BASE_NS = 1_700_000_000_000_000_000
-LIVE15_ASSETS = ("BTC", "ETH", "Gold", "Silver", "XRP", "SOL", "HYPE", "DOGE", "BNB")
+LIVE15_ASSETS = tuple(AssetId)
 
 
 class FakeFrame:
@@ -51,7 +52,11 @@ class FakeSender:
         self._pending.append(
             {
                 **columns,
-                "provider_timestamp": columns["provider_timestamp"].value,
+                "provider_timestamp": (
+                    None
+                    if columns["provider_timestamp"] is None
+                    else columns["provider_timestamp"].value
+                ),
                 "received_timestamp": at.value,
             }
         )
@@ -98,30 +103,42 @@ class FakeDatabase:
                 selected = [row for row in selected if row["channel"] == binds[2]]
             if "channel = $4" in sql:
                 selected = [row for row in selected if row["channel"] == binds[3]]
-        order_column = "provider_timestamp" if "ORDER BY provider_timestamp" in sql else "received_timestamp"
+        order_column = (
+            "provider_timestamp"
+            if "ORDER BY provider_timestamp" in sql
+            else "received_timestamp"
+        )
         return FakeQueryResult(sorted(selected, key=lambda row: row[order_column]))
 
 
 def fact(
     capture_id: str,
     *,
-    asset: str = "BTC",
+    asset: AssetId = AssetId.BTC,
     channel: str = "orderbook",
     provider: str = "kalshi",
+    source_id: str = "KXBTC15M-TICKER",
+    message_type: str = "orderbook_snapshot",
+    event_subtype: str | None = None,
     sid: int = 1,
     seq: int | None = 1,
-    provider_offset: int = 0,
+    provider_offset: int | None = 0,
     received_offset: int = 0,
     payload: str = '{"raw":true}',
 ) -> CaptureFact:
     return CaptureFact(
         capture_id=capture_id,
         asset=asset,
-        channel=channel,
         provider=provider,
+        source_id=source_id,
+        channel=channel,
+        message_type=message_type,
+        event_subtype=event_subtype,
         sid=sid,
         seq=seq,
-        provider_timestamp=BASE_NS + provider_offset,
+        provider_timestamp=(
+            None if provider_offset is None else BASE_NS + provider_offset
+        ),
         received_timestamp=BASE_NS + received_offset,
         schema_version="market-ingress/v1",
         payload=payload,
@@ -142,9 +159,11 @@ def store() -> QuestDBHotStore:
 def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
     expected = fact(
         "capture-1",
-        asset="Gold",
+        asset=AssetId.GOLD,
         channel="pyth_value",
         provider="kalshi",
+        source_id="Metal.XAU/USD",
+        message_type="pyth_value",
         sid=41,
         seq=None,
         provider_offset=71,
@@ -158,6 +177,32 @@ def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
     assert receipt.appended_count == 1
     assert hot_store.read_capture("capture-1") == expected
     assert "DEDUP" not in database.executed[0]
+    assert database.executed[1] == (
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS "
+        "source_id VARCHAR, message_type VARCHAR, event_subtype VARCHAR"
+    )
+
+
+def test_metadata_and_nullable_provider_time_round_trip_exactly(
+    database: FakeDatabase,
+) -> None:
+    expected = fact(
+        "capture-metadata",
+        asset=AssetId.SOL,
+        channel="lifecycle",
+        source_id="KXSOL15M-TICKER",
+        message_type="market_lifecycle_v2",
+        event_subtype="open",
+        seq=None,
+        provider_offset=None,
+        payload='{"event":"open","note":"exact"}',
+    )
+
+    hot_store = store()
+    hot_store.append_batch([expected])
+
+    assert hot_store.read_capture(expected.capture_id) == expected
+    assert database.rows[0]["provider_timestamp"] is None
 
 
 @pytest.mark.parametrize(
@@ -258,7 +303,7 @@ def test_all_nine_assets_and_representative_channels_round_trip(
     )
     facts = [
         fact(
-            f"capture-{asset.lower()}",
+            f"capture-{asset.value.lower()}",
             asset=asset,
             channel=channel,
             provider="kalshi",
@@ -278,16 +323,33 @@ def test_all_nine_assets_and_representative_channels_round_trip(
 def test_capture_and_filtered_range_reads(database: FakeDatabase) -> None:
     hot_store = store()
     facts = [
-        fact("btc-orderbook", asset="BTC", channel="orderbook", received_offset=10),
-        fact("btc-ticker", asset="BTC", channel="ticker", received_offset=20),
-        fact("eth-orderbook", asset="ETH", channel="orderbook", received_offset=30),
+        fact(
+            "btc-orderbook",
+            asset=AssetId.BTC,
+            channel="orderbook",
+            received_offset=10,
+        ),
+        fact(
+            "btc-ticker",
+            asset=AssetId.BTC,
+            channel="ticker",
+            received_offset=20,
+        ),
+        fact(
+            "eth-orderbook",
+            asset=AssetId.ETH,
+            channel="orderbook",
+            received_offset=30,
+        ),
     ]
     hot_store.append_batch(facts)
 
     assert hot_store.read_capture("missing") is None
-    assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, asset="BTC")) == facts[:2]
+    assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, asset=AssetId.BTC)) == facts[:2]
     assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, channel="orderbook")) == [facts[0], facts[2]]
-    assert hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 100, asset="BTC", channel="orderbook")) == [facts[0]]
+    assert hot_store.read_range(
+        CaptureRange(BASE_NS, BASE_NS + 100, asset=AssetId.BTC, channel="orderbook")
+    ) == [facts[0]]
 
 
 def test_batch_limit_is_explicit_and_does_not_split(database: FakeDatabase) -> None:

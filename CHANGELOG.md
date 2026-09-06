@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-05 — LIVE15-V2-STORAGE-SHARED-CAPTURE-CONTRACT-MIGRATION-001
+
+**Summary:** Moved the immutable shared `CaptureFact` contract to Storage,
+introduced the canonical nine-value Data System `AssetId`, and migrated the
+sealed Hot Store QuestDB adapter and bounded tests to preserve source,
+message-type, optional event-subtype, and nullable provider-time metadata.
+
+**Why:** Prepare the future Capture Boundary sibling to use a shared Storage
+contract without depending on Hot Store-private models, while preserving the
+existing physical raw-fact behavior.
+
+**Validation / evidence:** Pending local validation and independent review. No
+Capture Boundary, new runtime, upstream dependency, QuestDB live test, Data
+Truth, or other Storage child was implemented.
+
+**Commit or PR:** Pending local commit; no PR opened.
+
+**Next step:** Independent review of this bounded contract migration. Capture
+Boundary remains unimplemented and must receive separate authorization.
+
 ## 2026-09-05 — LIVE15-V2-HOT-STORE-VERIFY-CLEANUP-AND-COMMIT-001
 
 **Summary:** Removed the QuestDB adapter from the provider-neutral Hot Store
