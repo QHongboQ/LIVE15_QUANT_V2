@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-DURABLE-PERSISTENCE-CONTRACT-AUTHORITY-001
+
+**Summary:** Defined the Storage Durable Persistence contract / authority
+candidate without beginning implementation.
+
+**Why:** The completed upstream contract-fit gate established that pinned
+`questdb==5.0.0` Store-and-Forward owns the approved generic transient-failure
+mechanisms, while LIVE15 needs a narrow CaptureFact handoff and result-semantics
+seam.
+
+**Validation / evidence:** Baseline:
+`d9199a84286d4fe7873ce1d3a31670c8656a39ea`. The candidate defines local
+disk-backed SF publication, process-restart and transient network/server
+failure scope; sender identity; at-least-once replay; physical idempotency
+requirement `(received_timestamp, capture_id)`; ACK timeout and structured
+rejection semantics; and the explicit future bounded Hot Store DEDUP evolution
+prerequisite. The pinned Python `5.0.0` client supports `sf_dir` and
+`sender_id`, but only usable `sf_durability=memory`; it has no approved periodic
+stable-storage contract, so host/power-loss RPO remains a future Operations /
+HA / DR concern. No additional upstream, custom queue/WAL/retry/replay system,
+source, tests, dependencies, QuestDB configuration, SF, DEDUP, or Hot Store
+change was added.
+
+**Commit:** `8946596d94eaef2866d16c04929b8be9ebdf4956`.
+
+**PR:** Pending.
+
+**Status:** Durable Persistence = CONTRACT / AUTHORITY CANDIDATE; not
+implemented.
+
+**Next step:** Independent review of this contract authority. Do not enable SF
+or DEDUP and do not begin Durable Persistence implementation.
+
 ## 2026-09-06 — LIVE15-V2-QUESTDB-RUNTIME-PLATFORM-PROJECT-BRAIN-CLOSURE-001
 
 **Summary:** Persisted the completed QuestDB Runtime Platform technical seal as
