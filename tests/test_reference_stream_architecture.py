@@ -41,3 +41,12 @@ def test_reference_stream_public_composition_owns_canonical_scope() -> None:
 
     assert "self._scope = Live15ReferenceScopeConfig()" in source
     assert "scope: Live15ReferenceScopeConfig" not in source
+
+
+def test_pyth_value_is_public_but_control_messages_remain_compat_leaf_only() -> None:
+    from live15_quant_v2.data.market_ingress import reference_stream
+
+    assert "PythValueMessage" in reference_stream.__all__
+    assert hasattr(reference_stream, "PythValueMessage")
+    assert "PythUnderlyingListMessage" not in reference_stream.__all__
+    assert not hasattr(reference_stream, "PythUnderlyingListMessage")

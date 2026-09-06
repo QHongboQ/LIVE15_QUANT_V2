@@ -90,8 +90,15 @@ def test_asset_id_is_the_exact_canonical_nine_without_normalization() -> None:
         AssetId("gold")
 
 
-def test_capture_boundary_remains_unimplemented() -> None:
-    assert not (ROOT / "src" / "live15_quant_v2" / "data" / "storage" / "capture_boundary").exists()
+def test_capture_boundary_is_a_storage_sibling_without_hot_store_coupling() -> None:
+    boundary = ROOT / "src" / "live15_quant_v2" / "data" / "storage" / "capture_boundary"
+    source = "\n".join(
+        path.read_text(encoding="utf-8") for path in boundary.glob("*.py")
+    )
+
+    assert boundary.exists()
+    assert "hot_store" not in source
+    assert "questdb" not in source.lower()
 
 
 def test_questdb_import_is_contained_inside_hot_store_adapter() -> None:

@@ -3,6 +3,9 @@
 from live15_quant_v2.data.market_ingress.reference_stream.composition import (
     ReferenceStream,
 )
+from live15_quant_v2.data.market_ingress.reference_stream.pyth_value.models import (
+    PythValueMessage,
+)
 from live15_quant_v2.data.market_ingress.reference_stream.scope import (
     Live15ReferenceScopeConfig,
     ReferenceBinding,
@@ -11,6 +14,7 @@ from live15_quant_v2.data.market_ingress.reference_stream.scope import (
 
 __all__ = [
     "Live15ReferenceScopeConfig",
+    "PythValueMessage",
     "ReferenceBinding",
     "ReferenceSource",
     "ReferenceStream",

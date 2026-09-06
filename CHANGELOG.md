@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-STORAGE-CAPTURE-BOUNDARY-IMPLEMENTATION-001
+
+**Summary:** Added the first bounded Storage Capture Boundary implementation
+candidate. It synchronously freezes exact approved typed Market Ingress
+data-plane messages into the shared immutable `CaptureFact` contract.
+
+**Why:** Establish the approved upstream-first seam from verifier-issued or
+scope-approved ingress messages to captured facts without introducing a
+Recorder, persistence, or any Storage sibling composition.
+
+**Validation / evidence:** Ruff, pytest (82 passed, 1 expected live-QuestDB
+skip), MyPy, and `git diff --check` passed. Independent review found the
+Capture Boundary data path, authority, timestamp, freeze, and runtime boundaries
+sound, but identified one governance defect: the required Pyth exact type caused
+an undocumented public Reference Stream contract expansion. The bounded
+follow-up formalizes only the required public `PythValueMessage` contract; final
+independent re-review remains pending. No QuestDB runtime, Hot Store write,
+async runtime, I/O, queue, retry, WAL, Data Truth, replay, archive, retention,
+or new dependency was added.
+
+**Commit or PR:** Implementation candidate:
+`713d9afefef0d6001c6c3e5c1f8ca2c06a17c1ea`; no PR opened.
+
+**Status:** Capture Boundary = implementation candidate / in progress; not
+FINAL CLOSED.
+
+**Next step:** Final independent re-review of the Capture Boundary candidate and
+its narrow Reference Stream public-contract evolution only. Do not begin another
+Storage child.
+
 ## 2026-09-05 — LIVE15-V2-SHARED-CAPTURE-CONTRACT-PROJECT-BRAIN-CLOSURE-001
 
 **Summary:** Closed the Shared Capture Contract phase in the Project Brain after
