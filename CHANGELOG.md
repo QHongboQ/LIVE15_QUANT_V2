@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-STORAGE-CAPTURE-BOUNDARY-PROJECT-BRAIN-CLOSURE-001
+
+**Summary:** Closed the Storage Capture Boundary phase in the Project Brain
+after its independently reviewed implementation, bounded public-contract review
+fix, merge, hosted CI, post-merge validation, and local seal.
+
+**Why:** Make every current Storage authority reflect the completed code and
+contract without beginning Durable Persistence or any other Storage child.
+
+**Validation / evidence:** Final independent re-review passed. PR #16 Windows,
+Ubuntu, and CI Gate passed; post-merge main Windows, Ubuntu, and CI Gate also
+passed. Local Ruff, pytest (84 passed, 1 expected live-QuestDB skip), MyPy, and
+`git diff --check` passed. Local main and `origin/main` equal the merge SHA; the
+feature branch was removed locally and remotely; no unexpected worktrees or
+task residue remained; QuestDB was not started; and `.git` remained owned by the
+normal user.
+
+**Commit or PR:** PR #16. Implementation:
+`713d9afefef0d6001c6c3e5c1f8ca2c06a17c1ea`; review fix:
+`914084164f8e617e5c578dd6ccf73101fbee3312`; merge:
+`2d00ad1fcc13456e801e9335c5ccc3c10a7399c1`.
+
+**Status:** Storage Capture Boundary = FINAL CLOSED.
+
+**Next step:** Storage → Durable Persistence. Begin with an upstream-first
+responsibility and contract-fit audit before implementation.
+
 ## 2026-09-06 — LIVE15-V2-STORAGE-CAPTURE-BOUNDARY-IMPLEMENTATION-001
 
 **Summary:** Added the first bounded Storage Capture Boundary implementation

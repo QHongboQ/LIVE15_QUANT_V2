@@ -2,7 +2,19 @@
 
 ## Status
 
-Implementation candidate / in progress. Capture Boundary is not FINAL CLOSED.
+Capture Boundary = FINAL CLOSED.
+
+## Closure evidence
+
+- Implementation candidate: `713d9afefef0d6001c6c3e5c1f8ca2c06a17c1ea`
+- Review fix: `914084164f8e617e5c578dd6ccf73101fbee3312`
+- PR #16 merged as `2d00ad1fcc13456e801e9335c5ccc3c10a7399c1`
+- Final independent re-review, PR Windows / Ubuntu / CI Gate, and post-merge
+  Windows / Ubuntu / CI Gate passed.
+- Local Ruff, pytest (84 passed, 1 expected live-QuestDB skip), MyPy, and
+  `git diff --check` passed on local main equal to `origin/main` at the merge
+  SHA. The merged feature branch was removed, no task residue remained, and
+  QuestDB was not started.
 
 ## Responsibility
 
