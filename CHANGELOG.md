@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-QUESTDB-RUNTIME-PLATFORM-BOOTSTRAP-RESUME-001
+
+**Summary:** Recorded the completed canonical QuestDB Runtime Platform
+deployment as a validation candidate after the Hot Store QuestDB `10.0.1`
+compatibility repair was sealed.
+
+**Why:** The original platform bootstrap installed the official runtime but was
+interrupted by real Hot Store adapter compatibility defects. Those defects are
+now FINAL CLOSED, so the existing runtime could be verified and its durable
+deployment evidence recorded without reinstalling or reconfiguring it.
+
+**Validation / evidence:** Baseline:
+`ca07197d0e139e50e0b76655cc04117902ab3207`. Official QuestDB Server `10.0.1`
+remains installed at `D:\LIVE15_V2_RUNTIME\questdb\dist\10.0.1`, with canonical
+root `D:\LIVE15_V2_RUNTIME\questdb\root`, canonical SF parent
+`D:\LIVE15_V2_RUNTIME\questdb\sf`, and official service
+`QuestDB:LIVE15_V2` (`QuestDB Server [LIVE15_V2]`) Running with AutoStart.
+The retained bootstrap evidence records the official
+`questdb-10.0.1-rt-windows-x86-64.tar.gz` artifact (88,871,519 bytes) and
+verified SHA-256 `e8ea640e3e68a70a700cdf0a05f60e374efa33d6ed2399be8e4a70677a98d092`
+against the available vendor checksum; the archive is no longer retained
+locally. `metrics.enabled=true`; health and Prometheus metrics endpoints passed
+on min HTTP `9003`; HTTP/QWP `9000`, PGWire `8812`, and ILP TCP `9009` listen.
+`questdb==5.0.0` imports, and the sealed Hot Store live integration passed
+against this runtime using only `hot_store_adapter_integration`. No reinstallation,
+DEDUP, Durable Persistence, or application-side Store-and-Forward configuration
+was added.
+
+**Commit or PR:** Pending commit.
+
+**Status:** QuestDB Runtime Platform = DEPLOYED / VALIDATION CANDIDATE.
+
+**Next step:** Independent review; then PR, CI, merge, and local seal. Only
+after that seal does execution return to Storage → Durable Persistence.
+
 ## 2026-09-06 — LIVE15-V2-HOT-STORE-QUESTDB10-NULLABLE-TEXT-COMPAT-FIX-001
 
 **Summary:** Corrected three bounded QuestDB `10.0.1` provider-adapter
