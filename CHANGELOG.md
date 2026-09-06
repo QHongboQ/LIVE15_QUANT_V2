@@ -20,7 +20,7 @@ seal, Ruff, pytest (88 passed, 1 expected environment-gated skip), MyPy, and
 `git diff --check` passed. No source, test, dependency, QuestDB Runtime, SF,
 DEDUP, Hot Store, or Durable Persistence implementation changed.
 
-**Commit:** Pending.
+**Commit:** `8ae33589340f95322c5625b405a18c31135c4172`.
 
 **PR:** Pending.
 
