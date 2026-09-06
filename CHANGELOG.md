@@ -19,7 +19,9 @@ integration. No runtime, service, configuration, source, test, dependency,
 DEDUP, application-side Store-and-Forward, or Durable Persistence change
 occurred in this closure task.
 
-**Commit or PR:** Pending commit.
+**Commit:** `28fec936673007cd22960d6ebc5b0d98064fddb4`.
+
+**PR:** Pending.
 
 **Status:** QuestDB Runtime Platform = FINAL CLOSED.
 
