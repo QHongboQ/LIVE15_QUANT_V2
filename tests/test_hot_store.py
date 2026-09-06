@@ -10,10 +10,10 @@ from live15_quant_v2.data.storage.hot_store import (
     CaptureRange,
     HotStoreUnavailableError,
     HotStoreWriteRejectedError,
-    QuestDBHotStore,
     TimestampOrder,
     questdb_adapter,
 )
+from live15_quant_v2.data.storage.hot_store.questdb_adapter import QuestDBHotStore
 
 BASE_NS = 1_700_000_000_000_000_000
 LIVE15_ASSETS = ("BTC", "ETH", "Gold", "Silver", "XRP", "SOL", "HYPE", "DOGE", "BNB")
@@ -158,6 +158,40 @@ def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
     assert receipt.appended_count == 1
     assert hot_store.read_capture("capture-1") == expected
     assert "DEDUP" not in database.executed[0]
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        pytest.param(
+            '{"book":{"yes":[["0.42",12]],"no":[["0.58",8]]},"meta":{"depth":1}}',
+            id="nested-json",
+        ),
+        pytest.param('{"symbol":"金","note":"café ☕","currency":"€"}', id="unicode"),
+        pytest.param(
+            r'{"line":"first\nsecond","quote":"\"exact\"","path":"C:\\data"}',
+            id="escaped-characters",
+        ),
+        pytest.param("{}", id="empty-structured-payload"),
+        pytest.param(
+            '{"market":{"ticker":"BTC-USD","status":"open"},"levels":['
+            '{"side":"yes","price":"0.4200","quantity":12345},'
+            '{"side":"no","price":"0.5800","quantity":67890},'
+            '{"side":"yes","price":"0.4100","quantity":11111}],'
+            '"metadata":{"provider":"kalshi","sequence":987654321,'
+            '"received_by":"live15","flags":["raw","unmodified","audit"]}}',
+            id="representative-longer-payload",
+        ),
+    ],
+)
+def test_payload_text_round_trips_exactly(database: FakeDatabase, payload: str) -> None:
+    """Hot Store preserves opaque payload text without inspecting its JSON structure."""
+    expected = fact("payload-round-trip", payload=payload)
+    hot_store = store()
+
+    hot_store.append_batch([expected])
+
+    assert hot_store.read_capture(expected.capture_id) == expected
 
 
 def test_duplicate_raw_facts_remain_individually_retrievable(database: FakeDatabase) -> None:

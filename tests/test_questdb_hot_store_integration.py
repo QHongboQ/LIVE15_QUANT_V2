@@ -10,9 +10,9 @@ from live15_quant_v2.data.storage.hot_store import (
     BatchTooLargeError,
     CaptureFact,
     CaptureRange,
-    QuestDBHotStore,
     TimestampOrder,
 )
+from live15_quant_v2.data.storage.hot_store.questdb_adapter import QuestDBHotStore
 
 CONNECTION_STRING = os.getenv("LIVE15_QUESTDB_CONNECTION_STRING")
 pytestmark = pytest.mark.integration
@@ -22,7 +22,8 @@ TABLE_NAME = "hot_store_adapter_integration"
 
 def facts() -> list[CaptureFact]:
     return [
-        CaptureFact("btc-orderbook", "BTC", "orderbook", "kalshi", 1, 10, BASE_NS + 10, BASE_NS + 100, "market-ingress/v1", '{"snapshot":true}'),
+        CaptureFact("btc-orderbook-snapshot", "BTC", "orderbook", "kalshi", 1, 10, BASE_NS + 10, BASE_NS + 100, "market-ingress/v1", '{"type":"snapshot","yes":[["0.42",12]],"no":[["0.58",8]]}'),
+        CaptureFact("btc-orderbook-delta", "BTC", "orderbook", "kalshi", 1, 11, BASE_NS + 11, BASE_NS + 110, "market-ingress/v1", '{"type":"delta","side":"yes","price":"0.42","delta":3}'),
         CaptureFact("eth-ticker", "ETH", "ticker", "kalshi", 2, None, BASE_NS + 20, BASE_NS + 200, "market-ingress/v1", '{"price":"100"}'),
         CaptureFact("gold-pyth", "Gold", "pyth_value", "kalshi", 3, None, BASE_NS + 30, BASE_NS + 300, "market-ingress/v1", '{"value":"2000"}'),
         CaptureFact("silver-pyth", "Silver", "pyth_value", "kalshi", 4, None, BASE_NS + 40, BASE_NS + 400, "market-ingress/v1", '{"value":"25"}'),
@@ -48,6 +49,7 @@ def test_questdb_adapter_preserves_live15_capture_facts() -> None:
 
     hot_store = QuestDBHotStore(CONNECTION_STRING, table_name=TABLE_NAME)
     expected = facts()
+    expected_by_capture_id = {fact.capture_id: fact for fact in expected}
     assert hot_store.append_batch(expected).appended_count == len(expected)
 
     deadline = time.monotonic() + 15
@@ -58,10 +60,10 @@ def test_questdb_adapter_preserves_live15_capture_facts() -> None:
             break
         time.sleep(0.05)
     assert actual == expected
-    assert hot_store.read_capture("duplicate-a") == expected[9]
-    assert hot_store.read_capture("duplicate-b") == expected[10]
+    assert hot_store.read_capture("duplicate-a") == expected_by_capture_id["duplicate-a"]
+    assert hot_store.read_capture("duplicate-b") == expected_by_capture_id["duplicate-b"]
     assert [fact.capture_id for fact in hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 10_000, order_by=TimestampOrder.PROVIDER)) if fact.capture_id.startswith("o3-")] == ["o3-100", "o3-102", "o3-103", "o3-105"]
-    assert len(hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 10_000, asset="BTC", channel="orderbook"))) == 1
+    assert [fact.capture_id for fact in hot_store.read_range(CaptureRange(BASE_NS, BASE_NS + 10_000, asset="BTC", channel="orderbook"))] == ["btc-orderbook-snapshot", "btc-orderbook-delta"]
     with pytest.raises(BatchTooLargeError):
         hot_store.append_batch([expected[0]] * (hot_store.max_batch_rows + 1))
     hot_store.close()

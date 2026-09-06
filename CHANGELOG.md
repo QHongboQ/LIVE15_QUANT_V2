@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-05 — LIVE15-V2-HOT-STORE-VERIFY-CLEANUP-AND-COMMIT-001
+
+**Summary:** Removed the QuestDB adapter from the provider-neutral Hot Store
+package root, documented the adapter-local pandas and opaque payload boundary,
+and added regressions for exact text round trips, the public surface, and raw
+orderbook snapshot/delta fixture coverage.
+
+**Why:** Close the bounded Hot Store review findings without changing the port,
+storage behavior, or any deferred Storage child.
+
+**Validation / evidence:** A single disposable official QuestDB 10.0.1 live
+adapter integration test passed for both orderbook snapshot and orderbook delta,
+including stable capture-ID duplicate assertions. After runtime cleanup, Ruff,
+the local suite (55 passed, 1 expected live-test skip), MyPy, and
+`git diff --check` passed. Independent review passed after this entry was added.
+
+**Commit or PR:** This local commit; no PR opened.
+
+**Next step:** Independent re-review of this immutable Hot Store commit only;
+do not begin another Storage child.
+
 ## 2026-09-05 — LIVE15-V2-STORAGE-HOT-STORE-QUESTDB-IMPLEMENTATION-001
 
 **Summary:** Added the first Storage leaf: a provider-neutral Hot Store interface and a thin QuestDB adapter using the pinned official Python client.

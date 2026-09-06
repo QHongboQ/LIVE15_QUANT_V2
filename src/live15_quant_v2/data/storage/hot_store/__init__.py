@@ -1,4 +1,4 @@
-"""Provider-neutral Hot Store interface and QuestDB adapter."""
+"""Provider-neutral Hot Store interface."""
 
 from live15_quant_v2.data.storage.hot_store.models import (
     CaptureFact,
@@ -12,7 +12,6 @@ from live15_quant_v2.data.storage.hot_store.port import (
     HotStoreUnavailableError,
     HotStoreWriteRejectedError,
 )
-from live15_quant_v2.data.storage.hot_store.questdb_adapter import QuestDBHotStore
 
 __all__ = [
     "AppendReceipt",
@@ -22,6 +21,5 @@ __all__ = [
     "HotStore",
     "HotStoreUnavailableError",
     "HotStoreWriteRejectedError",
-    "QuestDBHotStore",
     "TimestampOrder",
 ]
