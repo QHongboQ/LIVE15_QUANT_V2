@@ -20,6 +20,10 @@ from live15_quant_v2.data.storage.hot_store.port import (
 _TABLE_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
+class StoredCaptureFactIncompatibleError(RuntimeError):
+    """Raised when a stored row cannot satisfy the shared CaptureFact contract."""
+
+
 class QuestDBHotStore:
     """Persist raw capture facts through the official QuestDB Python client."""
 
@@ -158,16 +162,29 @@ class QuestDBHotStore:
 
     @staticmethod
     def _capture_fact(row: dict[str, Any]) -> CaptureFact:
+        source_id = QuestDBHotStore._required_text(row, "source_id")
+        message_type = QuestDBHotStore._required_text(row, "message_type")
+        asset_value = row.get("asset")
+        if not isinstance(asset_value, str):
+            raise StoredCaptureFactIncompatibleError(
+                "stored capture row has a non-canonical asset"
+            )
+        try:
+            asset = AssetId(asset_value)
+        except (TypeError, ValueError) as error:
+            raise StoredCaptureFactIncompatibleError(
+                "stored capture row has a non-canonical asset"
+            ) from error
         received_timestamp = QuestDBHotStore._timestamp_ns(row["received_timestamp"])
         if received_timestamp is None:
             raise TypeError("QuestDB returned a null received timestamp")
         return CaptureFact(
             capture_id=row["capture_id"],
-            asset=AssetId(row["asset"]),
+            asset=asset,
             provider=row["provider"],
-            source_id=row["source_id"],
+            source_id=source_id,
             channel=row["channel"],
-            message_type=row["message_type"],
+            message_type=message_type,
             event_subtype=row["event_subtype"],
             sid=row["sid"],
             seq=row["seq"],
@@ -176,6 +193,15 @@ class QuestDBHotStore:
             schema_version=row["schema_version"],
             payload=row["payload"],
         )
+
+    @staticmethod
+    def _required_text(row: dict[str, Any], field_name: str) -> str:
+        value = row.get(field_name)
+        if not isinstance(value, str) or not value:
+            raise StoredCaptureFactIncompatibleError(
+                f"stored capture row lacks required {field_name}"
+            )
+        return value
 
     @staticmethod
     def _timestamp_ns(value: Any) -> int | None:

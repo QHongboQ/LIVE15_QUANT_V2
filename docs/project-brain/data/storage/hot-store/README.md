@@ -13,7 +13,10 @@ interface and raw-fact mapping. The raw table does not enable deduplication, so
 separate capture identities remain separate stored facts. Initial writes are
 explicitly limited to 500 facts per batch, based on the accepted local adapter
 integration evidence. The adapter adds newly required raw metadata columns
-non-destructively when an existing table is reused.
+non-destructively when an existing table is reused. That physical schema change
+does not semantically upgrade historical rows: no metadata or asset identity is
+backfilled, and rows missing required source/message metadata or carrying a
+non-canonical asset are incompatible with the shared contract and fail closed.
 
 QuestDB reads materialize through the official `QueryResult.to_pandas()` path.
 Accordingly, pandas is an adapter-local runtime dependency: pandas values and

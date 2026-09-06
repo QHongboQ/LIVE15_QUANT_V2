@@ -14,7 +14,10 @@ from live15_quant_v2.data.storage.hot_store import (
     TimestampOrder,
     questdb_adapter,
 )
-from live15_quant_v2.data.storage.hot_store.questdb_adapter import QuestDBHotStore
+from live15_quant_v2.data.storage.hot_store.questdb_adapter import (
+    QuestDBHotStore,
+    StoredCaptureFactIncompatibleError,
+)
 
 BASE_NS = 1_700_000_000_000_000_000
 LIVE15_ASSETS = tuple(AssetId)
@@ -145,6 +148,25 @@ def fact(
     )
 
 
+def stored_row(capture_fact: CaptureFact, **overrides: Any) -> dict[str, Any]:
+    return {
+        "capture_id": capture_fact.capture_id,
+        "asset": capture_fact.asset.value,
+        "provider": capture_fact.provider,
+        "source_id": capture_fact.source_id,
+        "channel": capture_fact.channel,
+        "message_type": capture_fact.message_type,
+        "event_subtype": capture_fact.event_subtype,
+        "sid": capture_fact.sid,
+        "seq": capture_fact.seq,
+        "provider_timestamp": capture_fact.provider_timestamp,
+        "received_timestamp": capture_fact.received_timestamp,
+        "schema_version": capture_fact.schema_version,
+        "payload": capture_fact.payload,
+        **overrides,
+    }
+
+
 @pytest.fixture
 def database(monkeypatch: pytest.MonkeyPatch) -> FakeDatabase:
     fake = FakeDatabase()
@@ -203,6 +225,27 @@ def test_metadata_and_nullable_provider_time_round_trip_exactly(
 
     assert hot_store.read_capture(expected.capture_id) == expected
     assert database.rows[0]["provider_timestamp"] is None
+
+
+@pytest.mark.parametrize("missing_field", ["source_id", "message_type"])
+def test_legacy_null_required_metadata_fails_closed(
+    database: FakeDatabase,
+    missing_field: str,
+) -> None:
+    legacy_row = stored_row(fact("legacy-null-metadata"), **{missing_field: None})
+    database.rows.append(legacy_row)
+
+    with pytest.raises(StoredCaptureFactIncompatibleError, match=missing_field):
+        store().read_capture("legacy-null-metadata")
+
+
+def test_legacy_noncanonical_asset_fails_closed_without_normalization(
+    database: FakeDatabase,
+) -> None:
+    database.rows.append(stored_row(fact("legacy-gold"), asset="Gold"))
+
+    with pytest.raises(StoredCaptureFactIncompatibleError, match="non-canonical asset"):
+        store().read_capture("legacy-gold")
 
 
 @pytest.mark.parametrize(
