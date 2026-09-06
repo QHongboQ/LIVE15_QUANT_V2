@@ -27,7 +27,11 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Data Truth, Replay & As-Of, Canonical Dataset, Model, Trading, and broad
   Operations functionality remain unimplemented.
 
-Current NEXT: Storage → Durable Persistence. It must consume the already-sealed
-QuestDB Runtime Platform, begin with upstream-first responsibility and
-contract-fit work before implementation, and must not reinstall or rediscover
-QuestDB. Durable Persistence is not implemented.
+Durable Persistence = CONTRACT / AUTHORITY CANDIDATE. It consumes the
+already-sealed QuestDB Runtime Platform and records the approved upstream-first
+handoff, result, and physical transport-idempotency boundary; it does not begin
+implementation or configure Store-and-Forward.
+
+Current NEXT: Durable Persistence independent review. The candidate must not
+reinstall or rediscover QuestDB, enable Store-and-Forward or DEDUP, or begin
+implementation before that review.

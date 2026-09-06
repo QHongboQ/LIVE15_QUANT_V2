@@ -10,5 +10,8 @@ typed Market Ingress messages into immutable facts.
 
 Capture Boundary remains a Storage sibling of Hot Store and does not depend on
 Hot Store-private models. The next Storage responsibility is Durable
-Persistence; other Storage responsibilities remain unimplemented and are not
-defined by this routing node.
+Persistence, whose [contract / authority candidate](durable-persistence.md)
+defines its upstream-first handoff, result, and transport-idempotency boundary.
+Durable Persistence is not implemented; its next action is independent review.
+Other Storage responsibilities remain unimplemented and are not defined by this
+routing node.
