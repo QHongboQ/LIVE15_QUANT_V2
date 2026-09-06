@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-05 — LIVE15-V2-SHARED-CAPTURE-CONTRACT-PROJECT-BRAIN-CLOSURE-001
+
+**Summary:** Closed the Shared Capture Contract phase in the Project Brain after
+its merged implementation, fail-closed legacy-row review fix, independent
+re-review, hosted CI, and local-main seal.
+
+**Why:** Make the durable current state and single next action accurate without
+starting Capture Boundary implementation.
+
+**Validation / evidence:** Final independent re-review passed. PR #14 Windows,
+Ubuntu, and CI Gate passed; post-merge main Windows, Ubuntu, and CI Gate also
+passed. Local Ruff, pytest (64 passed, 1 expected live-QuestDB skip), MyPy, and
+`git diff --check` passed. Local main and `origin/main` both equal the merge
+SHA; the merged feature branch was removed locally and remotely; no task residue
+remained; QuestDB was not started; and `.git` remained owned by the normal user.
+
+**Commit or PR:** PR #14. Implementation evidence:
+`ac91a4404b6239c454fd2f50893e5d91332abf6a`; review-fix evidence:
+`eab7d514a9618b8b90733e78ff32e16adac15936`; merge:
+`98a0aa397d4a61f327dd7dcce9a9fae0ebb30f58`.
+
+**Status:** Storage Shared Capture Contract = FINAL CLOSED.
+
+**Next step:** Storage → Capture Boundary. It remains unimplemented and requires
+separate authorization.
+
 ## 2026-09-05 — LIVE15-V2-STORAGE-SHARED-CAPTURE-CONTRACT-MIGRATION-001
 
 **Summary:** Moved the immutable shared `CaptureFact` contract to Storage,

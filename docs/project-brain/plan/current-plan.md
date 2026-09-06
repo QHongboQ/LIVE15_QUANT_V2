@@ -16,14 +16,17 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Do not reintroduce direct Pyth, Coinbase, Binance, or Hyperliquid clients at
   this stage.
 - Engineering Foundation is complete.
-- Market Ingress is complete and hardened; its authoritative child details are
-  owned under `docs/project-brain/data/market-ingress/`.
-- Storage owns the shared `CaptureFact` contract and has begun only its Hot
-  Store leaf: a provider-neutral interface and QuestDB adapter with explicit
-  500-row write batches. Capture Boundary and all other Storage responsibilities
-  remain unimplemented.
+- Market Ingress is FINAL CLOSED; its authoritative child details are owned
+  under `docs/project-brain/data/market-ingress/`.
+- Storage's shared `CaptureFact` contract is merged and sealed. Its Hot Store
+  leaf is FINAL CLOSED under that contract: a provider-neutral interface and
+  QuestDB adapter with explicit 500-row write batches. Capture Boundary and all
+  other Storage responsibilities remain unimplemented.
 - Data Truth, Replay, Dataset, Model, Trading, and Operations implementation have
   not begun.
 
-Next implementation stage: independent review of the bounded shared Storage
-capture-contract migration before any Capture Boundary implementation.
+Next implementation stage: Storage → Capture Boundary. Its approved
+upstream-first, composition-first direction is `kalshi-sdk` typed models +
+Pydantic serialization/freeze + Python standard-library mechanics + thin
+LIVE15-owned semantic policy → shared `CaptureFact`. Capture Boundary remains
+unimplemented.
