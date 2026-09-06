@@ -27,11 +27,14 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Data Truth, Replay & As-Of, Canonical Dataset, Model, Trading, and broad
   Operations functionality remain unimplemented.
 
-Durable Persistence = CONTRACT / AUTHORITY CANDIDATE. It consumes the
-already-sealed QuestDB Runtime Platform and records the approved upstream-first
-handoff, result, and physical transport-idempotency boundary; it does not begin
-implementation or configure Store-and-Forward.
+Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
+implementation = NOT IMPLEMENTED; it consumes the already-sealed QuestDB
+Runtime Platform but does not configure Store-and-Forward.
 
-Current NEXT: Durable Persistence independent review. The candidate must not
-reinstall or rediscover QuestDB, enable Store-and-Forward or DEDUP, or begin
-implementation before that review.
+Current NEXT: Storage → Hot Store physical transport-idempotency / DEDUP
+prerequisite gate. This is a bounded forward evolution prerequisite of the
+FINAL CLOSED Hot Store, not a reopening of its provider-neutral semantic
+contract. The gate must begin with exact QuestDB `10.0.1` / Python client
+`5.0.0` DEDUP contract fit and read-only collision audits; it must not mutate
+the schema or enable DEDUP until that gate passes. Durable Persistence
+implementation remains unauthorized.
