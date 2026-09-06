@@ -23,7 +23,9 @@ HA / DR concern. No additional upstream, custom queue/WAL/retry/replay system,
 source, tests, dependencies, QuestDB configuration, SF, DEDUP, or Hot Store
 change was added.
 
-**Commit or PR:** Pending commit.
+**Commit:** `8946596d94eaef2866d16c04929b8be9ebdf4956`.
+
+**PR:** Pending.
 
 **Status:** Durable Persistence = CONTRACT / AUTHORITY CANDIDATE; not
 implemented.

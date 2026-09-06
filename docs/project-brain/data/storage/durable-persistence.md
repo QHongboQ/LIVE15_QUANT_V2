@@ -95,13 +95,27 @@ must correlate completion with the pinned client's structured rejection channel:
 `SenderError.message_sequence`, `SenderError.from_fsn`, and
 `SenderError.to_fsn`.
 
+The negative rejection observation also has a pinned upstream loss boundary.
+`PooledSender.poll_error()` and `PooledSender.error_events_dropped()` expose
+diagnostics and the count dropped from a borrowed connection's bounded
+rejection ring. The `QuestDB` `error_handler` receives server rejections and
+`QuestDB.error_events_dropped` reports diagnostics discarded by its bounded
+drop-oldest handler inbox. `ACKNOWLEDGED_OK` requires the relevant completion
+watermark, no structured rejection covering the relevant FSN/range, and no
+detected rejection-diagnostic loss that could make that negative observation
+unreliable. If diagnostics were dropped and LIVE15 cannot prove the loss is
+irrelevant to the relevant FSN, diagnostic loss cannot produce success: do not
+return `ACKNOWLEDGED_OK`. QuestDB owns these bounded channels and counters;
+LIVE15 owns only this fail-closed interpretation, not a custom recovery,
+journal, queue, or ACK/rejection tracker.
+
 The minimal result categories are:
 
 - `LOCAL_PERSISTENCE_FAILED`: SF definitely did not accept ownership.
 - `PERSISTED_PENDING`: SF accepted local ownership but server acceptance is not
   proven.
-- `ACKNOWLEDGED_OK`: server completion is proven and no rejection covers the
-  relevant frame.
+- `ACKNOWLEDGED_OK`: server completion is proven, no rejection covers the
+  relevant frame, and relevant rejection-diagnostic loss is ruled out.
 - `DEFINITELY_REJECTED`: structured upstream evidence proves rejection.
 - `IN_DOUBT`: an upstream exception leaves publication/ownership ambiguous.
 
@@ -122,7 +136,10 @@ failure; network loss; server restart; lost ACK after server acceptance;
 process restart with queued data; exact replay; distinct IDs with identical
 content; capacity exhaustion; unavailable/unwritable SF directory; sender-ID
 collision; close with pending data; structured server rejection; and completion
-watermark/rejection correlation.
+watermark/rejection correlation; and structured rejection-diagnostic
+overflow/drop. The last case must force or simulate diagnostic loss and prove
+that completion watermark plus an empty rejection poll cannot report
+`ACKNOWLEDGED_OK` when upstream loss evidence exists.
 
 ```text
 Storage
