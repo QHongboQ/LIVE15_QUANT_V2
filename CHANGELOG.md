@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-QUESTDB-RUNTIME-PROJECT-BRAIN-AUTHORITY-001
+
+**Summary:** Added the minimum Operations / Runtime Project Brain routing tree
+for the approved canonical LIVE15 V2 QuestDB Runtime Platform.
+
+**Why:** The preceding bootstrap task correctly stopped because no Operations /
+Runtime authority existed. The human approved the minimum routing needed before
+the platform bootstrap can proceed.
+
+**Validation / evidence:** No QuestDB server, Windows service, runtime root, or
+Store-and-Forward parent was installed or created, and no deletion occurred.
+The project environment verified `questdb==5.0.0`. This task adds routing only.
+
+**Commit or PR:** Pending commit.
+
+**Status:** QuestDB Runtime = APPROVED FOR PLATFORM BOOTSTRAP; UNIMPLEMENTED.
+
+**Next step:** QuestDB Runtime Platform Bootstrap using official QuestDB
+documentation.
+
 ## 2026-09-06 — LIVE15-V2-STORAGE-CAPTURE-BOUNDARY-PROJECT-BRAIN-CLOSURE-001
 
 **Summary:** Closed the Storage Capture Boundary phase in the Project Brain

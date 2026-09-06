@@ -5,4 +5,5 @@ This is the durable, current authority for LIVE15_QUANT_V2. Start at the reposit
 - Current V2 plan → [`plan/current-plan.md`](plan/current-plan.md)
 - CI architecture / upstream provenance → [`ci.md`](ci.md)
 - Data System → [data/README.md](data/README.md)
+- Operations / Runtime → [operations/README.md](operations/README.md)
 - Proven V1 reference paths → [`references/v1-proven-paths.md`](references/v1-proven-paths.md)
