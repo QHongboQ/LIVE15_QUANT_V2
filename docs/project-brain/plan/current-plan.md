@@ -21,14 +21,13 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - Storage Shared `CaptureFact` Contract = FINAL CLOSED. Hot Store = FINAL
   CLOSED under that contract: a provider-neutral interface and QuestDB adapter
   with explicit 500-row write batches. Capture Boundary = FINAL CLOSED.
-- QuestDB Runtime Platform = DEPLOYED / VALIDATION CANDIDATE. The canonical
-  official QuestDB `10.0.1` runtime is operational and its sealed Hot Store
-  compatibility integration has passed; independent review remains required.
+- QuestDB Runtime Platform = FINAL CLOSED. The canonical official QuestDB
+  `10.0.1` runtime is operational; independent review, PR #20, hosted CI,
+  merge, post-merge CI, and final local seal passed.
 - Data Truth, Replay & As-Of, Canonical Dataset, Model, Trading, and broad
   Operations functionality remain unimplemented.
 
-Current NEXT: Operations / Runtime → QuestDB Runtime independent review. After
-independent review → PR → CI → merge → local seal, execution returns to
-Storage → Durable Persistence for its upstream-first responsibility and
-contract-fit audit. This remains a prerequisite runtime platform action, not
-the beginning of broad Operations implementation.
+Current NEXT: Storage → Durable Persistence. It must consume the already-sealed
+QuestDB Runtime Platform, begin with upstream-first responsibility and
+contract-fit work before implementation, and must not reinstall or rediscover
+QuestDB. Durable Persistence is not implemented.

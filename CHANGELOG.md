@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-QUESTDB-RUNTIME-PLATFORM-PROJECT-BRAIN-CLOSURE-001
+
+**Summary:** Persisted the completed QuestDB Runtime Platform technical seal as
+FINAL CLOSED current authority.
+
+**Why:** The canonical runtime deployment candidate completed independent
+review, PR publication, hosted CI, merge, post-merge CI, and final local seal;
+the Project Brain must now reflect that durable completion before the next Data
+System stage begins.
+
+**Validation / evidence:** PR #20 merged as
+`b1d415aef1b1c2f3d1a8688e9d3358647ee836ab`. Hosted Windows and Ubuntu checks,
+CI Gate, post-merge CI, final local Ruff, pytest (88 passed, 1 expected
+environment-gated skip), MyPy, and `git diff --check` passed. The canonical
+QuestDB runtime health and metrics passed, as did the real sealed Hot Store
+integration. No runtime, service, configuration, source, test, dependency,
+DEDUP, application-side Store-and-Forward, or Durable Persistence change
+occurred in this closure task.
+
+**Commit or PR:** Pending commit.
+
+**Status:** QuestDB Runtime Platform = FINAL CLOSED.
+
+**Next step:** Storage → Durable Persistence, starting with upstream-first
+responsibility and contract-fit work while consuming the sealed runtime.
+
 ## 2026-09-06 — LIVE15-V2-QUESTDB-RUNTIME-PLATFORM-BOOTSTRAP-RESUME-001
 
 **Summary:** Recorded the completed canonical QuestDB Runtime Platform
