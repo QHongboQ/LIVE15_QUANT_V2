@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-CORE-SF-IMPLEMENTATION-001
+
+**Summary:** Added the bounded Durable Persistence implementation candidate:
+the provider-neutral `persist(CaptureFact) -> PersistenceResult` seam and its
+QuestDB Store-and-Forward adapter using the pinned QuestDB Server `10.0.1` /
+Python client `questdb==5.0.0` integration.
+
+**Scope and contract:** `sf_dir`, stable `sender_id`, physical table name, and
+acknowledgement timeout are explicit. The adapter uses only `sf_durability =
+memory`, treats successful `flush_and_get_fsn()` as local ownership transfer,
+returns `PERSISTED_PENDING` on an acknowledgement timeout, correlates
+structured rejection ranges, and fails closed on relevant diagnostic loss. It
+does not expose FSNs as receipts or add a custom WAL, queue, retry, replay,
+reconnect, ACK-tracker, or persistence framework.
+
+**Safety and evidence:** Unit coverage exercises all five result categories,
+exact CaptureFact mapping, no double enqueue after ownership transfer, and
+close lifecycle. A bounded live SF test uses only a UUID-scoped disposable
+table and task-owned temporary SF directory; the canonical table, canonical SF
+parent, runtime configuration, and production data remain untouched. Project
+Brain authority remains: Durable Persistence contract FINAL CLOSED;
+implementation NOT IMPLEMENTED.
+
+**Validation:** Ruff, pytest, MyPy, `git diff --check`, and the bounded live
+SF integration passed. PR not opened; this is an implementation candidate for
+independent review.
+
 ## 2026-09-07 — LIVE15-V2-HOT-STORE-NATIVE-DEDUP-PROJECT-BRAIN-CLOSURE-001
 
 **Summary:** Closed the Hot Store native QuestDB physical transport-idempotency
