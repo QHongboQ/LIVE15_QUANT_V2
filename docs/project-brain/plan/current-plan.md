@@ -26,13 +26,19 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - QuestDB Runtime Platform = FINAL CLOSED. The canonical official QuestDB
   `10.0.1` runtime is operational; independent review, PR #20, hosted CI,
   merge, post-merge CI, and final local seal passed.
-- Data Truth, Replay & As-Of, Canonical Dataset, Model, Trading, and broad
-  Operations functionality remain unimplemented.
+- Data Truth contract authority is the bounded candidate on this branch. Its
+  approved post-review/merge authority is FINAL CLOSED; implementation remains
+  NOT IMPLEMENTED and requires separate authorization. Replay & As-Of,
+  Canonical Dataset, Model, Trading, and broad Operations functionality remain
+  unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Data Truth responsibility / contract-authority
-definition**. This is not Data Truth implementation.
+After this candidate is independently reviewed and merged, Current NEXT is:
+**Data System → Data Truth implementation planning / upstream-fit-bounded
+implementation preparation**. This does not authorize Data Truth
+implementation. Replay & As-Of and Canonical Dataset remain unimplemented;
+canonical runtime activation remains unauthorized.

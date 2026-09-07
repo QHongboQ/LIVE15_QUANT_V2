@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-CONTRACT-AUTHORITY-CANDIDATE-001
+
+**Change:** Added the Data Truth contract-authority candidate: exactly two
+semantic children, Event Facts and Observation Facts, with a provider-neutral
+`CaptureFact` to append-only `TruthDecision` public contract.
+
+**Reason:** Record the approved simplified semantic boundary without creating
+family-specific truth engines, a second evidence envelope, storage model,
+database, or runtime component. DT-S1 through DT-S4 approve the two-leaf tree,
+provider-observation truth, provider-proven event identity only, and
+append-only authority with derived non-authoritative projections.
+
+**Validation / result:** Contract self-consistency, sibling independence, leaf
+removability, sealed `CaptureFact` reuse, and scope checks passed. The candidate
+has two semantic child leaves, zero new storage models, zero databases, and zero
+runtime components. Ruff PASS; pytest PASS (114 passed, 11 skipped); MyPy PASS;
+and `git diff --check` PASS. Independent review remains pending.
+
+**Commit / PR:** Local candidate commit pending; PR NOT OPENED / PENDING
+REVIEW.
+
+**Next:** Independent review of the Data Truth contract authority. Data Truth
+implementation remains unauthorized.
+
+**Safety:** Documentation authority only: no code, test, dependency, CI,
+QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP, canonical SF,
+or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-QUESTDB-RUNTIME-DURABLE-PERSISTENCE-STALE-AUTHORITY-CLEANUP-001
 
 **Change:** Corrected the QuestDB Runtime leaf's stale statement that Durable

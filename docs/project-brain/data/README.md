@@ -1,14 +1,17 @@
 # Data System
 
 Data System owns the canonical `AssetId` contract: `BTC`, `ETH`, `GOLD`,
-`SILVER`, `XRP`, `SOL`, `HYPE`, `DOGE`, and `BNB`. It has two implemented
-children: Market Ingress and Storage.
+`SILVER`, `XRP`, `SOL`, `HYPE`, `DOGE`, and `BNB`. Its current children are
+Market Ingress, Storage, and [Data Truth](data-truth/README.md).
 
 Market Ingress and Storage are FINAL CLOSED. Storage owns the sealed shared
 immutable `CaptureFact` contract and its FINAL CLOSED [Hot Store, Capture
 Boundary, and Durable Persistence](storage/README.md) responsibilities.
-Data Truth, Replay & As-Of, and Canonical Dataset remain unimplemented. Market
-Ingress does not own those deferred responsibilities.
+Data Truth contract authority is being established by the bounded candidate on
+this branch; its implementation remains NOT IMPLEMENTED. Replay & As-Of and
+Canonical Dataset remain UNIMPLEMENTED. Data Truth is a Data System
+responsibility, not a Storage child; Market Ingress does not own any of those
+deferred responsibilities.
 
 Research & Model System, Decision & Trading System, Operations & Interface
 System, and Engineering Foundation are separate top-level sibling systems, not
