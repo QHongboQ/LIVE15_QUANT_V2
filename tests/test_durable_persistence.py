@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+import questdb
+
 from live15_quant_v2.data.asset import AssetId
 from live15_quant_v2.data.storage.capture import CaptureFact
 from live15_quant_v2.data.storage.durable_persistence import (
@@ -21,8 +23,11 @@ class FakeSender:
         await_error: BaseException | None = None,
         errors: list["FakeSenderError"] | None = None,
         dropped_values: list[int] | None = None,
+        fsn: int | None = 42,
     ) -> None:
         self.row_calls: list[dict[str, Any]] = []
+        self.flush_calls = 0
+        self.await_calls: list[tuple[int, int]] = []
         self.closed = False
         self.acknowledged = acknowledged
         self.row_error = row_error
@@ -31,6 +36,7 @@ class FakeSender:
         self.errors = list(errors or [])
         self.dropped_values = iter(dropped_values or [0])
         self.last_dropped = 0
+        self.fsn = fsn
 
     def row(
         self,
@@ -51,12 +57,14 @@ class FakeSender:
             }
         )
 
-    def flush_and_get_fsn(self) -> int:
+    def flush_and_get_fsn(self) -> int | None:
+        self.flush_calls += 1
         if self.flush_error is not None:
             raise self.flush_error
-        return 42
+        return self.fsn
 
     def await_acked_fsn(self, fsn: int, timeout_millis: int) -> bool:
+        self.await_calls.append((fsn, timeout_millis))
         assert fsn == 42
         assert timeout_millis == 500
         if self.await_error is not None:
@@ -104,7 +112,7 @@ class FakeDatabase:
 class FakeSenderError:
     from_fsn: int
     to_fsn: int
-    applied_policy: str = "terminal"
+    applied_policy: questdb.SenderErrorPolicy = questdb.SenderErrorPolicy.Terminal
     message_sequence: int | None = 1
 
 
@@ -218,13 +226,91 @@ def test_definite_pre_publication_failure_is_not_persisted(monkeypatch) -> None:
     assert result.status is PersistenceStatus.LOCAL_PERSISTENCE_FAILED
 
 
-def test_structured_rejection_covering_the_frame_is_definite(monkeypatch) -> None:
-    sender = FakeSender(errors=[FakeSenderError(from_fsn=42, to_fsn=42)])
+def test_terminal_structured_rejection_covering_the_frame_is_definite(monkeypatch) -> None:
+    sender = FakeSender(
+        errors=[
+            FakeSenderError(
+                from_fsn=42,
+                to_fsn=42,
+                applied_policy=questdb.SenderErrorPolicy.Terminal,
+            )
+        ]
+    )
     persistence = persistence_for(monkeypatch, sender)
 
     result = persistence.persist(capture_fact())
 
     assert result.status is PersistenceStatus.DEFINITELY_REJECTED
+
+
+def test_retriable_structured_rejection_covering_the_frame_is_pending(monkeypatch) -> None:
+    sender = FakeSender(
+        errors=[
+            FakeSenderError(
+                from_fsn=42,
+                to_fsn=42,
+                applied_policy=questdb.SenderErrorPolicy.Retriable,
+            )
+        ]
+    )
+    persistence = persistence_for(monkeypatch, sender)
+
+    result = persistence.persist(capture_fact())
+
+    assert result.status is PersistenceStatus.PERSISTED_PENDING
+
+
+def test_retriable_other_structured_rejection_covering_the_frame_is_pending(
+    monkeypatch,
+) -> None:
+    sender = FakeSender(
+        errors=[
+            FakeSenderError(
+                from_fsn=42,
+                to_fsn=42,
+                applied_policy=questdb.SenderErrorPolicy.RetriableOther,
+            )
+        ]
+    )
+    persistence = persistence_for(monkeypatch, sender)
+
+    result = persistence.persist(capture_fact())
+
+    assert result.status is PersistenceStatus.PERSISTED_PENDING
+
+
+def test_unrelated_rejection_before_matching_terminal_rejection_is_definite(monkeypatch) -> None:
+    sender = FakeSender(
+        errors=[
+            FakeSenderError(from_fsn=43, to_fsn=43),
+            FakeSenderError(from_fsn=42, to_fsn=42),
+        ]
+    )
+    persistence = persistence_for(monkeypatch, sender)
+
+    result = persistence.persist(capture_fact())
+
+    assert result.status is PersistenceStatus.DEFINITELY_REJECTED
+    assert sender.errors == []
+
+
+def test_unrelated_rejection_before_matching_retriable_rejection_is_pending(monkeypatch) -> None:
+    sender = FakeSender(
+        errors=[
+            FakeSenderError(from_fsn=43, to_fsn=43),
+            FakeSenderError(
+                from_fsn=42,
+                to_fsn=42,
+                applied_policy=questdb.SenderErrorPolicy.Retriable,
+            ),
+        ]
+    )
+    persistence = persistence_for(monkeypatch, sender)
+
+    result = persistence.persist(capture_fact())
+
+    assert result.status is PersistenceStatus.PERSISTED_PENDING
+    assert sender.errors == []
 
 
 def test_structured_rejection_for_another_frame_does_not_reject_current_fact(monkeypatch) -> None:
@@ -254,6 +340,15 @@ def test_database_diagnostic_loss_after_publication_fails_closed(monkeypatch) ->
     assert result.status is PersistenceStatus.IN_DOUBT
 
 
+def test_historical_unchanged_diagnostic_loss_does_not_poison_clean_ack(monkeypatch) -> None:
+    sender = FakeSender(dropped_values=[7, 7])
+    persistence = persistence_for(monkeypatch, sender, database_dropped_values=[11, 11])
+
+    result = persistence.persist(capture_fact())
+
+    assert result.status is PersistenceStatus.ACKNOWLEDGED_OK
+
+
 def test_ambiguous_publication_failure_is_in_doubt(monkeypatch) -> None:
     class InDoubtError(OSError):
         in_doubt = True
@@ -266,14 +361,27 @@ def test_ambiguous_publication_failure_is_in_doubt(monkeypatch) -> None:
     assert result.status is PersistenceStatus.IN_DOUBT
 
 
-def test_post_publication_observation_failure_does_not_reenqueue(monkeypatch) -> None:
+def test_post_publication_observation_failure_is_pending_without_reenqueue(monkeypatch) -> None:
     sender = FakeSender(await_error=OSError("observation connection lost"))
+    persistence = persistence_for(monkeypatch, sender)
+
+    result = persistence.persist(capture_fact())
+
+    assert result.status is PersistenceStatus.PERSISTED_PENDING
+    assert len(sender.row_calls) == 1
+    assert sender.flush_calls == 1
+
+
+def test_no_fsn_is_in_doubt_without_ack_wait_or_second_enqueue(monkeypatch) -> None:
+    sender = FakeSender(fsn=None)
     persistence = persistence_for(monkeypatch, sender)
 
     result = persistence.persist(capture_fact())
 
     assert result.status is PersistenceStatus.IN_DOUBT
     assert len(sender.row_calls) == 1
+    assert sender.flush_calls == 1
+    assert sender.await_calls == []
 
 
 def test_close_releases_the_upstream_database(monkeypatch) -> None:

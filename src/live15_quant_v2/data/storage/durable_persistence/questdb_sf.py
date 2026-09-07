@@ -102,18 +102,18 @@ class QuestDBSFDurablePersistence:
             acknowledged = sender.await_acked_fsn(
                 fsn, timeout_millis=self._acknowledgement_timeout_millis
             )
-            rejection = self._rejection_for(sender, fsn)
+            rejection_status = self._rejection_status(sender, fsn)
             diagnostic_loss = (
                 sender.error_events_dropped() != sender_dropped_before
                 or database.error_events_dropped != database_dropped_before
             )
         except (OSError, questdb.QuestDBError):
             self._close_sender(sender)
-            return PersistenceResult(PersistenceStatus.IN_DOUBT)
+            return PersistenceResult(PersistenceStatus.PERSISTED_PENDING)
 
         self._close_sender(sender)
-        if rejection:
-            return PersistenceResult(PersistenceStatus.DEFINITELY_REJECTED)
+        if rejection_status is not None:
+            return PersistenceResult(rejection_status)
         if diagnostic_loss:
             return PersistenceResult(PersistenceStatus.IN_DOUBT)
         if not acknowledged:
@@ -142,11 +142,16 @@ class QuestDBSFDurablePersistence:
         sender.close(flush=False)
 
     @staticmethod
-    def _rejection_for(sender: Any, fsn: int) -> bool:
+    def _rejection_status(sender: Any, fsn: int) -> PersistenceStatus | None:
+        status: PersistenceStatus | None = None
         for error in _sender_errors(sender):
-            if error.from_fsn <= fsn <= error.to_fsn:
-                return True
-        return False
+            if not error.from_fsn <= fsn <= error.to_fsn:
+                continue
+            if error.applied_policy is questdb.SenderErrorPolicy.Terminal:
+                status = PersistenceStatus.DEFINITELY_REJECTED
+            elif status is None:
+                status = PersistenceStatus.PERSISTED_PENDING
+        return status
 
 
 def _sender_errors(sender: Any) -> Iterator[Any]:

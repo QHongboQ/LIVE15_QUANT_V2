@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-CORE-SF-IMPLEMENTATION-REVIEW-FIX-001
+
+**Summary:** Corrected the bounded Durable Persistence implementation
+candidate's SF result interpretation after independent review. A successful
+`flush_and_get_fsn()` now permanently establishes local SF ownership, so a
+later acknowledgement-observation exception returns `PERSISTED_PENDING` rather
+than `IN_DOUBT`. Structured rejections now distinguish the pinned
+`SenderErrorPolicy`: only `Terminal` can produce `DEFINITELY_REJECTED`, while
+retriable policies remain pending for QuestDB SF replay.
+
+**Regression evidence:** Added policy, queued-rejection, FSN-`None`,
+post-publication ownership, no-double-enqueue, and historical diagnostic-loss
+regressions. No retry, replay, queue, ACK tracker, schema DDL, dependency, or
+Project Brain authority was added or changed. Healthy disposable live SF
+acceptance passed; canonical runtime resources remain untouched.
+
+**Validation:** Ruff, pytest, MyPy, `git diff --check`, and the bounded live
+SF integration passed. This remains an implementation candidate pending
+independent re-review; PR not opened.
+
 ## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-CORE-SF-IMPLEMENTATION-001
 
 **Summary:** Added the bounded Durable Persistence implementation candidate:
