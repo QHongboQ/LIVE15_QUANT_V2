@@ -16,6 +16,7 @@ from live15_quant_v2.data.storage.hot_store import (
 )
 from live15_quant_v2.data.storage.hot_store.questdb_adapter import (
     QuestDBHotStore,
+    QuestDBHotStoreMigrationRequiredError,
     StoredCaptureFactIncompatibleError,
 )
 
@@ -75,22 +76,124 @@ class FakeSender:
 
 
 class FakeDatabase:
-    def __init__(self, *, acknowledged: bool = True) -> None:
+    def __init__(
+        self,
+        *,
+        acknowledged: bool = True,
+        table_exists: bool = False,
+        wal_enabled: bool = True,
+        dedup_enabled: bool = True,
+        designated_timestamp: str = "received_timestamp",
+        partition_by: str = "DAY",
+        column_types: dict[str, str] | None = None,
+        upsert_keys: frozenset[str] = frozenset({"received_timestamp", "capture_id"}),
+        missing_columns: frozenset[str] = frozenset(),
+    ) -> None:
         self.acknowledged = acknowledged
         self.rows: list[dict[str, Any]] = []
         self.executed: list[str] = []
         self.closed = False
+        self.metadata_queries = 0
+        self._table: dict[str, Any] | None = (
+            self._table_metadata(
+                wal_enabled=wal_enabled,
+                dedup_enabled=dedup_enabled,
+                designated_timestamp=designated_timestamp,
+                partition_by=partition_by,
+            )
+            if table_exists
+            else None
+        )
+        self._columns = self._column_metadata(
+            column_types=column_types or {},
+            upsert_keys=upsert_keys,
+            missing_columns=missing_columns,
+        )
+
+    @staticmethod
+    def _table_metadata(
+        *,
+        wal_enabled: bool,
+        dedup_enabled: bool,
+        designated_timestamp: str,
+        partition_by: str,
+    ) -> dict[str, Any]:
+        return {
+            "table_name": "hot_store_test",
+            "walEnabled": wal_enabled,
+            "dedup": dedup_enabled,
+            "designatedTimestamp": designated_timestamp,
+            "partitionBy": partition_by,
+        }
+
+    @staticmethod
+    def _column_metadata(
+        *,
+        column_types: dict[str, str],
+        upsert_keys: frozenset[str],
+        missing_columns: frozenset[str],
+    ) -> dict[str, dict[str, Any]]:
+        types = {
+            "capture_id": "VARCHAR",
+            "asset": "SYMBOL",
+            "provider": "SYMBOL",
+            "source_id": "VARCHAR",
+            "channel": "SYMBOL",
+            "message_type": "VARCHAR",
+            "event_subtype": "VARCHAR",
+            "sid": "LONG",
+            "seq": "LONG",
+            "provider_timestamp": "TIMESTAMP_NS",
+            "schema_version": "VARCHAR",
+            "payload": "VARCHAR",
+            "received_timestamp": "TIMESTAMP_NS",
+            **column_types,
+        }
+        return {
+            name: {
+                "column": name,
+                "type": column_type,
+                "designated": name == "received_timestamp",
+                "upsertKey": name in upsert_keys,
+            }
+            for name, column_type in types.items()
+            if name not in missing_columns
+        }
 
     def close(self) -> None:
         self.closed = True
 
     def execute(self, sql: str) -> None:
         self.executed.append(sql)
+        if sql.startswith("CREATE TABLE IF NOT EXISTS"):
+            self._table = self._table_metadata(
+                wal_enabled=True,
+                dedup_enabled=True,
+                designated_timestamp="received_timestamp",
+                partition_by="DAY",
+            )
+        elif "ADD COLUMN IF NOT EXISTS" in sql:
+            column_name = sql.split("ADD COLUMN IF NOT EXISTS ", maxsplit=1)[1].split()[0]
+            self._columns.setdefault(
+                column_name,
+                {
+                    "column": column_name,
+                    "type": "VARCHAR",
+                    "designated": False,
+                    "upsertKey": False,
+                },
+            )
 
     def sender(self) -> FakeSender:
         return FakeSender(self)
 
     def query(self, sql: str, binds: Sequence[Any]) -> FakeQueryResult:
+        if "FROM tables()" in sql:
+            self.metadata_queries += 1
+            return FakeQueryResult([] if self._table is None else [self._table])
+        if "FROM table_columns(" in sql:
+            self.metadata_queries += 1
+            return FakeQueryResult(list(self._columns.values()) if self._table else [])
         selected = list(self.rows)
         if "capture_id = $1" in sql:
             selected = [row for row in selected if row["capture_id"] == binds[0]]
@@ -201,11 +304,108 @@ def test_round_trip_preserves_every_raw_field(database: FakeDatabase) -> None:
     assert type(expected.asset) is AssetId
     assert type(database.rows[0]["asset"]) is str
     assert database.rows[0]["asset"] == expected.asset.value
-    assert "DEDUP" not in database.executed[0]
+    assert "WAL DEDUP UPSERT KEYS(received_timestamp, capture_id)" in database.executed[0]
     assert "source_id VARCHAR" in database.executed[0]
     assert "message_type VARCHAR" in database.executed[0]
     assert "event_subtype VARCHAR" in database.executed[0]
+    assert database.metadata_queries >= 4
     assert database.executed[1:] == [
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS source_id VARCHAR",
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS message_type VARCHAR",
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS event_subtype VARCHAR",
+    ]
+
+
+def test_existing_correct_dedup_table_is_accepted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database = FakeDatabase(table_exists=True)
+    monkeypatch.setattr(questdb_adapter.questdb, "connect", lambda _: database)
+
+    assert store().append_batch([fact("existing-correct")]).appended_count == 1
+    assert not any(sql.startswith("CREATE TABLE") for sql in database.executed)
+    assert database.executed == [
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS source_id VARCHAR",
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS message_type VARCHAR",
+        "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS event_subtype VARCHAR",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("database", "error"),
+    [
+        pytest.param(
+            FakeDatabase(table_exists=True, dedup_enabled=False),
+            "DEDUP enabled",
+            id="non-dedup",
+        ),
+        pytest.param(
+            FakeDatabase(table_exists=True, wal_enabled=False),
+            "WAL enabled",
+            id="non-wal",
+        ),
+        pytest.param(
+            FakeDatabase(table_exists=True, designated_timestamp="provider_timestamp"),
+            "designated timestamp",
+            id="wrong-designated-timestamp",
+        ),
+        pytest.param(
+            FakeDatabase(
+                table_exists=True,
+                column_types={"received_timestamp": "TIMESTAMP"},
+            ),
+            "received_timestamp must be TIMESTAMP_NS",
+            id="wrong-designated-timestamp-type",
+        ),
+        pytest.param(
+            FakeDatabase(table_exists=True, column_types={"capture_id": "SYMBOL"}),
+            "capture_id must be VARCHAR",
+            id="wrong-capture-id-type",
+        ),
+        pytest.param(
+            FakeDatabase(table_exists=True, upsert_keys=frozenset({"received_timestamp"})),
+            "UPSERT keys",
+            id="missing-approved-upsert-key",
+        ),
+        pytest.param(
+            FakeDatabase(
+                table_exists=True,
+                upsert_keys=frozenset({"received_timestamp", "capture_id", "provider"}),
+            ),
+            "UPSERT keys",
+            id="additional-upsert-key",
+        ),
+        pytest.param(
+            FakeDatabase(table_exists=True, column_types={"asset": "VARCHAR"}),
+            "asset must be SYMBOL",
+            id="incompatible-capture-schema",
+        ),
+    ],
+)
+def test_existing_incompatible_physical_table_fails_before_metadata_alters(
+    monkeypatch: pytest.MonkeyPatch,
+    database: FakeDatabase,
+    error: str,
+) -> None:
+    monkeypatch.setattr(questdb_adapter.questdb, "connect", lambda _: database)
+
+    with pytest.raises(QuestDBHotStoreMigrationRequiredError, match=error):
+        store().append_batch([fact("incompatible-existing-table")])
+
+    assert database.executed == []
+
+
+def test_existing_correct_dedup_table_keeps_approved_metadata_compatibility(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database = FakeDatabase(
+        table_exists=True,
+        missing_columns=frozenset({"source_id"}),
+    )
+    monkeypatch.setattr(questdb_adapter.questdb, "connect", lambda _: database)
+
+    assert store().append_batch([fact("legacy-metadata-column")]).appended_count == 1
+    assert database.executed == [
         "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS source_id VARCHAR",
         "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS message_type VARCHAR",
         "ALTER TABLE hot_store_test ADD COLUMN IF NOT EXISTS event_subtype VARCHAR",
