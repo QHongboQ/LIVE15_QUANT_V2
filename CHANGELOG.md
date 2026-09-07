@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-DURABLE-PERSISTENCE-CONTRACT-BRAIN-CLOSURE-001
+
+**Summary:** Closed the Durable Persistence contract authority in the current
+Project Brain without beginning Durable Persistence implementation.
+
+**Why:** The contract candidate completed independent review, its review fix,
+PR #22 merge, post-merge CI, and final local seal. Current authority must now
+route the next prerequisite precisely rather than imply that implementation can
+begin.
+
+**Validation / evidence:** Baseline and PR #22 merge:
+`e98e233cc2a3adb5f11997e7dbe00cde3556cf41`; review fix:
+`a577a73363aa2a2a5a1dce5406292a168cccfae2`. The upstream contract-fit gate
+found QuestDB SF a STRONG fit for the approved scope with no additional
+upstream required. Independent review, hosted Windows and Ubuntu checks, CI
+Gate, post-merge Windows and Ubuntu checks, post-merge CI Gate, final local
+seal, Ruff, pytest (88 passed, 1 expected environment-gated skip), MyPy, and
+`git diff --check` passed. No source, test, dependency, QuestDB Runtime, SF,
+DEDUP, Hot Store, or Durable Persistence implementation changed.
+
+**Commit:** `8ae33589340f95322c5625b405a18c31135c4172`.
+
+**PR:** Pending.
+
+**Status:** Durable Persistence contract authority = FINAL CLOSED;
+implementation = NOT IMPLEMENTED.
+
+**Next step:** Storage → Hot Store physical transport-idempotency / DEDUP
+prerequisite gate. Before any mutation, audit duplicate
+`(received_timestamp, capture_id)` pairs and duplicate `capture_id` values
+read-only; collisions stop for an explicit decision, with no automatic repair,
+deletion, or silent deduplication.
+
 ## 2026-09-06 — LIVE15-V2-DURABLE-PERSISTENCE-CONTRACT-AUTHORITY-001
 
 **Summary:** Defined the Storage Durable Persistence contract / authority
