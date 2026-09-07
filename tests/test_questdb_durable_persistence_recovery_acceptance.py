@@ -899,7 +899,8 @@ def test_questdb_sf_recovers_server_and_live15_process_outages(tmp_path: Path) -
         assert all((adapter_recovered, raw_recovered, raw_orphan_recovered)), (
             json.dumps(forensic_evidence, sort_keys=True)
         )
-        assert server.start_count == 3
+        # Initial launch plus one intentional restart for each outage seam.
+        assert server.start_count == 4
         assert server.stop_count == 3
     finally:
         if direct_persistence is not None:
