@@ -70,11 +70,15 @@ that child result. It must not absorb either child's private semantic rules.
 
 Hot Store's physical replay idempotency
 `(received_timestamp, capture_id)` is not Data Truth semantic identity.
-QuestDB continues to own physical WAL, DEDUP, UPSERT, and query execution.
-LIVE15 owns only its narrow semantic policy; no Flink, RisingWave,
+Pinned QuestDB Server `10.0.1` provides sufficient generic query/execution
+mechanics for the currently approved Data Truth scope. QuestDB continues to own
+physical WAL, DEDUP, UPSERT, and query execution; it does not decide Data Truth
+semantics. LIVE15 owns only its narrow semantic policy; no Flink, RisingWave,
 Materialize, Kafka, state store, database, streaming engine, custom rule engine,
 queue, replay engine, watermark engine, or generic dedup system is currently
-justified.
+justified. This is not a permanent prohibition: if a future separately approved
+semantic or mechanical requirement exposes a proven missing mechanic, upstream
+fit must be reassessed before custom infrastructure is built.
 
 V1 has no global event-time authority, watermark, late-data engine, semantic
 completeness assertion, source-precedence policy, or correction/supersession

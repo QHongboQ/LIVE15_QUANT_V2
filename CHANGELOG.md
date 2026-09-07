@@ -16,13 +16,16 @@ append-only authority with derived non-authoritative projections.
 removability, sealed `CaptureFact` reuse, and scope checks passed. The candidate
 has two semantic child leaves, zero new storage models, zero databases, and zero
 runtime components. Ruff PASS; pytest PASS (114 passed, 11 skipped); MyPy PASS;
-and `git diff --check` PASS. Independent review remains pending.
+and `git diff --check` PASS. Independent review found Architecture PASS;
+Standards FAIL only for missing candidate commit evidence; and Spec FAIL only
+for missing explicit pinned-QuestDB sufficiency authority. This bounded review
+fix is in progress.
 
-**Commit / PR:** Local candidate commit pending; PR NOT OPENED / PENDING
-REVIEW.
+**Commit / PR:** Candidate commit
+`a21ea7747377444b60355671a315a78fa29b1a30`; PR NOT OPENED / PENDING REVIEW.
 
-**Next:** Independent review of the Data Truth contract authority. Data Truth
-implementation remains unauthorized.
+**Next:** Independent Data Truth contract re-review after this bounded review
+fix. Data Truth implementation remains unauthorized.
 
 **Safety:** Documentation authority only: no code, test, dependency, CI,
 QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP, canonical SF,
