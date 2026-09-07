@@ -46,10 +46,15 @@ The canonical platform deployment evidence is:
   create, append acknowledgement, exact raw round-trip, nine assets, distinct
   capture IDs, out-of-order facts, filters, and the 500-row limit.
 
-Durable Persistence is not implemented. Disk-backed application
-Store-and-Forward is not enabled, and this platform deployment does not set
-`sf_dir`, `sender_id`, `sf_durability`, Store-and-Forward capacity, retry,
-acknowledgement policy, or deduplication.
+Durable Persistence implementation is FINAL CLOSED and consumes this FINAL
+CLOSED QuestDB Runtime Platform through its own sealed application contract.
+Its implementation uses QuestDB Store-and-Forward capability, but disk-backed
+application Store-and-Forward is NOT ENABLED in the canonical runtime. The
+canonical deployment does not set `sf_dir`, `sender_id`, `sf_durability`,
+Store-and-Forward capacity, retry, acknowledgement policy, or deduplication;
+canonical `hot_capture_facts` remains unmaterialized and canonical DEDUP is
+NOT ACTIVE. QuestDB Runtime does not own Durable Persistence delivery
+semantics.
 
 The runtime is consumed by Storage / Hot Store and Storage / Durable
 Persistence. It is not a child of Hot Store: Hot Store and Durable Persistence
