@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-CONTRACT-POST-MERGE-AUTHORITY-CLOSURE-001
+
+**Change:** Corrected the stale current-authority wording left after the
+successful Data Truth contract merge: parent, Event Facts, Observation Facts,
+Data System routing, and Current Plan now record FINAL CLOSED contract
+authority while implementation remains NOT IMPLEMENTED.
+
+**Reason:** PR #30 merged correctly, but post-merge authority readback found
+candidate/pending-review wording still active in current Project Brain nodes.
+The semantic contract and architecture remained sound; this task corrects
+status only.
+
+**Validation / result:** PR #30 merged as
+`089e7aba2c78a8b66cbedd5e195cdf2325b4c51f`; post-merge Windows, Ubuntu, and
+CI Gate checks passed. This closure candidate's local validation is pending.
+
+**Commit / PR:** Authority-closure commit pending; PR NOT OPENED / PENDING
+REVIEW.
+
+**Next:** Independent review of this bounded post-merge authority closure.
+Data Truth implementation remains unauthorized.
+
+**Safety:** Documentation authority only: no source, test, dependency, CI,
+QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP, canonical SF,
+or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-CONTRACT-AUTHORITY-CANDIDATE-001
 
 **Change:** Added the Data Truth contract-authority candidate: exactly two

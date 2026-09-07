@@ -7,11 +7,10 @@ Market Ingress, Storage, and [Data Truth](data-truth/README.md).
 Market Ingress and Storage are FINAL CLOSED. Storage owns the sealed shared
 immutable `CaptureFact` contract and its FINAL CLOSED [Hot Store, Capture
 Boundary, and Durable Persistence](storage/README.md) responsibilities.
-Data Truth contract authority is being established by the bounded candidate on
-this branch; its implementation remains NOT IMPLEMENTED. Replay & As-Of and
-Canonical Dataset remain UNIMPLEMENTED. Data Truth is a Data System
-responsibility, not a Storage child; Market Ingress does not own any of those
-deferred responsibilities.
+Data Truth contract authority is FINAL CLOSED; its implementation remains NOT
+IMPLEMENTED. Replay & As-Of and Canonical Dataset remain UNIMPLEMENTED. Data
+Truth is a Data System responsibility, not a Storage child; Market Ingress does
+not own any of those deferred responsibilities.
 
 Research & Model System, Decision & Trading System, Operations & Interface
 System, and Engineering Foundation are separate top-level sibling systems, not
