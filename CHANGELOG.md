@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-HOT-STORE-NATIVE-DEDUP-PROJECT-BRAIN-CLOSURE-001
+
+**Summary:** Closed the Hot Store native QuestDB physical transport-idempotency
+evolution in current Project Brain authority.
+
+**Evidence:** Implementation `811dd957be96aaa8b4433f03452c73dc32b09e20` and
+review fix `f7b17eb01e1ba7390f4bb1927619aa0d92eab30a` passed independent
+re-review. PR #24 merged as `c5dde82a2b164b06681d63a55ce2c6f2a1922758`;
+hosted PR and post-merge Windows, Ubuntu, and CI Gate checks passed, as did the
+final local seal. Merged-main validation passed: Ruff, pytest (98 passed, 5
+expected environment-gated live skips), MyPy, and `git diff --check`. The
+combined live integration passed five cases in one process with no connection
+stall: exact replay left one physical row and distinct IDs at the same timestamp
+left two.
+
+**Runtime distinction:** The canonical `hot_capture_facts` table remains absent
+and canonical DEDUP is not enabled; SF is not enabled and production data is
+unchanged. The sealed adapter capability configures a future authorized new
+table with native `WAL DEDUP UPSERT KEYS(received_timestamp, capture_id)`.
+
+**Status:** Hot Store native physical transport-idempotency evolution = FINAL
+CLOSED.
+
+**Next:** Storage → Durable Persistence implementation. Durable Persistence is
+not implemented.
+
 ## 2026-09-06 — LIVE15-V2-HOT-STORE-NATIVE-DEDUP-BOUNDED-EVOLUTION-IMPLEMENTATION-001
 
 **Summary:** Added the bounded Hot Store native QuestDB physical transport-

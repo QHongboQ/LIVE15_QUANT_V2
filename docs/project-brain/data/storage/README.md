@@ -5,13 +5,18 @@ provider, source, channel, message type, optional event subtype, stream/session
 metadata, nullable provider timestamp, received timestamp, schema version, and
 opaque payload text. This shared contract is sealed. Its [Hot Store](hot-store/README.md)
 and [Capture Boundary](capture-boundary.md) children are FINAL CLOSED: Hot Store
-owns physical retention and retrieval, while Capture Boundary freezes approved
-typed Market Ingress messages into immutable facts.
+owns physical retention and retrieval, including its sealed native QuestDB
+physical transport-idempotency evolution, while Capture Boundary freezes
+approved typed Market Ingress messages into immutable facts.
 
 Capture Boundary remains a Storage sibling of Hot Store and does not depend on
-Hot Store-private models. The [Durable Persistence contract authority](durable-persistence.md)
-is FINAL CLOSED; Durable Persistence implementation is NOT IMPLEMENTED. The
-next Storage action is the bounded Hot Store physical transport-idempotency /
-DEDUP prerequisite gate, starting with QuestDB `10.0.1` / Python client `5.0.0`
-contract fit and read-only collision audits before any mutation. Other Storage
-responsibilities remain unimplemented and are not defined by this routing node.
+Hot Store-private models. New Hot Store tables use QuestDB-native `WAL DEDUP
+UPSERT KEYS(received_timestamp, capture_id)`; existing incompatible tables fail
+closed rather than receiving silent DEDUP activation. This fulfills the physical
+transport-idempotency prerequisite of the [Durable Persistence contract authority](durable-persistence.md),
+which is FINAL CLOSED. Durable Persistence implementation remains NOT
+IMPLEMENTED. Current Storage NEXT is **Storage → Durable Persistence
+implementation**. Canonical `hot_capture_facts` remains unmaterialized, so this
+sealed implementation capability does not activate canonical runtime DEDUP or
+Store-and-Forward. Other Storage responsibilities remain unimplemented and are
+not defined by this routing node.

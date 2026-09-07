@@ -20,7 +20,9 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   under `docs/project-brain/data/market-ingress/`.
 - Storage Shared `CaptureFact` Contract = FINAL CLOSED. Hot Store = FINAL
   CLOSED under that contract: a provider-neutral interface and QuestDB adapter
-  with explicit 500-row write batches. Capture Boundary = FINAL CLOSED.
+  with explicit 500-row write batches and sealed native physical
+  transport-idempotency using `WAL DEDUP UPSERT KEYS(received_timestamp,
+  capture_id)` for new tables. Capture Boundary = FINAL CLOSED.
 - QuestDB Runtime Platform = FINAL CLOSED. The canonical official QuestDB
   `10.0.1` runtime is operational; independent review, PR #20, hosted CI,
   merge, post-merge CI, and final local seal passed.
@@ -31,10 +33,9 @@ Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = NOT IMPLEMENTED; it consumes the already-sealed QuestDB
 Runtime Platform but does not configure Store-and-Forward.
 
-Current NEXT: Storage → Hot Store physical transport-idempotency / DEDUP
-prerequisite gate. This is a bounded forward evolution prerequisite of the
-FINAL CLOSED Hot Store, not a reopening of its provider-neutral semantic
-contract. The gate must begin with exact QuestDB `10.0.1` / Python client
-`5.0.0` DEDUP contract fit and read-only collision audits; it must not mutate
-the schema or enable DEDUP until that gate passes. Durable Persistence
-implementation remains unauthorized.
+Current NEXT: **Storage → Durable Persistence implementation**. Durable
+Persistence contract authority is already FINAL CLOSED, and its Hot Store
+physical transport-idempotency prerequisite is satisfied; Durable Persistence
+implementation has NOT begun. Canonical table materialization, canonical DEDUP
+runtime activation, and SF activation remain separate future
+implementation/runtime actions and are not authorized by this closure alone.

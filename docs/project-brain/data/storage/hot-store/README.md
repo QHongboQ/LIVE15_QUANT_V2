@@ -1,41 +1,46 @@
 # Hot Store
 
-Hot Store preserves raw capture facts behind the provider-neutral `HotStore`
-interface: bounded `append_batch`, `read_capture`, and physical `read_range`.
-It consumes Storage's shared `CaptureFact` contract rather than owning capture
-semantics.
+**Status:** FINAL CLOSED, including the sealed native QuestDB physical
+transport-idempotency bounded forward evolution. The provider-neutral
+`HotStore` interface remains bounded `append_batch`, `read_capture`, and
+physical `read_range`; it consumes the sealed shared immutable `CaptureFact`
+contract without changing it.
 
-The current adapter is QuestDB `10.0.1` through the official Python client
+The adapter is QuestDB Server `10.0.1` through the official Python client
 `questdb==5.0.0`. It is available only from
 `live15_quant_v2.data.storage.hot_store.questdb_adapter`; the package root is
-provider-neutral. QuestDB owns generic database mechanics; LIVE15 owns the
-interface and raw-fact mapping. The raw table does not enable deduplication, so
-separate capture identities remain separate stored facts. Initial writes are
-explicitly limited to 500 facts per batch, based on the accepted local adapter
-integration evidence. The adapter adds newly required raw metadata columns
-non-destructively when an existing table is reused. That physical schema change
-does not semantically upgrade historical rows: no metadata or asset identity is
-backfilled, and rows missing required source/message metadata or carrying a
-non-canonical asset are incompatible with the shared contract and fail closed.
+provider-neutral. For a new physical table it creates
+`TIMESTAMP(received_timestamp)`, `PARTITION BY DAY`, `WAL`, and `DEDUP UPSERT
+KEYS(received_timestamp, capture_id)`.
 
-**Status:** FINAL CLOSED — bounded compatibility fix candidate. Official
-QuestDB `10.0.1` integration corrected three provider-adapter details without
-changing the Hot Store semantic contract or `CaptureFact`: each legacy metadata
-column uses its own guarded `ADD COLUMN` statement; `AssetId` crosses the write
-boundary as its canonical plain-string `.value`; and pandas `NaN` for nullable
-`event_subtype` returns as canonical `None`. No deduplication, Store-and-
-Forward application configuration, retry behavior, or dependency was added.
+This is physical transport idempotency only: an exact replay with the same
+`capture_id` and `received_timestamp` leaves one eventual physical row, while
+facts with different `capture_id` values remain distinct rows even when their
+content matches. It introduces no semantic/Data Truth deduplication.
+
+Existing physical tables are inspected first. A non-WAL, non-DEDUP, wrong-key,
+wrong timestamp/type, or otherwise incompatible table fails closed at an
+explicit migration-required boundary; the adapter does not silently run
+`ALTER TABLE ... DEDUP ENABLE`. Previously approved `source_id`,
+`message_type`, and `event_subtype` compatibility additions occur only after
+core physical compatibility is accepted. Historical rows are never backfilled;
+rows missing required metadata or carrying a non-canonical asset fail closed.
+
+QuestDB owns WAL, DEDUP, and UPSERT mechanics. LIVE15 owns only physical
+configuration authority, compatibility verification, `CaptureFact` mapping,
+the fail-closed migration boundary, and acceptance tests. No custom WAL, queue,
+dedup cache/system, retry manager, replay engine, reconnect manager, ACK
+tracker, or persistence framework is introduced.
+
+Canonical runtime activation is separate from sealed implementation capability:
+canonical `hot_capture_facts` is currently **NOT MATERIALIZED**, so canonical
+runtime DEDUP is **NOT ENABLED / NOT ACTIVE**. The adapter is ready to create a
+future authorized new table correctly from birth; this status does not
+authorize that materialization or Store-and-Forward.
 
 QuestDB reads materialize through the official `QueryResult.to_pandas()` path.
-Accordingly, pandas is an adapter-local runtime dependency: pandas values and
-types do not cross the `HotStore` port, whose reads return `CaptureFact` values.
-
-`CaptureFact.payload` is opaque UTF-8 text. Its current expected representation
-is JSON text, preserved exactly on round trip; Hot Store performs no parsing,
-normalization, or canonicalization. This contract does not claim arbitrary
-binary-payload support.
-
-This leaf preserves provider, source ID, channel, message type, optional event
-subtype, session, optional sequence, nullable provider timestamp, received
-timestamp, schema version, and raw payload. It does not infer Capture Boundary,
-Data Truth, gaps, quarantine, replay, or any other Storage responsibility.
+Pandas remains adapter-local: pandas values and types do not cross the HotStore
+port, whose reads return `CaptureFact` values. `CaptureFact.payload` is opaque
+UTF-8 text, currently expected as JSON text and preserved exactly without
+parsing, normalization, or canonicalization; arbitrary binary support is not
+claimed.
