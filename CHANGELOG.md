@@ -2,10 +2,22 @@
 
 ## 2026-09-07 — LIVE15-V2-QUESTDB-RUNTIME-DURABLE-PERSISTENCE-STALE-AUTHORITY-CLEANUP-001
 
-**Summary:** Corrected the QuestDB Runtime leaf's stale statement that Durable
-Persistence was not implemented. Durable Persistence contract and
-implementation became FINAL CLOSED through PR #28
-(`9802e431c6ec117fcc4c41e187e1f3d30ecedf27`).
+**Change:** Corrected the QuestDB Runtime leaf's stale statement that Durable
+Persistence was not implemented.
+
+**Reason:** Durable Persistence contract and implementation became FINAL CLOSED
+through PR #28 (`9802e431c6ec117fcc4c41e187e1f3d30ecedf27`), while the runtime
+leaf retained an obsolete current-state statement.
+
+**Validation / result:** The stale statement was confirmed; QuestDB Runtime,
+Durable Persistence contract, and Durable Persistence implementation remain
+FINAL CLOSED; canonical activation remains false. Ruff, pytest (114 passed,
+11 skipped), MyPy, and `git diff --check` passed. Cleanup task result: PASS.
+
+**Commit / PR:** Cleanup commit
+`efbd9692d55fd5fbee981fa13ef72347a754c1d0`; PR NOT OPENED / PENDING REVIEW.
+
+**Next:** Independent cleanup re-review after this changelog-only review fix.
 
 **Safety:** Documentation authority only: no QuestDB runtime, code, canonical
 Store-and-Forward/DEDUP configuration, canonical `hot_capture_facts`, or
