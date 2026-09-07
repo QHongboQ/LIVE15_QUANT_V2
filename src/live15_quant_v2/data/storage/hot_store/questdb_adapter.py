@@ -2,7 +2,7 @@
 
 import re
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, NoReturn
 
 import pandas as pd  # type: ignore[import-untyped]
 import questdb
@@ -18,10 +18,33 @@ from live15_quant_v2.data.storage.hot_store.port import (
 )
 
 _TABLE_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_REQUIRED_UPSERT_KEYS = frozenset({"received_timestamp", "capture_id"})
+_REQUIRED_COLUMNS = {
+    "capture_id": "VARCHAR",
+    "asset": "SYMBOL",
+    "provider": "SYMBOL",
+    "source_id": "VARCHAR",
+    "channel": "SYMBOL",
+    "message_type": "VARCHAR",
+    "event_subtype": "VARCHAR",
+    "sid": "LONG",
+    "seq": "LONG",
+    "provider_timestamp": "TIMESTAMP_NS",
+    "schema_version": "VARCHAR",
+    "payload": "VARCHAR",
+    "received_timestamp": "TIMESTAMP_NS",
+}
+_APPROVED_COMPATIBILITY_COLUMNS = frozenset(
+    {"source_id", "message_type", "event_subtype"}
+)
 
 
 class StoredCaptureFactIncompatibleError(RuntimeError):
     """Raised when a stored row cannot satisfy the shared CaptureFact contract."""
+
+
+class QuestDBHotStoreMigrationRequiredError(RuntimeError):
+    """Raised when an existing QuestDB table cannot safely serve as Hot Store."""
 
 
 class QuestDBHotStore:
@@ -129,27 +152,139 @@ class QuestDBHotStore:
                 raise HotStoreUnavailableError("QuestDB is unavailable") from error
         if not self._schema_ready:
             try:
-                self._database.execute(
-                    f"CREATE TABLE IF NOT EXISTS {self._table_name} ("
-                    "capture_id VARCHAR, asset SYMBOL, provider SYMBOL, source_id VARCHAR, "
-                    "channel SYMBOL, message_type VARCHAR, event_subtype VARCHAR, "
-                    "sid LONG, seq LONG, provider_timestamp TIMESTAMP_NS, "
-                    "schema_version VARCHAR, payload VARCHAR, received_timestamp TIMESTAMP_NS"
-                    ") TIMESTAMP(received_timestamp) PARTITION BY DAY WAL"
-                )
-                self._database.execute(
-                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS source_id VARCHAR"
-                )
-                self._database.execute(
-                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS message_type VARCHAR"
-                )
-                self._database.execute(
-                    f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS event_subtype VARCHAR"
-                )
+                if not self._table_exists():
+                    self._database.execute(
+                        f"CREATE TABLE IF NOT EXISTS {self._table_name} ("
+                        "capture_id VARCHAR, asset SYMBOL, provider SYMBOL, source_id VARCHAR, "
+                        "channel SYMBOL, message_type VARCHAR, event_subtype VARCHAR, "
+                        "sid LONG, seq LONG, provider_timestamp TIMESTAMP_NS, "
+                        "schema_version VARCHAR, payload VARCHAR, received_timestamp TIMESTAMP_NS"
+                        ") TIMESTAMP(received_timestamp) PARTITION BY DAY WAL "
+                        "DEDUP UPSERT KEYS(received_timestamp, capture_id)"
+                    )
+                self._verify_core_physical_configuration()
+                self._verify_existing_columns_are_compatible()
+                self._apply_approved_metadata_compatibility()
+                self._verify_capture_fact_schema()
             except (OSError, questdb.QuestDBError) as error:
                 raise HotStoreUnavailableError("QuestDB schema is unavailable") from error
             self._schema_ready = True
         return self._database
+
+    def _table_exists(self) -> bool:
+        return any(
+            row.get("table_name") == self._table_name
+            for row in self._metadata_rows(
+                "SELECT table_name, designatedTimestamp, partitionBy, walEnabled, dedup "
+                "FROM tables()",
+                [],
+            )
+        )
+
+    def _verify_core_physical_configuration(self) -> None:
+        table_rows = [
+            row
+            for row in self._metadata_rows(
+                "SELECT table_name, designatedTimestamp, partitionBy, walEnabled, dedup "
+                "FROM tables()",
+                [],
+            )
+            if row.get("table_name") == self._table_name
+        ]
+        if len(table_rows) != 1:
+            raise QuestDBHotStoreMigrationRequiredError(
+                "QuestDB Hot Store table is absent after creation"
+            )
+        table = table_rows[0]
+        requirements = {
+            "WAL enabled": table.get("walEnabled") is True,
+            "DEDUP enabled": table.get("dedup") is True,
+            "designated timestamp received_timestamp": (
+                table.get("designatedTimestamp") == "received_timestamp"
+            ),
+            "DAY partitioning": table.get("partitionBy") == "DAY",
+        }
+        failures = [name for name, satisfied in requirements.items() if not satisfied]
+        if failures:
+            self._migration_required(", ".join(failures))
+
+        columns = self._columns_metadata()
+        received_timestamp = columns.get("received_timestamp")
+        capture_id = columns.get("capture_id")
+        if received_timestamp is None:
+            self._migration_required("missing received_timestamp column")
+        if capture_id is None:
+            self._migration_required("missing capture_id column")
+        if received_timestamp.get("type") != "TIMESTAMP_NS":
+            self._migration_required("received_timestamp must be TIMESTAMP_NS")
+        if received_timestamp.get("designated") is not True:
+            self._migration_required("received_timestamp must be designated")
+        if capture_id.get("type") != "VARCHAR":
+            self._migration_required("capture_id must be VARCHAR")
+
+        upsert_keys = {
+            column_name
+            for column_name, metadata in columns.items()
+            if metadata.get("upsertKey") is True
+        }
+        if upsert_keys != _REQUIRED_UPSERT_KEYS:
+            self._migration_required(
+                "UPSERT keys must be exactly received_timestamp and capture_id"
+            )
+
+    def _verify_existing_columns_are_compatible(self) -> None:
+        columns = self._columns_metadata()
+        for column_name, expected_type in _REQUIRED_COLUMNS.items():
+            metadata = columns.get(column_name)
+            if metadata is None:
+                if column_name in _APPROVED_COMPATIBILITY_COLUMNS:
+                    continue
+                self._migration_required(f"missing required {column_name} column")
+            if metadata.get("type") != expected_type:
+                self._migration_required(
+                    f"{column_name} must be {expected_type}"
+                )
+
+    def _apply_approved_metadata_compatibility(self) -> None:
+        database = self._database
+        if database is None:
+            raise RuntimeError("QuestDB connection is unavailable")
+        for column_name in ("source_id", "message_type", "event_subtype"):
+            database.execute(
+                f"ALTER TABLE {self._table_name} ADD COLUMN IF NOT EXISTS {column_name} VARCHAR"
+            )
+
+    def _verify_capture_fact_schema(self) -> None:
+        columns = self._columns_metadata()
+        for column_name, expected_type in _REQUIRED_COLUMNS.items():
+            metadata = columns.get(column_name)
+            if metadata is None or metadata.get("type") != expected_type:
+                self._migration_required(
+                    f"{column_name} must be present as {expected_type}"
+                )
+
+    def _columns_metadata(self) -> dict[str, dict[str, Any]]:
+        rows = self._metadata_rows(
+            f"SELECT \"column\", type, designated, upsertKey "
+            f"FROM table_columns('{self._table_name}')",
+            [],
+        )
+        return {
+            row["column"]: row
+            for row in rows
+            if isinstance(row.get("column"), str)
+        }
+
+    def _metadata_rows(self, sql: str, binds: list[Any]) -> list[dict[str, Any]]:
+        database = self._database
+        if database is None:
+            raise RuntimeError("QuestDB connection is unavailable")
+        return database.query(sql, binds).to_pandas().to_dict(orient="records")
+
+    def _migration_required(self, detail: str) -> NoReturn:
+        raise QuestDBHotStoreMigrationRequiredError(
+            f"QuestDB Hot Store table requires explicit migration: {detail}"
+        )
 
     def _rows(self, sql: str, binds: list[Any]) -> list[dict[str, Any]]:
         try:

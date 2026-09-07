@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-06 — LIVE15-V2-HOT-STORE-NATIVE-DEDUP-BOUNDED-EVOLUTION-IMPLEMENTATION-001
+
+**Summary:** Added the bounded Hot Store native QuestDB physical transport-
+idempotency implementation candidate.
+
+**Why:** The preceding read-only DEDUP prerequisite and absent-table disposition
+gates established that the canonical `hot_capture_facts` table was never
+materialized. A newly materialized table must therefore be born with native
+QuestDB `WAL DEDUP UPSERT KEYS(received_timestamp, capture_id)` rather than be
+silently converted later.
+
+**Validation / evidence:** The QuestDB adapter now inspects existing table
+metadata first and accepts only the exact WAL, DEDUP, designated
+`received_timestamp`, `TIMESTAMP_NS`, `capture_id VARCHAR`, and approved
+two-column UPSERT-key configuration. Existing nonconforming tables fail closed
+before metadata-column compatibility alters. Task-scoped disposable live
+QuestDB `10.0.1` tests passed for exact replay (one physical row), distinct
+capture IDs at one timestamp (two physical rows), an already-correct table,
+non-DEDUP fail-closed behavior, and success/exception cleanup. The canonical
+table remains absent; the historical `hot_store_adapter_integration` residue
+was not touched. No Store-and-Forward, runtime configuration, custom retry,
+queue, WAL, semantic deduplication, or dependency changed.
+
+**Commit:** Pending.
+
+**PR:** Not opened.
+
+**Status:** Hot Store native DEDUP bounded evolution = IMPLEMENTATION CANDIDATE;
+not FINAL CLOSED.
+
+**Next step:** Independent review only. Do not materialize the canonical table,
+enable canonical DEDUP, or begin Durable Persistence implementation.
+
 ## 2026-09-06 — LIVE15-V2-DURABLE-PERSISTENCE-CONTRACT-BRAIN-CLOSURE-001
 
 **Summary:** Closed the Durable Persistence contract authority in the current
