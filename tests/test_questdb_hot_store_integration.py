@@ -31,16 +31,43 @@ def table_name() -> str:
     return f"{TABLE_PREFIX}_{uuid4().hex}"
 
 
+@pytest.fixture(scope="module")
+def control_database() -> Iterator[questdb.QuestDB]:
+    """Keep one test-owned QWP control connection for DDL and metadata checks."""
+    assert CONNECTION_STRING is not None
+    database = questdb.connect(CONNECTION_STRING)
+    try:
+        yield database
+    finally:
+        database.close()
+
+
+def table_exists(database: questdb.QuestDB, name: str) -> bool:
+    rows = database.query(
+        f"SELECT table_name FROM tables() WHERE table_name = '{name}'"
+    ).to_pandas().to_dict(orient="records")
+    return bool(rows)
+
+
+def assert_table_absent(database: questdb.QuestDB, name: str) -> None:
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        if not table_exists(database, name):
+            return
+        time.sleep(0.05)
+    assert not table_exists(database, name)
+
+
 @contextmanager
-def disposable_table() -> Iterator[str]:
+def disposable_table(control_database: questdb.QuestDB) -> Iterator[str]:
     """Own one task-scoped table and remove it on every test exit path."""
     assert CONNECTION_STRING is not None
     name = table_name()
     try:
         yield name
     finally:
-        with questdb.connect(CONNECTION_STRING) as database:
-            database.execute(f"DROP TABLE IF EXISTS {name}")
+        control_database.execute(f"DROP TABLE IF EXISTS {name}")
+        assert_table_absent(control_database, name)
 
 
 def physical_row_count(
@@ -76,8 +103,9 @@ def wait_for_physical_row_count(
     assert physical_row_count(hot_store, name, capture_ids=capture_ids) == expected_count
 
 
-def create_existing_table(name: str, *, dedup: bool) -> None:
-    assert CONNECTION_STRING is not None
+def create_existing_table(
+    control_database: questdb.QuestDB, name: str, *, dedup: bool
+) -> None:
     ddl = (
         f"CREATE TABLE {name} ("
         "capture_id VARCHAR, asset SYMBOL, provider SYMBOL, source_id VARCHAR, "
@@ -88,8 +116,7 @@ def create_existing_table(name: str, *, dedup: bool) -> None:
     )
     if dedup:
         ddl += " DEDUP UPSERT KEYS(received_timestamp, capture_id)"
-    with questdb.connect(CONNECTION_STRING) as database:
-        database.execute(ddl)
+    control_database.execute(ddl)
 
 
 def capture_fact(
@@ -201,9 +228,11 @@ def facts() -> list[CaptureFact]:
 
 
 @pytest.mark.skipif(CONNECTION_STRING is None, reason="requires a local QuestDB connection")
-def test_questdb_adapter_preserves_live15_capture_facts() -> None:
+def test_questdb_adapter_preserves_live15_capture_facts(
+    control_database: questdb.QuestDB,
+) -> None:
     assert CONNECTION_STRING is not None
-    with disposable_table() as name:
+    with disposable_table(control_database) as name:
         hot_store = QuestDBHotStore(CONNECTION_STRING, table_name=name)
         try:
             expected = facts()
@@ -240,9 +269,11 @@ def test_questdb_adapter_preserves_live15_capture_facts() -> None:
 
 
 @pytest.mark.skipif(CONNECTION_STRING is None, reason="requires a local QuestDB connection")
-def test_questdb_native_dedup_preserves_transport_identity() -> None:
+def test_questdb_native_dedup_preserves_transport_identity(
+    control_database: questdb.QuestDB,
+) -> None:
     assert CONNECTION_STRING is not None
-    with disposable_table() as replay_table:
+    with disposable_table(control_database) as replay_table:
         replay_fact = capture_fact(
             "exact-replay",
             AssetId.BTC,
@@ -296,10 +327,12 @@ def test_questdb_native_dedup_preserves_transport_identity() -> None:
 
 
 @pytest.mark.skipif(CONNECTION_STRING is None, reason="requires a local QuestDB connection")
-def test_existing_correct_questdb_table_is_accepted() -> None:
+def test_existing_correct_questdb_table_is_accepted(
+    control_database: questdb.QuestDB,
+) -> None:
     assert CONNECTION_STRING is not None
-    with disposable_table() as correct_table:
-        create_existing_table(correct_table, dedup=True)
+    with disposable_table(control_database) as correct_table:
+        create_existing_table(control_database, correct_table, dedup=True)
         hot_store = QuestDBHotStore(CONNECTION_STRING, table_name=correct_table)
         try:
             assert hot_store.append_batch(
@@ -321,10 +354,12 @@ def test_existing_correct_questdb_table_is_accepted() -> None:
 
 
 @pytest.mark.skipif(CONNECTION_STRING is None, reason="requires a local QuestDB connection")
-def test_existing_non_dedup_questdb_table_fails_closed() -> None:
+def test_existing_non_dedup_questdb_table_fails_closed(
+    control_database: questdb.QuestDB,
+) -> None:
     assert CONNECTION_STRING is not None
-    with disposable_table() as non_dedup_table:
-        create_existing_table(non_dedup_table, dedup=False)
+    with disposable_table(control_database) as non_dedup_table:
+        create_existing_table(control_database, non_dedup_table, dedup=False)
         hot_store = QuestDBHotStore(CONNECTION_STRING, table_name=non_dedup_table)
         try:
             with pytest.raises(QuestDBHotStoreMigrationRequiredError, match="DEDUP enabled"):
@@ -342,10 +377,9 @@ def test_existing_non_dedup_questdb_table_fails_closed() -> None:
                         )
                     ]
                 )
-            with questdb.connect(CONNECTION_STRING) as database:
-                metadata = database.query(
-                    "SELECT table_name, dedup FROM tables()"
-                ).to_pandas().to_dict(orient="records")
+            metadata = control_database.query(
+                "SELECT table_name, dedup FROM tables()"
+            ).to_pandas().to_dict(orient="records")
             assert next(row for row in metadata if row["table_name"] == non_dedup_table)[
                 "dedup"
             ] is False
@@ -354,11 +388,16 @@ def test_existing_non_dedup_questdb_table_fails_closed() -> None:
 
 
 @pytest.mark.skipif(CONNECTION_STRING is None, reason="requires a local QuestDB connection")
-def test_disposable_questdb_table_is_removed_after_test_path_exception() -> None:
+def test_disposable_questdb_table_is_removed_after_test_path_exception(
+    control_database: questdb.QuestDB,
+) -> None:
     assert CONNECTION_STRING is not None
     names: list[str] = []
-    with pytest.raises(RuntimeError, match="expected test path"), disposable_table() as name:
+    with pytest.raises(RuntimeError, match="expected test path"), disposable_table(
+        control_database
+    ) as name:
         names.append(name)
-        create_existing_table(name, dedup=True)
+        create_existing_table(control_database, name, dedup=True)
         raise RuntimeError("expected test path")
     assert len(names) == 1
+    assert_table_absent(control_database, names[0])
