@@ -630,6 +630,10 @@ def test_raw_questdb_500_sf_process_restart_isolation(tmp_path: Path) -> None:
         assert healthy and same and graceful["recovered"] and crash["recovered"], (
             json.dumps(evidence, sort_keys=True)
         )
+        assert graceful["same_dirty_slot_reopened"] is True
+        assert graceful["new_slot_created"] is False
+        assert crash["same_dirty_slot_reopened"] is True
+        assert crash["new_slot_created"] is False
     finally:
         if server is not None:
             server.stop()
