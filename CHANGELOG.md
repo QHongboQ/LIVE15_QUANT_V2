@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-QUESTDB-RUNTIME-DURABLE-PERSISTENCE-STALE-AUTHORITY-CLEANUP-001
+
+**Summary:** Corrected the QuestDB Runtime leaf's stale statement that Durable
+Persistence was not implemented. Durable Persistence contract and
+implementation became FINAL CLOSED through PR #28
+(`9802e431c6ec117fcc4c41e187e1f3d30ecedf27`).
+
+**Safety:** Documentation authority only: no QuestDB runtime, code, canonical
+Store-and-Forward/DEDUP configuration, canonical `hot_capture_facts`, or
+production data changed. This does not authorize Data Truth.
+
 ## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-PROJECT-BRAIN-CLOSURE-001
 
 **Summary:** Durable Persistence implementation is technically sealed: core
