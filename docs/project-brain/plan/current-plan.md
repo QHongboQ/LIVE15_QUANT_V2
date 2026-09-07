@@ -30,12 +30,9 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   Operations functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
-implementation = NOT IMPLEMENTED; it consumes the already-sealed QuestDB
-Runtime Platform but does not configure Store-and-Forward.
+implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
+acceptance are sealed; canonical table materialization, canonical DEDUP runtime
+activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Storage → Durable Persistence implementation**. Durable
-Persistence contract authority is already FINAL CLOSED, and its Hot Store
-physical transport-idempotency prerequisite is satisfied; Durable Persistence
-implementation has NOT begun. Canonical table materialization, canonical DEDUP
-runtime activation, and SF activation remain separate future
-implementation/runtime actions and are not authorized by this closure alone.
+Current NEXT: **Data System → Data Truth responsibility / contract-authority
+definition**. This is not Data Truth implementation.

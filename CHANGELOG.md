@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-PROJECT-BRAIN-CLOSURE-001
+
+**Summary:** Durable Persistence implementation is technically sealed: core
+implementation PR #26 merged as `8dac68451bd06d372eb866633def58bdc316d741`,
+failure-mode acceptance PR #27 merged as
+`098718febc82f28ce012ecda5e370578529ca2f1`, and the final post-merge local
+seal passed. Project Brain authority now records FINAL CLOSED.
+
+**Next:** Data System → Data Truth responsibility / contract-authority
+definition. Canonical SF, DEDUP, and `hot_capture_facts` activation remain
+unauthorized.
+
 ## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-FINAL-ADAPTER-FAILURE-MODE-ACCEPTANCE-001
 
 **Summary:** Added opt-in acceptance evidence for the merged

@@ -2,11 +2,10 @@
 
 **Contract authority status:** FINAL CLOSED.
 
-**Implementation status:** NOT IMPLEMENTED. QuestDB Store-and-Forward (SF) is
-NOT ENABLED. The Hot Store native physical transport-idempotency prerequisite
-is FINAL CLOSED and sealed, but canonical `hot_capture_facts` remains
+**Implementation status:** FINAL CLOSED. QuestDB Store-and-Forward (SF) is
+NOT ENABLED in the canonical runtime. Canonical `hot_capture_facts` remains
 unmaterialized, so canonical runtime DEDUP is NOT ENABLED / NOT ACTIVE. This
-contract-authority closure authorizes no implementation work.
+engineering closure does not authorize canonical activation.
 
 Durable Persistence begins when Capture Boundary hands it a valid immutable
 `CaptureFact`. It owns attempting local durable handoff and exposing correct
@@ -23,12 +22,23 @@ Windows, Ubuntu, and CI Gate checks passed, as did the final local contract
 seal, Ruff, pytest (88 passed, 1 expected environment-gated skip), MyPy, and
 `git diff --check`.
 
-The current engineering NEXT is **Durable Persistence implementation**. Its
-Hot Store physical transport-idempotency prerequisite was sealed through PR
-#24, merged as `c5dde82a2b164b06681d63a55ce2c6f2a1922758`: disposable-table
-acceptance proved exact replay physical idempotency, while canonical
-`hot_capture_facts` remains unmaterialized. This closure does not activate
-runtime DEDUP or SF.
+## Final implementation evidence
+
+Core implementation PR #26 merged as `8dac68451bd06d372eb866633def58bdc316d741`.
+Failure-mode acceptance PR #27 merged as
+`098718febc82f28ce012ecda5e370578529ca2f1`; final post-merge local technical
+seal passed. The sealed implementation provides local disk-backed QuestDB SF
+handoff, ownership transfer after successful `flush_and_get_fsn()`, the five
+approved result interpretations, same-process outage recovery, graceful and
+hard process-restart recovery, stable-`sender_id` dirty-slot recovery,
+physical transport-replay idempotency, no application republish of a pending
+identity, and raw pinned-upstream confirmation.
+
+The production adapter opens its QuestDB pool lazily. After restart, recovery
+begins when ordinary new public `persist()` work opens that pool; its distinct
+new immutable recovery trigger never republishes the old pending fact. There
+is no startup hook or idle-startup-open claim. This closure does not activate
+canonical DEDUP or SF.
 
 The internal ownership-transfer point is successful local QuestDB
 Store-and-Forward (SF) publication. Before that publication succeeds, LIVE15

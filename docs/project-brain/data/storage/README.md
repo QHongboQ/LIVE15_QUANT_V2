@@ -14,9 +14,7 @@ Hot Store-private models. New Hot Store tables use QuestDB-native `WAL DEDUP
 UPSERT KEYS(received_timestamp, capture_id)`; existing incompatible tables fail
 closed rather than receiving silent DEDUP activation. This fulfills the physical
 transport-idempotency prerequisite of the [Durable Persistence contract authority](durable-persistence.md),
-which is FINAL CLOSED. Durable Persistence implementation remains NOT
-IMPLEMENTED. Current Storage NEXT is **Storage → Durable Persistence
-implementation**. Canonical `hot_capture_facts` remains unmaterialized, so this
-sealed implementation capability does not activate canonical runtime DEDUP or
-Store-and-Forward. Other Storage responsibilities remain unimplemented and are
-not defined by this routing node.
+which is FINAL CLOSED. Durable Persistence implementation is FINAL CLOSED.
+Storage's currently defined responsibilities are closed. Canonical
+`hot_capture_facts` remains unmaterialized, so this sealed implementation
+capability does not activate canonical runtime DEDUP or Store-and-Forward.
