@@ -3,8 +3,10 @@
 **Contract authority status:** FINAL CLOSED.
 
 **Implementation status:** NOT IMPLEMENTED. QuestDB Store-and-Forward (SF) is
-NOT ENABLED, DEDUP is NOT ENABLED, and the Hot Store DEDUP evolution is NOT
-IMPLEMENTED. This contract-authority closure authorizes no implementation work.
+NOT ENABLED. The Hot Store native physical transport-idempotency prerequisite
+is FINAL CLOSED and sealed, but canonical `hot_capture_facts` remains
+unmaterialized, so canonical runtime DEDUP is NOT ENABLED / NOT ACTIVE. This
+contract-authority closure authorizes no implementation work.
 
 Durable Persistence begins when Capture Boundary hands it a valid immutable
 `CaptureFact`. It owns attempting local durable handoff and exposing correct
@@ -21,12 +23,12 @@ Windows, Ubuntu, and CI Gate checks passed, as did the final local contract
 seal, Ruff, pytest (88 passed, 1 expected environment-gated skip), MyPy, and
 `git diff --check`.
 
-The next engineering prerequisite is the bounded Hot Store physical
-transport-idempotency / DEDUP evolution gate. Before any mutation, it must run
-read-only audits for duplicate `(received_timestamp, capture_id)` pairs and
-duplicate `capture_id` values. If either audit finds collisions, stop for an
-explicit migration decision: no automatic repair, deletion, or silent
-deduplication is permitted.
+The current engineering NEXT is **Durable Persistence implementation**. Its
+Hot Store physical transport-idempotency prerequisite was sealed through PR
+#24, merged as `c5dde82a2b164b06681d63a55ce2c6f2a1922758`: disposable-table
+acceptance proved exact replay physical idempotency, while canonical
+`hot_capture_facts` remains unmaterialized. This closure does not activate
+runtime DEDUP or SF.
 
 The internal ownership-transfer point is successful local QuestDB
 Store-and-Forward (SF) publication. Before that publication succeeds, LIVE15
@@ -91,11 +93,12 @@ timestamp.
 
 Hot Store owns QuestDB physical table/schema configuration. Durable
 Persistence owns the requirement that transport replay of the same immutable
-`CaptureFact` identity is physically idempotent. A future bounded Hot Store
-forward evolution must enable the approved physical DEDUP configuration; it is
-an explicit prerequisite, not a hidden modification.
+`CaptureFact` identity is physically idempotent. The sealed Hot Store evolution
+implements the approved physical configuration for a future new table; it does
+not materialize or activate the canonical table.
 
-Before any such activation, perform read-only audits for duplicate
+Any future canonical-table activation remains separately authorized work. Before
+that activation, perform read-only audits for duplicate
 `(received_timestamp, capture_id)` pairs and duplicate `capture_id` values. If
 either audit returns rows, stop and escalate for an explicit migration decision;
 do not delete, repair, or silently deduplicate data.
@@ -165,7 +168,7 @@ that completion watermark plus an empty rejection poll cannot report
 Storage
 ├── Capture Boundary                         FINAL CLOSED
 ├── Hot Store                                FINAL CLOSED
-│   └── future bounded physical DEDUP evolution prerequisite
+│   └── native physical transport-idempotency / DEDUP sealed
 └── Durable Persistence
     ├── QuestDB Python 5.0.0 SF              upstream-owned
     │   ├── spool / slot locking
