@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-FINAL-ADAPTER-FAILURE-MODE-ACCEPTANCE-001
+
+**Summary:** Added opt-in acceptance evidence for the merged
+`QuestDBSFDurablePersistence` public seam against task-owned QuestDB Server
+`10.0.1` / Python client `questdb==5.0.0` resources. Healthy publication
+returned `ACKNOWLEDGED_OK`; same-process server outage, graceful producer
+restart, and hard producer crash each returned `PERSISTED_PENDING` after local
+SF publication and later delivered exactly one preserved physical fact.
+
+**Recovery evidence:** Replacement LIVE15 processes use the actual production
+adapter and trigger its lazy connection only through one distinct ordinary
+`persist()` call. Pending identities are never application-republished. The
+prior apparent restart failures were subprocess-harness defects; the raw
+pinned QuestDB controls pass for healthy, same-process, graceful-restart, and
+hard-crash recovery.
+
+**Safety:** No production source, Project Brain authority, canonical runtime,
+canonical SF/DEDUP, canonical `hot_capture_facts`, or production data changed.
+No custom retry, replay, WAL, queue, or process journal was added. The test
+uses short task-owned Windows paths because longer disposable paths caused a
+QuestDB file-open rejection; this is harness-only evidence and not an adapter
+semantic change.
+
+**Status:** Durable Persistence failure-mode acceptance = IMPLEMENTATION
+CANDIDATE pending independent acceptance review. PR not opened.
+
 ## 2026-09-07 — LIVE15-V2-DURABLE-PERSISTENCE-CORE-SF-IMPLEMENTATION-REVIEW-FIX-001
 
 **Summary:** Corrected the bounded Durable Persistence implementation
