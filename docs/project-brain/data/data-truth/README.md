@@ -121,7 +121,10 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-Implementation planning is the next responsibility, but implementation itself
-requires separate authorization. Any newly identified generic mechanical need
-must first undergo an upstream-fit review. This authority does not authorize
-implementation.
+The implementation-plan authority is FINAL CLOSED. Current NEXT is Data Truth
+Slice 1 semantic-library candidate preparation. Slice 1 requires separate
+authorization and remains NOT AUTHORIZED. The required QuestDB reconciliation
+POC and Slice 2 remain separately unauthorized; the POC remains mandatory
+before Slice 2. Any newly identified generic mechanical need must first undergo
+upstream-fit review before custom infrastructure is introduced. This authority
+does not authorize Data Truth implementation or canonical runtime activation.
