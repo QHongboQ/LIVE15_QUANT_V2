@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-PR33-CHATGPT-REMOTE-AUDIT-FIX-001
+
+**Change:** Updated Draft PR #33's Slice 1 semantic-library candidate with two
+bounded authority checks: `TruthDecision` now snapshots contributing capture IDs
+once before validating and storing them, and Event Facts rejects an accepted
+`EventAnchor` whose decision policy version differs from `data-truth/v1`.
+Updated active Data Truth authority from LOCAL CANDIDATE to DRAFT PR CANDIDATE
+for PR #33, pending direct remote implementation review/fix.
+
+**Reason:** ChatGPT's direct remote code audit of Draft PR #33 returned
+FAIL_WITH_BOUNDED_FIX: caller-owned contributing-ID input could change between
+validation and storage; an accepted anchor's policy version was not verified;
+and active Project Brain status was stale after publication.
+
+**Validation / result:** Added an adversarial stateful-list regression proving
+the stored authority is the exact once-snapshotted, validated string tuple, and
+a wrong-policy accepted-anchor regression proving `TruthDecisionInvariantError`
+before any append. Targeted Data Truth tests PASS (67 passed); full pytest PASS
+(181 passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS.
+PR #33 remains OPEN and DRAFT. This records the bounded fix only; it does not
+claim a ChatGPT remote re-audit PASS. Slice 1 remains NOT FINAL CLOSED; overall
+Data Truth implementation and persistent TruthDecision authority remain NOT
+IMPLEMENTED; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Remote-audit fix commit
+`8952796d193a5bd7814c7882365a4e13711520ad`; PR #33 DRAFT.
+
+**Next:** ChatGPT direct remote re-audit of the updated Draft PR #33 before any
+review-ready or merge decision. The QuestDB POC, Slice 2, persistent
+TruthDecision authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-INDEPENDENT-RE-REVIEW-FIX-001
 
 **Change:** Tightened the local Slice 1 `TruthDecision` reference-input
