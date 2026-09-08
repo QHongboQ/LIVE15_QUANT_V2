@@ -9,15 +9,12 @@
 
 **Implementation:** NOT IMPLEMENTED.
 
-**Slice 1 semantic-library implementation:** REVIEWED PR CANDIDATE — PR #33.
-ChatGPT direct remote code audit = PASS for reviewed code head
-`78660844e690eeb73cacd8a756a4e65419c1a798`. Pending guarded merge,
-post-merge hosted CI, and final local seal. It provides no persistent
-`TruthDecision` authority.
+**Slice 1 semantic-library implementation:** FINAL CLOSED. It provides no
+persistent `TruthDecision` authority.
 
-This sealed authority records the approved semantic boundary. The Slice 1 Draft
-PR candidate creates no schema, table, runtime component, canonical activation,
-or implementation authority beyond its bounded semantic library.
+This sealed authority records the approved semantic boundary. The FINAL CLOSED
+Slice 1 semantic library creates no schema, table, runtime component, canonical
+activation, or implementation authority beyond its bounded semantic library.
 
 ## Closure evidence
 
@@ -27,6 +24,13 @@ or implementation authority beyond its bounded semantic library.
 - Independent Standards, Spec, and Architecture re-reviews passed.
 - PR #30 merged as `089e7aba2c78a8b66cbedd5e195cdf2325b4c51f`.
 - Post-merge Windows, Ubuntu, and CI Gate checks passed.
+- Slice 1 PR #33 merged as
+  `f80c786307fe5e2c2092a0f2955f62ca03c9c7bb`; reviewed code head
+  `78660844e690eeb73cacd8a756a4e65419c1a798` passed ChatGPT direct remote
+  code audit.
+- Merge-SHA Windows, Ubuntu, and CI Gate checks passed, and final local seal
+  passed with local main and origin/main at
+  `f80c786307fe5e2c2092a0f2955f62ca03c9c7bb`.
 
 ## Responsibility
 
@@ -127,11 +131,11 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-The implementation-plan authority is FINAL CLOSED. Current NEXT is guarded
-merge preparation for Data Truth Slice 1 PR #33. Slice 1 is a reviewed PR
-candidate only and is not FINAL CLOSED. Persistent `TruthDecision` authority
-remains NOT IMPLEMENTED. The required QuestDB reconciliation POC and Slice 2
-remain NOT AUTHORIZED; the POC remains mandatory before Slice 2. Any newly
-identified generic mechanical need must first undergo upstream-fit review before
-custom infrastructure is introduced. This authority does not authorize
+The implementation-plan authority is FINAL CLOSED. Current NEXT is Data Truth
+QuestDB reconciliation POC authorization preparation. Slice 1 is FINAL CLOSED.
+Overall Data Truth implementation and persistent `TruthDecision` authority
+remain NOT IMPLEMENTED. The required QuestDB reconciliation POC remains NOT
+AUTHORIZED and mandatory before Slice 2; Slice 2 remains NOT AUTHORIZED. Any
+newly identified generic mechanical need must first undergo upstream-fit review
+before custom infrastructure is introduced. This authority does not authorize
 persistent TruthDecision authority or canonical runtime activation.
