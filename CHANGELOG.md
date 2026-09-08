@@ -1,5 +1,93 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-PREMERGE-STATUS-CLOSURE-REVIEW-FIX-001
+
+**Change:** Corrected the remaining stale Data Truth parent implementation-gate
+sentence after the independent pre-merge status-closure review.
+
+**Reason:** The parent correctly recorded FINAL CLOSED implementation-plan
+authority, but its gate still said implementation planning was the next
+responsibility. Current NEXT is instead Slice 1 semantic-library candidate
+preparation, which remains separately unauthorized.
+
+**Validation / result:** The independent pre-merge status-closure review found
+this one stale gate sentence; all other status-closure, architecture, global
+engineering, and CI checks passed. Data Truth implementation-plan authority
+remains FINAL CLOSED; implementation remains NOT IMPLEMENTED. Slice 1, the
+QuestDB reconciliation POC, and Slice 2 remain unauthorized; QuestDB fit
+remains PARTIAL_FIT. No source, test, dependency, runtime, or production
+change. Ruff PASS; pytest PASS (114 passed, 11 skipped); MyPy PASS; and
+`git diff --check` PASS.
+
+**Commit / PR:** Implementation-gate fix commit
+`4e5f115fb34d2c0c0a3c885cc706435c0751e683`; PR #32 OPEN.
+
+**Next:** Final independent pre-merge re-audit. Slice 1, the QuestDB
+reconciliation POC, Slice 2, and Data Truth implementation remain unauthorized.
+
+**Safety:** Documentation authority only: no QuestDB runtime, canonical
+`hot_capture_facts`, canonical DEDUP, canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-PREMERGE-STATUS-CLOSURE-001
+
+**Change:** Closed the current Project Brain implementation-plan authority
+status after the independently reviewed candidate and PR #32 hosted CI passed.
+Data Truth contract authority remains FINAL CLOSED; implementation-plan
+authority is now FINAL CLOSED; implementation remains NOT IMPLEMENTED.
+
+**Reason:** Current authority still described independent review as pending and
+kept Current NEXT at review. Without this bounded status closure, merging PR
+#32 would leave stale current authority on main.
+
+**Validation / result:** Independent re-review PASS: Standards, Spec,
+Architecture, and Global Engineering Rule. Reviewed candidate head
+`68c757ec08289a53c17744ceb8607cb39dda3108`; PR #32 is OPEN. Slice 1, the
+QuestDB reconciliation POC, and Slice 2 remain unauthorized; QuestDB
+TruthDecision-history fit remains PARTIAL_FIT. No source, test, dependency,
+runtime, or production change. Ruff PASS; pytest PASS (114 passed, 11
+skipped); MyPy PASS; and `git diff --check` PASS.
+
+**Commit / PR:** Status-closure commit
+`c3c79adb22e6c7679985e3d9cfc333ae4a4e43ea`; PR #32 OPEN.
+
+**Next:** Independent pre-merge status-closure review. Slice 1, the QuestDB
+reconciliation POC, Slice 2, and Data Truth implementation remain unauthorized.
+
+**Safety:** Documentation authority only: no QuestDB runtime, canonical
+`hot_capture_facts`, canonical DEDUP, canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-CANDIDATE-001
+
+**Change:** Added the bounded Data Truth implementation-plan authority
+candidate, its two production slices, single-writer initial authority,
+TruthDecision subject-key/retry rules, and the mandatory pre-Slice-2 QuestDB
+reconciliation POC. Added the global V2 engineering lifecycle authority:
+Responsibility → Contract / Interface → Leaf Implementation → Adapter →
+Composition → Integration Test → Runtime Deployment → Canonical
+Activation.
+
+**Reason:** Convert the passed implementation-planning/upstream-fit and
+decision-closure results into durable authority without reopening the sealed
+Data Truth semantic contract or authorizing implementation.
+
+**Validation / result:** Data Truth contract remains FINAL CLOSED;
+implementation remains NOT IMPLEMENTED. TruthDecision DEDUP is disabled,
+QuestDB TruthDecision-history fit remains PARTIAL_FIT, and the disposable POC
+is mandatory before Slice 2. No database, runtime, dependency, source, test,
+or canonical activation was introduced. Decision closure PASS; Ruff PASS;
+pytest PASS (114 passed, 11 skipped); MyPy PASS; and `git diff --check` PASS.
+
+**Commit / PR:** Original candidate commit
+`95a5b8698f83440fbd9232e16b249662a3065f75`; PR NOT OPENED / PENDING
+independent review.
+
+**Next:** Independent review of this implementation-plan authority candidate.
+Slice 1, the Slice-2 QuestDB POC, and Data Truth implementation remain
+unauthorized.
+
+**Safety:** Documentation authority only: no QuestDB runtime, canonical
+`hot_capture_facts`, canonical DEDUP, canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-CONTRACT-POST-MERGE-AUTHORITY-CLOSURE-001
 
 **Change:** Corrected the stale current-authority wording left after the
