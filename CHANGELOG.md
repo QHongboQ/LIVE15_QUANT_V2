@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-GLOBAL-ENGINEERING-GITHUB-FIRST-REMOTE-REVIEW-AUTHORITY-001
+
+**Change:** Added global V2 Engineering authority requiring a GitHub-visible
+candidate branch and Draft PR before formal ChatGPT independent implementation
+or architecture review.
+
+**Reason:** ChatGPT does not directly access the user's local worktree. Local
+implementation, validation, and Codex self-review remain valid evidence, but
+they are not a ChatGPT independent audit of the actual candidate source.
+
+**Validation / result:** The authority preserves the existing V2 lifecycle and
+requires formal ChatGPT review to inspect the GitHub-visible actual
+source/diff/commits/tests and applicable Hosted CI at an exact head SHA. Draft
+PRs are review surfaces only, not merge authority; bounded review fixes stay on
+the same PR through normal commits; CI and local self-review remain separate
+evidence; and cosmetic amend/rebase/force-push is not allowed. Full pytest
+PASS (183 passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff --check`
+PASS. No Data Truth, runtime, production-data, source, test, dependency, or
+current-plan change occurred.
+
+**Commit / PR:** Engineering authority commit
+`c68097a4d362184c131667d3b061e72be3a29780`; audit commit and Draft PR pending
+publication and remote authority audit.
+
+**Next:** Publish this two-commit global Engineering authority candidate as a
+Draft PR for ChatGPT direct remote authority audit. Merge remains separately
+unauthorized.
+
+**Safety:** No runtime, canonical activation, production-data, Data Truth POC,
+or Slice 2 authorization change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-FINAL-STATUS-CLOSURE-001
 
 **Change:** Recorded the completed Data Truth Slice 1 semantic-library
