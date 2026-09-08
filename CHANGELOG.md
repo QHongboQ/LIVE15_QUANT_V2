@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-PREMERGE-STATUS-CLOSURE-001
+
+**Change:** Closed the current Project Brain implementation-plan authority
+status after the independently reviewed candidate and PR #32 hosted CI passed.
+Data Truth contract authority remains FINAL CLOSED; implementation-plan
+authority is now FINAL CLOSED; implementation remains NOT IMPLEMENTED.
+
+**Reason:** Current authority still described independent review as pending and
+kept Current NEXT at review. Without this bounded status closure, merging PR
+#32 would leave stale current authority on main.
+
+**Validation / result:** Independent re-review PASS: Standards, Spec,
+Architecture, and Global Engineering Rule. Reviewed candidate head
+`68c757ec08289a53c17744ceb8607cb39dda3108`; PR #32 is OPEN. Slice 1, the
+QuestDB reconciliation POC, and Slice 2 remain unauthorized; QuestDB
+TruthDecision-history fit remains PARTIAL_FIT. No source, test, dependency,
+runtime, or production change. Ruff PASS; pytest PASS (114 passed, 11
+skipped); MyPy PASS; and `git diff --check` PASS.
+
+**Commit / PR:** Status-closure commit
+`c3c79adb22e6c7679985e3d9cfc333ae4a4e43ea`; PR #32 OPEN.
+
+**Next:** Independent pre-merge status-closure review. Slice 1, the QuestDB
+reconciliation POC, Slice 2, and Data Truth implementation remain unauthorized.
+
+**Safety:** Documentation authority only: no QuestDB runtime, canonical
+`hot_capture_facts`, canonical DEDUP, canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-CANDIDATE-001
 
 **Change:** Added the bounded Data Truth implementation-plan authority
