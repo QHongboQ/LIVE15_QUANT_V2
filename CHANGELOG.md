@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-IMPLEMENTATION-001
+
+**Change:** Implemented the separately authorized local Data Truth Slice 1
+semantic-library candidate: immutable provider-neutral models, the narrow
+three-method history seam, parent composition, Trade Event Facts, one stateless
+Observation Facts policy, and focused behavior and architecture tests.
+
+**Reason:** The sealed Data Truth contract and implementation plan authorize a
+deterministic semantic library as Slice 1 before any persistent TruthDecision
+authority. The candidate preserves the two-child semantic tree and defers the
+mandatory QuestDB reconciliation POC and Slice 2.
+
+**Validation / result:** Baseline validation PASS (Ruff, pytest 114 passed / 11
+skipped, MyPy, and `git diff --check`). Candidate validation PASS: targeted
+Data Truth tests 41 passed; full pytest 155 passed / 11 skipped; Ruff PASS;
+MyPy PASS; and `git diff --check` PASS. Data Truth contract and
+implementation-plan authority remain FINAL CLOSED; overall implementation
+remains NOT IMPLEMENTED. Slice 1 is a local candidate pending independent
+review; persistent TruthDecision authority is NOT implemented; QuestDB fit
+remains PARTIAL_FIT; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No
+runtime, canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Baseline `c13ae9b7fc09db1e8d0bdc51c3218b3f3b647c3a`;
+Slice 1 candidate commit `bc1468becb62ea118f3432c6d8ca6f7393bda464`; PR NOT
+OPENED.
+
+**Next:** Independent implementation review of the Slice 1 semantic-library
+candidate. The QuestDB POC, Slice 2, persistent TruthDecision authority, and
+canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-PREMERGE-STATUS-CLOSURE-REVIEW-FIX-001
 
 **Change:** Corrected the remaining stale Data Truth parent implementation-gate
