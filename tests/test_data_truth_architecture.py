@@ -9,35 +9,67 @@ from live15_quant_v2.data.storage.capture import CaptureFact
 
 ROOT = Path(__file__).parents[1]
 DATA_TRUTH = ROOT / "src" / "live15_quant_v2" / "data" / "data_truth"
+_DATA_TRUTH_PACKAGE = "live15_quant_v2.data.data_truth"
 
 
-def _imported_modules(source: str) -> set[str]:
+def _imported_modules(source: str, *, module_name: str | None = None) -> set[str]:
     imports: set[str] = set()
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.Import):
             imports.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
-            if node.module is None:
+            if node.level:
+                if module_name is None:
+                    raise ValueError("relative imports require a module name")
+                package = module_name.rsplit(".", 1)[0].split(".")
+                base = ".".join(package[: len(package) - node.level + 1])
+                module = f"{base}.{node.module}" if node.module else base
+            else:
+                module = node.module
+            if module is None:
                 continue
-            imports.add(node.module)
-            imports.update(f"{node.module}.{alias.name}" for alias in node.names)
+            imports.add(module)
+            imports.update(f"{module}.{alias.name}" for alias in node.names)
     return imports
 
 
 def _module_imports(module_name: str) -> set[str]:
-    return _imported_modules((DATA_TRUTH / module_name).read_text(encoding="utf-8"))
+    source_module = f"{_DATA_TRUTH_PACKAGE}.{Path(module_name).stem}"
+    return _imported_modules(
+        (DATA_TRUTH / module_name).read_text(encoding="utf-8"),
+        module_name=source_module,
+    )
 
 
 def _has_forbidden_import(imports: set[str], fragment: str) -> bool:
     return any(fragment.casefold() in imported.casefold() for imported in imports)
 
 
-def test_ast_import_extraction_handles_import_and_import_from() -> None:
-    assert _imported_modules("import alpha.beta\nfrom gamma.delta import Value\n") == {
-        "alpha.beta",
-        "gamma.delta",
-        "gamma.delta.Value",
-    }
+def test_ast_import_extraction_handles_normal_and_relative_import_forms() -> None:
+    imports = _imported_modules(
+        "import questdb\n"
+        "import questdb as q\n"
+        "import questdb, os\n"
+        "from questdb import ingress\n"
+        "from questdb.ingress import Sender\n"
+        "from questdb.ingress import Sender as S\n"
+        "from . import observation_facts\n"
+        "from . import observation_facts as obs\n"
+        "from .observation_facts import adjudicate\n"
+        "from .observation_facts import adjudicate as a\n"
+        "from .. import storage\n",
+        module_name=f"{_DATA_TRUTH_PACKAGE}.event_facts",
+    )
+
+    assert {
+        "questdb",
+        "os",
+        "questdb.ingress",
+        "questdb.ingress.Sender",
+        f"{_DATA_TRUTH_PACKAGE}.observation_facts",
+        f"{_DATA_TRUTH_PACKAGE}.observation_facts.adjudicate",
+        "live15_quant_v2.data.storage",
+    } <= imports
 
 
 def test_semantic_tree_is_exactly_event_and_observation_facts() -> None:

@@ -54,10 +54,12 @@ class TruthDecision:
 
     def __post_init__(self) -> None:
         """Take immutable ownership of the contributing capture references."""
-        contributing_capture_ids = tuple(self.contributing_capture_ids)
+        contributing_capture_ids: object = self.contributing_capture_ids
+        if not isinstance(contributing_capture_ids, (list, tuple)):
+            raise TypeError("contributing capture IDs must be a list or tuple")
         if not all(isinstance(capture_id, str) for capture_id in contributing_capture_ids):
             raise TypeError("contributing capture IDs must be strings")
-        object.__setattr__(self, "contributing_capture_ids", contributing_capture_ids)
+        object.__setattr__(self, "contributing_capture_ids", tuple(contributing_capture_ids))
 
 
 @dataclass(frozen=True, slots=True)

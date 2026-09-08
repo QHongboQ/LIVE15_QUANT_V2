@@ -534,3 +534,71 @@ def test_public_authority_models_are_deeply_immutable() -> None:
         identity.trade_id = "other-trade"
     with pytest.raises(FrozenInstanceError):
         anchor.accepted_fact = fact
+
+
+def test_truth_decision_accepts_tuple_references() -> None:
+    from live15_quant_v2.data.data_truth import (
+        EventIdentity,
+        TruthDecision,
+        TruthDecisionCategory,
+    )
+
+    fact = _trade_fact()
+    decision = TruthDecision(
+        subject_capture_id=fact.capture_id,
+        category=TruthDecisionCategory.ACCEPTED,
+        policy_version="data-truth/v1",
+        contributing_capture_ids=(fact.capture_id,),
+        reason=None,
+        event_identity=EventIdentity("kalshi", fact.source_id, "trade", "trade-1"),
+    )
+
+    assert decision.contributing_capture_ids == (fact.capture_id,)
+
+
+@pytest.mark.parametrize(
+    "references",
+    [
+        "capture-trade-1",
+        b"capture-trade-1",
+        bytearray(b"capture-trade-1"),
+        {"capture-trade-1"},
+        frozenset({"capture-trade-1"}),
+        {"capture-trade-1": True},
+        (capture_id for capture_id in ("capture-trade-1",)),
+        1,
+        object(),
+        ["capture-trade-1", 2],
+        ("capture-trade-1", object()),
+    ],
+    ids=[
+        "str",
+        "bytes",
+        "bytearray",
+        "set",
+        "frozenset",
+        "dict",
+        "generator",
+        "integer",
+        "object",
+        "list-non-string-element",
+        "tuple-non-string-element",
+    ],
+)
+def test_truth_decision_rejects_unsafe_reference_input(references: object) -> None:
+    from live15_quant_v2.data.data_truth import (
+        EventIdentity,
+        TruthDecision,
+        TruthDecisionCategory,
+    )
+
+    fact = _trade_fact()
+    with pytest.raises(TypeError):
+        TruthDecision(
+            subject_capture_id=fact.capture_id,
+            category=TruthDecisionCategory.ACCEPTED,
+            policy_version="data-truth/v1",
+            contributing_capture_ids=references,
+            reason=None,
+            event_identity=EventIdentity("kalshi", fact.source_id, "trade", "trade-1"),
+        )
