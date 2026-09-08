@@ -52,6 +52,10 @@ class DataTruth:
             if isinstance(event_identity, TruthDecision):
                 return event_identity
             anchor = self._history.find_accepted_event(event_identity)
+            if anchor is not None and anchor.accepted_fact.capture_id == fact.capture_id:
+                raise TruthDecisionInvariantError(
+                    "accepted event anchor contradicts missing subject authority"
+                )
             return self._event_facts.decide(fact, anchor)
         if fact.message_type in _OBSERVATION_MESSAGE_TYPES:
             return self._observation_facts.decide(fact)

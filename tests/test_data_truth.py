@@ -269,6 +269,35 @@ def test_wrong_policy_event_anchor_fails_closed_before_append() -> None:
     assert history.append_calls == 0
 
 
+def test_same_subject_event_anchor_fails_closed_before_duplicate_classification() -> None:
+    from live15_quant_v2.data.data_truth import DataTruth, TruthDecisionInvariantError
+
+    accepted = _trade_fact()
+    anchor = _accepted_anchor(accepted)
+    history = FakeTruthDecisionHistory(anchors={anchor.event_identity: anchor})
+
+    with pytest.raises(TruthDecisionInvariantError):
+        DataTruth(history).decide(accepted)
+
+    assert history.append_calls == 0
+    assert history.event_lookups == [anchor.event_identity]
+
+
+def test_same_subject_event_anchor_fails_closed_before_conflict_classification() -> None:
+    from live15_quant_v2.data.data_truth import DataTruth, TruthDecisionInvariantError
+
+    accepted = _trade_fact()
+    subject = replace(accepted, payload=_trade_payload(yes_price="0.4300"))
+    anchor = _accepted_anchor(accepted)
+    history = FakeTruthDecisionHistory(anchors={anchor.event_identity: anchor})
+
+    with pytest.raises(TruthDecisionInvariantError):
+        DataTruth(history).decide(subject)
+
+    assert history.append_calls == 0
+    assert history.event_lookups == [anchor.event_identity]
+
+
 @pytest.mark.parametrize(
     ("fact", "reason"),
     [
