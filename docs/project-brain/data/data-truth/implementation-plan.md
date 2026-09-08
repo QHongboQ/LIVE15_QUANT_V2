@@ -4,8 +4,7 @@
 
 **Contract authority:** FINAL CLOSED.
 
-**Implementation-plan authority:** CANDIDATE pending independent review and
-merge.
+**Implementation-plan authority:** FINAL CLOSED.
 
 **Implementation:** NOT IMPLEMENTED. Slice 1 and Slice 2 are NOT AUTHORIZED.
 The required QuestDB TruthDecision-history POC is NOT AUTHORIZED and must pass

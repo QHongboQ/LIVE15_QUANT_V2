@@ -4,8 +4,8 @@
 
 **Contract authority:** FINAL CLOSED.
 
-**Implementation-plan authority:** CANDIDATE pending independent review and
-merge; see [implementation-plan.md](implementation-plan.md).
+**Implementation-plan authority:** FINAL CLOSED; see
+[implementation-plan.md](implementation-plan.md).
 
 **Implementation:** NOT IMPLEMENTED.
 
