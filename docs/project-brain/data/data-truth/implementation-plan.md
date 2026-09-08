@@ -6,9 +6,10 @@
 
 **Implementation-plan authority:** FINAL CLOSED.
 
-**Implementation:** NOT IMPLEMENTED. Slice 1 and Slice 2 are NOT AUTHORIZED.
-The required QuestDB TruthDecision-history POC is NOT AUTHORIZED and must pass
-before Slice 2 can be authorized.
+**Implementation:** NOT IMPLEMENTED. Slice 1 is FINAL CLOSED. The required
+QuestDB TruthDecision-history reconciliation POC is FINAL CLOSED, PASS /
+ACCEPTED. Slice 2 remains NOT AUTHORIZED and requires separate explicit
+authorization.
 
 Replay & As-Of, Canonical Dataset, Model, and Trading remain UNIMPLEMENTED.
 Canonical runtime activation remains UNAUTHORIZED. This plan creates neither
@@ -147,13 +148,20 @@ valid first slice, but Data Truth cannot be FINAL CLOSED before persistent
 append-only TruthDecision authority is independently accepted.
 
 QuestDB Server `10.0.1` with existing `questdb==5.0.0` is the preferred
-generic persistence/query mechanism, but current TruthDecision-history fit is
-**PARTIAL_FIT**. Full fit under the single-writer constraint is not yet proven.
-Before Slice 2, a disposable, test-owned POC must prove direct append
-acknowledgement, acknowledgement-loss/ambiguous-write behavior, subject-key
-lookup/read visibility, no blind-reappend requirement, and append-only
-operation without DEDUP. It must not use canonical tables, alter `server.conf`,
-or enable canonical SF or DEDUP.
+generic persistence/query mechanism. TruthDecision-history
+persistence/reconciliation fit is **PROVEN UNDER THE APPROVED SINGLE-WRITER
+CONSTRAINT** by the accepted disposable POC: direct append acknowledgement,
+committed-but-no-caller-ACK reconciliation, ambiguous-write/in-doubt handling,
+exact subject-key lookup/read visibility, no blind reappend, fail-closed
+conflicting/multiple authority, and append-only operation without DEDUP or
+UPSERT. The POC did not use canonical tables, alter `server.conf`, or enable
+canonical SF or DEDUP.
+
+That accepted mechanical result does not implement Slice 2, a production
+`questdb_history.py`, production `find_accepted_event` behavior, Hot Store
+evidence resolution, multi-writer safety, concurrent `decide()`, a canonical
+TruthDecision table, or canonical runtime activation. Slice 2 remains NOT
+AUTHORIZED pending separate explicit authorization.
 
 One conceptual append-only TruthDecision-history table may be needed. It keeps
 the subject key, policy version, category, contributing CaptureFact IDs,

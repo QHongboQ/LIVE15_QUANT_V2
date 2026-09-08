@@ -12,6 +12,12 @@
 **Slice 1 semantic-library implementation:** FINAL CLOSED. It provides no
 persistent `TruthDecision` authority.
 
+**QuestDB reconciliation POC gate:** FINAL CLOSED. The technical result is
+PASS / ACCEPTED under the approved single-writer constraint.
+
+**Persistent `TruthDecision` authority:** NOT IMPLEMENTED. **Slice 2:** NOT
+AUTHORIZED. Canonical runtime activation remains NOT AUTHORIZED.
+
 This sealed authority records the approved semantic boundary. The FINAL CLOSED
 Slice 1 semantic library creates no schema, table, runtime component, canonical
 activation, or implementation authority beyond its bounded semantic library.
@@ -31,6 +37,11 @@ activation, or implementation authority beyond its bounded semantic library.
 - Merge-SHA Windows, Ubuntu, and CI Gate checks passed, and final local seal
   passed with local main and origin/main at
   `f80c786307fe5e2c2092a0f2955f62ca03c9c7bb`.
+- QuestDB reconciliation POC PR #36 merged as
+  `249144de204247bd7a0589d8ba67116c48b8dcc7`; reviewed POC head
+  `a4fd011586289ede142d7d087f682898aef18530` passed ChatGPT direct remote POC
+  review. Merge-SHA Windows, Ubuntu, and CI Gate checks passed, as did the
+  merge-SHA local opt-in POC A-L (12 passed).
 
 ## Responsibility
 
@@ -131,11 +142,21 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-The implementation-plan authority is FINAL CLOSED. Current NEXT is Data Truth
-QuestDB reconciliation POC authorization preparation. Slice 1 is FINAL CLOSED.
-Overall Data Truth implementation and persistent `TruthDecision` authority
-remain NOT IMPLEMENTED. The required QuestDB reconciliation POC remains NOT
-AUTHORIZED and mandatory before Slice 2; Slice 2 remains NOT AUTHORIZED. Any
-newly identified generic mechanical need must first undergo upstream-fit review
-before custom infrastructure is introduced. This authority does not authorize
-persistent TruthDecision authority or canonical runtime activation.
+The implementation-plan authority is FINAL CLOSED. Slice 1 is FINAL CLOSED.
+The QuestDB TruthDecision-history persistence/reconciliation fit is **PROVEN
+UNDER THE APPROVED SINGLE-WRITER CONSTRAINT** by the FINAL CLOSED, PASS /
+ACCEPTED POC gate. The POC proves direct append acknowledgement, exact
+server-visible subject lookup, committed-but-no-caller-ACK reconciliation,
+ambiguous absence remaining in-doubt, no blind reappend, fail-closed
+conflicting/multiple authority, and append-only operation without DEDUP or
+UPSERT.
+
+It does not implement a production `questdb_history.py`, production
+`find_accepted_event` behavior, Hot Store evidence-resolution integration,
+multi-writer or concurrent-`decide()` safety, a canonical TruthDecision table,
+or canonical runtime activation. Overall Data Truth implementation and
+persistent `TruthDecision` authority remain NOT IMPLEMENTED; Slice 2 remains
+NOT AUTHORIZED. Current NEXT is Data Truth Slice 2 authorization preparation.
+Any newly identified generic mechanical need must first undergo upstream-fit
+review before custom infrastructure is introduced. This authority does not
+authorize persistent TruthDecision authority or canonical runtime activation.

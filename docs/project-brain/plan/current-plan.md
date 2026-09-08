@@ -31,19 +31,23 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   semantic library is FINAL CLOSED after PR #33 merge
   `f80c786307fe5e2c2092a0f2955f62ca03c9c7bb`, merge-SHA hosted CI PASS, and
   final local seal PASS. It provides no persistent TruthDecision authority.
-  QuestDB TruthDecision-history fit remains PARTIAL_FIT. The mandatory QuestDB
-  reconciliation POC remains NOT AUTHORIZED before Slice 2, and Slice 2 remains
-  NOT AUTHORIZED. Replay & As-Of, Canonical Dataset, Model, Trading, and broad
-  Operations functionality remain unimplemented.
+  QuestDB TruthDecision-history persistence/reconciliation fit is PROVEN under
+  the approved single-writer constraint: POC PR #36 merged as
+  `249144de204247bd7a0589d8ba67116c48b8dcc7`, its ChatGPT remote review PASS,
+  merge-SHA hosted CI PASS, and merge-SHA local opt-in POC A-L PASS (12
+  passed). The POC gate is FINAL CLOSED / PASS / accepted. Persistent
+  TruthDecision authority remains NOT IMPLEMENTED; Slice 2 remains NOT
+  AUTHORIZED. Replay & As-Of, Canonical Dataset, Model, Trading, and broad
+  Operations functionality remain unimplemented. Canonical runtime activation
+  remains unauthorized.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Data Truth QuestDB reconciliation POC
-authorization preparation**. Slice 1 is FINAL CLOSED. Overall Data Truth
-implementation and persistent TruthDecision authority remain NOT IMPLEMENTED.
-The required QuestDB reconciliation POC remains NOT AUTHORIZED and mandatory
-before Slice 2; Slice 2 remains NOT AUTHORIZED. Replay & As-Of and Canonical
+Current NEXT: **Data System → Data Truth Slice 2 authorization preparation**.
+Slice 1 and the QuestDB reconciliation POC gate are FINAL CLOSED. Overall Data
+Truth implementation and persistent TruthDecision authority remain NOT
+IMPLEMENTED. Slice 2 remains NOT AUTHORIZED. Replay & As-Of and Canonical
 Dataset remain unimplemented; canonical runtime activation remains unauthorized.
