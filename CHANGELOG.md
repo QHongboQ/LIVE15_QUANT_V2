@@ -1,5 +1,41 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-INDEPENDENT-RE-REVIEW-FIX-001
+
+**Change:** Tightened the local Slice 1 `TruthDecision` reference-input
+contract to accept only `list[str]` and `tuple[str, ...]`, then store an owned
+tuple. Hardened the AST import test helper to resolve normal relative
+`ImportFrom` statements, including `module=None`, against the inspected module
+package.
+
+**Reason:** The independent re-review found two remaining bounded defects:
+arbitrary iterable/string contributing-ID normalization could split a scalar
+string into character references, and relative imports such as `from . import
+observation_facts` could bypass architecture-boundary enforcement.
+
+**Validation / result:** The pre-fix independent re-review recorded Standards
+PASS; Spec, Architecture, Test Authority, and Immutability FAIL; and Failure /
+Reconciliation PASS. This fix adds direct rejection coverage for scalar,
+unordered, mapping, generator, and non-string-element reference input, plus
+normal, aliased, multi-name, absolute, and relative AST import-form coverage.
+Focused Data Truth tests PASS (65 passed); full pytest PASS (179 passed, 11
+skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS. Slice 1 remains a
+LOCAL CANDIDATE and is not FINAL CLOSED; Data Truth and persistent
+`TruthDecision` authority remain NOT IMPLEMENTED; QuestDB fit remains
+PARTIAL_FIT; the POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+production-data, or dependency change occurred.
+
+**Commit / PR:** Baseline `c13ae9b7fc09db1e8d0bdc51c3218b3f3b647c3a`;
+previous candidate head `a06b91fdc58fb3c9e078c84cbbde1642518edb44`; second
+review-fix commit `2493c5265125593c10047b5c71e4bf0f686ba833`; PR NOT OPENED.
+
+**Next:** Independent re-review of the local Slice 1 candidate after this
+second bounded review fix. Publication, the QuestDB POC, Slice 2, persistent
+TruthDecision authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-INDEPENDENT-REVIEW-FIX-001
 
 **Change:** Hardened the local Data Truth Slice 1 candidate's authority
