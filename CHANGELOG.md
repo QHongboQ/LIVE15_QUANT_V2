@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-GLOBAL-ENGINEERING-GITHUB-FIRST-REMOTE-REVIEW-AUTHORITY-REMOTE-AUDIT-FIX-001
+
+**Change:** Generalized the global GitHub-first authority so formal ChatGPT
+independent review of any repository change requires the actual changed scope
+to be visible on GitHub, with source and tests included only where applicable.
+
+**Reason:** ChatGPT's direct GitHub authority audit of PR #35 found that the
+original rule correctly covered implementation and architecture review but did
+not explicitly cover pure Project Brain, authority, contract, lifecycle/status,
+and engineering-governance review.
+
+**Validation / result:** Local work and validation remain allowed, but no
+local-only candidate can receive formal ChatGPT independent-review PASS.
+Docs-only changes require the actual remote documentation/diff/commits and may
+receive bounded remote authority or status verification without reopening
+unchanged production-code review. Formal review remains bound to the exact
+remote head; fixes stay on the same PR through normal commits; Draft PRs do not
+authorize merge; and cosmetic amend/rebase/force-push remains disallowed. Full
+pytest PASS (183 passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff
+--check` PASS. No source, test, runtime, Data Truth, current-plan, production,
+or dependency change occurred.
+
+**Commit / PR:** Scope-fix commit
+`55cde353a04a4e4b2eab6db391f9739a3fa3708e`; audit commit pending. Existing
+Draft PR #35 remains the remote review surface and is not ready for merge.
+
+**Next:** Push these bounded fixes to PR #35 and obtain ChatGPT direct GitHub
+remote authority re-audit of the new exact head. Merge remains unauthorized.
+
+**Safety:** No QuestDB POC, Slice 2, runtime, canonical activation, or
+production-data authorization change.
+
 ## 2026-09-07 — LIVE15-V2-GLOBAL-ENGINEERING-GITHUB-FIRST-REMOTE-REVIEW-AUTHORITY-001
 
 **Change:** Added global V2 Engineering authority requiring a GitHub-visible
