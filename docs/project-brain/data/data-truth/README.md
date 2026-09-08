@@ -9,9 +9,13 @@
 
 **Implementation:** NOT IMPLEMENTED.
 
-This sealed authority records the approved semantic boundary only. It creates
-no source code, schema, table, runtime component, canonical activation, or Data
-Truth implementation authorization.
+**Slice 1 semantic-library implementation:** LOCAL CANDIDATE pending
+independent review and merge. It provides no persistent `TruthDecision`
+authority.
+
+This sealed authority records the approved semantic boundary. The local Slice 1
+candidate creates no schema, table, runtime component, canonical activation, or
+implementation authority beyond its bounded semantic library.
 
 ## Closure evidence
 
@@ -122,9 +126,9 @@ invariant, not a future refactoring preference.
 ## Implementation gate
 
 The implementation-plan authority is FINAL CLOSED. Current NEXT is Data Truth
-Slice 1 semantic-library candidate preparation. Slice 1 requires separate
-authorization and remains NOT AUTHORIZED. The required QuestDB reconciliation
-POC and Slice 2 remain separately unauthorized; the POC remains mandatory
-before Slice 2. Any newly identified generic mechanical need must first undergo
-upstream-fit review before custom infrastructure is introduced. This authority
-does not authorize Data Truth implementation or canonical runtime activation.
+Slice 1 semantic-library candidate independent review. Slice 1 is a local
+candidate only and is not FINAL CLOSED. The required QuestDB reconciliation POC
+and Slice 2 remain NOT AUTHORIZED; the POC remains mandatory before Slice 2.
+Any newly identified generic mechanical need must first undergo upstream-fit
+review before custom infrastructure is introduced. This authority does not
+authorize persistent TruthDecision authority or canonical runtime activation.
