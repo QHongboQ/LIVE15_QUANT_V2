@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-PR33-SAME-SUBJECT-ANCHOR-CONSISTENCY-FIX-001
+
+**Change:** Added a parent-composition consistency guard that rejects an
+accepted `EventAnchor` when its accepted fact has the same `capture_id` as the
+current subject after subject lookup reported no decision. Added equal- and
+changed-projection regressions for this contradictory history state.
+
+**Reason:** ChatGPT's direct remote re-audit of Draft PR #33 found that a
+missing subject decision and an accepted event anchor could claim the same
+immutable CaptureFact subject, allowing an impossible DUPLICATE or CONFLICT
+classification.
+
+**Validation / result:** Both same-subject variants raise
+`TruthDecisionInvariantError` before append, and each performs exactly one
+event-anchor lookup. Targeted Data Truth tests PASS (69 passed); full pytest
+PASS (183 passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff --check`
+PASS. PR #33 remains OPEN and DRAFT. This records the bounded fix only and does
+not claim final ChatGPT remote-audit PASS. Slice 1 remains NOT FINAL CLOSED;
+overall Data Truth implementation and persistent TruthDecision authority remain
+NOT IMPLEMENTED; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Same-subject anchor fix commit
+`2568216f0adcba147052ef3ace451c35dfd88511`; PR #33 DRAFT.
+
+**Next:** ChatGPT final direct remote audit of the updated Draft PR #33 before
+any review-ready or merge decision. The QuestDB POC, Slice 2, persistent
+TruthDecision authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-PR33-CHATGPT-REMOTE-AUDIT-FIX-001
 
 **Change:** Updated Draft PR #33's Slice 1 semantic-library candidate with two
