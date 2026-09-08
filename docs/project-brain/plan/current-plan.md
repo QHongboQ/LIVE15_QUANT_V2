@@ -28,10 +28,12 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   merge, post-merge CI, and final local seal passed.
 - Data Truth contract authority = FINAL CLOSED. Implementation-plan authority
   = FINAL CLOSED. Overall implementation remains NOT IMPLEMENTED. The Slice 1
-  semantic library is a DRAFT PR CANDIDATE — PR #33, pending direct remote
-  implementation review/fix; it provides no persistent TruthDecision authority.
-  The plan defines two production slices and a mandatory QuestDB reconciliation
-  POC before Slice 2; the POC and Slice 2 remain NOT AUTHORIZED. Replay & As-Of,
+  semantic library is a REVIEWED PR CANDIDATE — PR #33. Direct remote code
+  audit = PASS for reviewed code head `78660844e690eeb73cacd8a756a4e65419c1a798`.
+  Slice 1 is not FINAL CLOSED and provides no persistent TruthDecision
+  authority. QuestDB TruthDecision-history fit remains PARTIAL_FIT. The plan
+  defines two production slices and a mandatory QuestDB reconciliation POC
+  before Slice 2; the POC and Slice 2 remain NOT AUTHORIZED. Replay & As-Of,
   Canonical Dataset, Model, Trading, and broad Operations functionality remain
   unimplemented.
 
@@ -40,8 +42,9 @@ implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → direct remote review / bounded fix of Data Truth
-Slice 1 Draft PR #33**. Slice 1 is not FINAL CLOSED. The required QuestDB
-reconciliation POC and Slice 2 remain NOT AUTHORIZED; the POC remains mandatory
-before Slice 2. Replay & As-Of and Canonical Dataset remain unimplemented;
-canonical runtime activation remains unauthorized.
+Current NEXT: **Data System → guarded merge preparation for Data Truth Slice 1
+PR #33**. Slice 1 is not FINAL CLOSED. Persistent TruthDecision authority
+remains NOT IMPLEMENTED. The required QuestDB reconciliation POC and Slice 2
+remain NOT AUTHORIZED; the POC remains mandatory before Slice 2. Replay & As-Of
+and Canonical Dataset remain unimplemented; canonical runtime activation remains
+unauthorized.

@@ -9,8 +9,10 @@
 
 **Implementation:** NOT IMPLEMENTED.
 
-**Slice 1 semantic-library implementation:** DRAFT PR CANDIDATE — PR #33,
-pending direct remote implementation review/fix. It provides no persistent
+**Slice 1 semantic-library implementation:** REVIEWED PR CANDIDATE — PR #33.
+ChatGPT direct remote code audit = PASS for reviewed code head
+`78660844e690eeb73cacd8a756a4e65419c1a798`. Pending guarded merge,
+post-merge hosted CI, and final local seal. It provides no persistent
 `TruthDecision` authority.
 
 This sealed authority records the approved semantic boundary. The Slice 1 Draft
@@ -125,11 +127,11 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-The implementation-plan authority is FINAL CLOSED. Current NEXT is direct
-remote review / bounded fix of Data Truth Slice 1 Draft PR #33. Slice 1 is a
-Draft PR candidate only and is not FINAL CLOSED. The required QuestDB
-reconciliation POC and Slice 2 remain NOT AUTHORIZED; the POC remains mandatory
-before Slice 2. Any newly identified generic mechanical need must first undergo
-upstream-fit review before custom infrastructure is introduced. This authority
-does not authorize persistent TruthDecision authority or canonical runtime
-activation.
+The implementation-plan authority is FINAL CLOSED. Current NEXT is guarded
+merge preparation for Data Truth Slice 1 PR #33. Slice 1 is a reviewed PR
+candidate only and is not FINAL CLOSED. Persistent `TruthDecision` authority
+remains NOT IMPLEMENTED. The required QuestDB reconciliation POC and Slice 2
+remain NOT AUTHORIZED; the POC remains mandatory before Slice 2. Any newly
+identified generic mechanical need must first undergo upstream-fit review before
+custom infrastructure is introduced. This authority does not authorize
+persistent TruthDecision authority or canonical runtime activation.
