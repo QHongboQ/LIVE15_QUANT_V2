@@ -1,5 +1,212 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-PR33-PREMERGE-STATUS-CLOSURE-001
+
+**Change:** Advanced Data Truth Slice 1 current authority from DRAFT PR
+CANDIDATE pending direct remote review/fix to REVIEWED PR CANDIDATE for PR #33.
+Recorded the ChatGPT direct remote code-audit PASS for reviewed code head
+`78660844e690eeb73cacd8a756a4e65419c1a798` and set Current NEXT to guarded
+merge preparation.
+
+**Reason:** The final direct remote audit confirmed that the prior bounded
+authority defects were fixed, no code blockers remain, and the reviewed Slice 1
+candidate is ready for guarded merge preparation. This status closure does not
+merge the PR or close Slice 1.
+
+**Validation / result:** ChatGPT final direct remote code audit = PASS;
+Standards, Spec, Architecture, Test Authority, Immutability, and Failure /
+Reconciliation reviews = PASS; known code defects = NONE; architecture drift =
+NONE. Targeted Data Truth tests PASS (69 passed); full pytest PASS (183 passed,
+11 skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS. Slice 1 remains
+NOT FINAL CLOSED; overall Data Truth and persistent TruthDecision authority
+remain NOT IMPLEMENTED; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No
+production, runtime, or dependency change occurred.
+
+**Commit / PR:** Reviewed PR #33; reviewed code head
+`78660844e690eeb73cacd8a756a4e65419c1a798`; pre-merge status commit
+`9e043bc0bdfa1f3a3f3ccab4562e00971ee8c1b7`; PR #33 remains OPEN and DRAFT
+pending hosted CI for this status-only update.
+
+**Next:** Push the status-only closure to PR #33, verify hosted CI on the new
+head, mark the PR ready for review, then obtain ChatGPT pre-merge remote
+verification. Guarded merge remains separately unauthorized.
+
+**Safety:** No source, test, QuestDB runtime, canonical `hot_capture_facts`,
+canonical DEDUP, canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-PR33-SAME-SUBJECT-ANCHOR-CONSISTENCY-FIX-001
+
+**Change:** Added a parent-composition consistency guard that rejects an
+accepted `EventAnchor` when its accepted fact has the same `capture_id` as the
+current subject after subject lookup reported no decision. Added equal- and
+changed-projection regressions for this contradictory history state.
+
+**Reason:** ChatGPT's direct remote re-audit of Draft PR #33 found that a
+missing subject decision and an accepted event anchor could claim the same
+immutable CaptureFact subject, allowing an impossible DUPLICATE or CONFLICT
+classification.
+
+**Validation / result:** Both same-subject variants raise
+`TruthDecisionInvariantError` before append, and each performs exactly one
+event-anchor lookup. Targeted Data Truth tests PASS (69 passed); full pytest
+PASS (183 passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff --check`
+PASS. PR #33 remains OPEN and DRAFT. This records the bounded fix only and does
+not claim final ChatGPT remote-audit PASS. Slice 1 remains NOT FINAL CLOSED;
+overall Data Truth implementation and persistent TruthDecision authority remain
+NOT IMPLEMENTED; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Same-subject anchor fix commit
+`2568216f0adcba147052ef3ace451c35dfd88511`; PR #33 DRAFT.
+
+**Next:** ChatGPT final direct remote audit of the updated Draft PR #33 before
+any review-ready or merge decision. The QuestDB POC, Slice 2, persistent
+TruthDecision authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-PR33-CHATGPT-REMOTE-AUDIT-FIX-001
+
+**Change:** Updated Draft PR #33's Slice 1 semantic-library candidate with two
+bounded authority checks: `TruthDecision` now snapshots contributing capture IDs
+once before validating and storing them, and Event Facts rejects an accepted
+`EventAnchor` whose decision policy version differs from `data-truth/v1`.
+Updated active Data Truth authority from LOCAL CANDIDATE to DRAFT PR CANDIDATE
+for PR #33, pending direct remote implementation review/fix.
+
+**Reason:** ChatGPT's direct remote code audit of Draft PR #33 returned
+FAIL_WITH_BOUNDED_FIX: caller-owned contributing-ID input could change between
+validation and storage; an accepted anchor's policy version was not verified;
+and active Project Brain status was stale after publication.
+
+**Validation / result:** Added an adversarial stateful-list regression proving
+the stored authority is the exact once-snapshotted, validated string tuple, and
+a wrong-policy accepted-anchor regression proving `TruthDecisionInvariantError`
+before any append. Targeted Data Truth tests PASS (67 passed); full pytest PASS
+(181 passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS.
+PR #33 remains OPEN and DRAFT. This records the bounded fix only; it does not
+claim a ChatGPT remote re-audit PASS. Slice 1 remains NOT FINAL CLOSED; overall
+Data Truth implementation and persistent TruthDecision authority remain NOT
+IMPLEMENTED; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Remote-audit fix commit
+`8952796d193a5bd7814c7882365a4e13711520ad`; PR #33 DRAFT.
+
+**Next:** ChatGPT direct remote re-audit of the updated Draft PR #33 before any
+review-ready or merge decision. The QuestDB POC, Slice 2, persistent
+TruthDecision authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-INDEPENDENT-RE-REVIEW-FIX-001
+
+**Change:** Tightened the local Slice 1 `TruthDecision` reference-input
+contract to accept only `list[str]` and `tuple[str, ...]`, then store an owned
+tuple. Hardened the AST import test helper to resolve normal relative
+`ImportFrom` statements, including `module=None`, against the inspected module
+package.
+
+**Reason:** The independent re-review found two remaining bounded defects:
+arbitrary iterable/string contributing-ID normalization could split a scalar
+string into character references, and relative imports such as `from . import
+observation_facts` could bypass architecture-boundary enforcement.
+
+**Validation / result:** The pre-fix independent re-review recorded Standards
+PASS; Spec, Architecture, Test Authority, and Immutability FAIL; and Failure /
+Reconciliation PASS. This fix adds direct rejection coverage for scalar,
+unordered, mapping, generator, and non-string-element reference input, plus
+normal, aliased, multi-name, absolute, and relative AST import-form coverage.
+Focused Data Truth tests PASS (65 passed); full pytest PASS (179 passed, 11
+skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS. Slice 1 remains a
+LOCAL CANDIDATE and is not FINAL CLOSED; Data Truth and persistent
+`TruthDecision` authority remain NOT IMPLEMENTED; QuestDB fit remains
+PARTIAL_FIT; the POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+production-data, or dependency change occurred.
+
+**Commit / PR:** Baseline `c13ae9b7fc09db1e8d0bdc51c3218b3f3b647c3a`;
+previous candidate head `a06b91fdc58fb3c9e078c84cbbde1642518edb44`; second
+review-fix commit `2493c5265125593c10047b5c71e4bf0f686ba833`; PR NOT OPENED.
+
+**Next:** Independent re-review of the local Slice 1 candidate after this
+second bounded review fix. Publication, the QuestDB POC, Slice 2, persistent
+TruthDecision authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-INDEPENDENT-REVIEW-FIX-001
+
+**Change:** Hardened the local Data Truth Slice 1 candidate's authority
+invariants and its focused architecture tests. `TruthDecision` now takes tuple
+ownership of contributing capture references; corrupted event anchors now fail
+closed when their decision subject or contributing references disagree with
+their accepted fact; and import-boundary tests inspect Python AST imports
+rather than source-text substrings.
+
+**Reason:** The original independent review accepted the bounded Slice 1
+design but found a shallow immutability leak, two missing EventAnchor
+consistency checks, incomplete corrupt-anchor coverage, and brittle
+architecture-import checks.
+
+**Validation / result:** The original review recorded Standards PASS; Spec,
+Architecture, Test Authority, and Immutability FAIL; and Failure /
+Reconciliation PASS. This local review fix adds explicit caller-mutation,
+seven corrupt-anchor, invalid-payload non-identity, and AST-boundary
+regressions. Focused Data Truth tests PASS (53 passed); full pytest PASS (167
+passed, 11 skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS. Slice
+1 remains a local candidate pending independent re-review; persistent
+TruthDecision authority remains NOT implemented; QuestDB fit remains
+PARTIAL_FIT; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No runtime,
+canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Original Slice 1 candidate commit
+`bc1468becb62ea118f3432c6d8ca6f7393bda464`; candidate audit commit
+`ae327883ee46633731fcf454e546405415440234`; review-fix commit
+`ad4feff051cc61057a0d65f899921e4545554201`; PR NOT OPENED.
+
+**Next:** Independent re-review of the local Slice 1 candidate after this
+bounded review fix. The QuestDB POC, Slice 2, persistent TruthDecision
+authority, and canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-SLICE-1-SEMANTIC-LIBRARY-IMPLEMENTATION-001
+
+**Change:** Implemented the separately authorized local Data Truth Slice 1
+semantic-library candidate: immutable provider-neutral models, the narrow
+three-method history seam, parent composition, Trade Event Facts, one stateless
+Observation Facts policy, and focused behavior and architecture tests.
+
+**Reason:** The sealed Data Truth contract and implementation plan authorize a
+deterministic semantic library as Slice 1 before any persistent TruthDecision
+authority. The candidate preserves the two-child semantic tree and defers the
+mandatory QuestDB reconciliation POC and Slice 2.
+
+**Validation / result:** Baseline validation PASS (Ruff, pytest 114 passed / 11
+skipped, MyPy, and `git diff --check`). Candidate validation PASS: targeted
+Data Truth tests 41 passed; full pytest 155 passed / 11 skipped; Ruff PASS;
+MyPy PASS; and `git diff --check` PASS. Data Truth contract and
+implementation-plan authority remain FINAL CLOSED; overall implementation
+remains NOT IMPLEMENTED. Slice 1 is a local candidate pending independent
+review; persistent TruthDecision authority is NOT implemented; QuestDB fit
+remains PARTIAL_FIT; the QuestDB POC and Slice 2 remain NOT AUTHORIZED. No
+runtime, canonical, dependency, or production-data change occurred.
+
+**Commit / PR:** Baseline `c13ae9b7fc09db1e8d0bdc51c3218b3f3b647c3a`;
+Slice 1 candidate commit `bc1468becb62ea118f3432c6d8ca6f7393bda464`; PR NOT
+OPENED.
+
+**Next:** Independent implementation review of the Slice 1 semantic-library
+candidate. The QuestDB POC, Slice 2, persistent TruthDecision authority, and
+canonical runtime activation remain unauthorized.
+
+**Safety:** No QuestDB runtime, canonical `hot_capture_facts`, canonical DEDUP,
+canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-PREMERGE-STATUS-CLOSURE-REVIEW-FIX-001
 
 **Change:** Corrected the remaining stale Data Truth parent implementation-gate

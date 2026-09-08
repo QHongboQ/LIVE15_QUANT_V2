@@ -9,9 +9,15 @@
 
 **Implementation:** NOT IMPLEMENTED.
 
-This sealed authority records the approved semantic boundary only. It creates
-no source code, schema, table, runtime component, canonical activation, or Data
-Truth implementation authorization.
+**Slice 1 semantic-library implementation:** REVIEWED PR CANDIDATE — PR #33.
+ChatGPT direct remote code audit = PASS for reviewed code head
+`78660844e690eeb73cacd8a756a4e65419c1a798`. Pending guarded merge,
+post-merge hosted CI, and final local seal. It provides no persistent
+`TruthDecision` authority.
+
+This sealed authority records the approved semantic boundary. The Slice 1 Draft
+PR candidate creates no schema, table, runtime component, canonical activation,
+or implementation authority beyond its bounded semantic library.
 
 ## Closure evidence
 
@@ -121,10 +127,11 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-The implementation-plan authority is FINAL CLOSED. Current NEXT is Data Truth
-Slice 1 semantic-library candidate preparation. Slice 1 requires separate
-authorization and remains NOT AUTHORIZED. The required QuestDB reconciliation
-POC and Slice 2 remain separately unauthorized; the POC remains mandatory
-before Slice 2. Any newly identified generic mechanical need must first undergo
-upstream-fit review before custom infrastructure is introduced. This authority
-does not authorize Data Truth implementation or canonical runtime activation.
+The implementation-plan authority is FINAL CLOSED. Current NEXT is guarded
+merge preparation for Data Truth Slice 1 PR #33. Slice 1 is a reviewed PR
+candidate only and is not FINAL CLOSED. Persistent `TruthDecision` authority
+remains NOT IMPLEMENTED. The required QuestDB reconciliation POC and Slice 2
+remain NOT AUTHORIZED; the POC remains mandatory before Slice 2. Any newly
+identified generic mechanical need must first undergo upstream-fit review before
+custom infrastructure is introduced. This authority does not authorize
+persistent TruthDecision authority or canonical runtime activation.

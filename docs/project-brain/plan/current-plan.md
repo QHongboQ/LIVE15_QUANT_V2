@@ -27,18 +27,24 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   `10.0.1` runtime is operational; independent review, PR #20, hosted CI,
   merge, post-merge CI, and final local seal passed.
 - Data Truth contract authority = FINAL CLOSED. Implementation-plan authority
-  = FINAL CLOSED. Implementation remains NOT IMPLEMENTED. The plan defines two
-  production slices and a mandatory QuestDB reconciliation POC before Slice 2;
-  it does not authorize either slice. Replay & As-Of, Canonical Dataset, Model,
-  Trading, and broad Operations functionality remain unimplemented.
+  = FINAL CLOSED. Overall implementation remains NOT IMPLEMENTED. The Slice 1
+  semantic library is a REVIEWED PR CANDIDATE — PR #33. Direct remote code
+  audit = PASS for reviewed code head `78660844e690eeb73cacd8a756a4e65419c1a798`.
+  Slice 1 is not FINAL CLOSED and provides no persistent TruthDecision
+  authority. QuestDB TruthDecision-history fit remains PARTIAL_FIT. The plan
+  defines two production slices and a mandatory QuestDB reconciliation POC
+  before Slice 2; the POC and Slice 2 remain NOT AUTHORIZED. Replay & As-Of,
+  Canonical Dataset, Model, Trading, and broad Operations functionality remain
+  unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Data Truth Slice 1 semantic-library candidate
-preparation**. Slice 1 requires separate authorization and is NOT AUTHORIZED.
-The required QuestDB reconciliation POC and Slice 2 are also NOT AUTHORIZED;
-the POC remains mandatory before Slice 2. Replay & As-Of and Canonical Dataset
-remain unimplemented; canonical runtime activation remains unauthorized.
+Current NEXT: **Data System → guarded merge preparation for Data Truth Slice 1
+PR #33**. Slice 1 is not FINAL CLOSED. Persistent TruthDecision authority
+remains NOT IMPLEMENTED. The required QuestDB reconciliation POC and Slice 2
+remain NOT AUTHORIZED; the POC remains mandatory before Slice 2. Replay & As-Of
+and Canonical Dataset remain unimplemented; canonical runtime activation remains
+unauthorized.
