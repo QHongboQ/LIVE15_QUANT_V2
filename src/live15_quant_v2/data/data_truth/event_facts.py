@@ -68,6 +68,10 @@ class EventFacts:
             or anchor.accepted_decision.event_identity != event_identity
         ):
             raise TruthDecisionInvariantError("event anchor does not contain accepted authority")
+        if anchor.accepted_decision.subject_capture_id != anchor.accepted_fact.capture_id:
+            raise TruthDecisionInvariantError("event anchor decision subject differs from accepted evidence")
+        if anchor.accepted_fact.capture_id not in anchor.accepted_decision.contributing_capture_ids:
+            raise TruthDecisionInvariantError("event anchor decision does not reference accepted evidence")
         accepted_evidence = self._trade_evidence_or_not_accepted(anchor.accepted_fact)
         if isinstance(accepted_evidence, TruthDecision):
             raise TruthDecisionInvariantError("event anchor contains invalid accepted evidence")

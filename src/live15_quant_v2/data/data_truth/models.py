@@ -52,6 +52,13 @@ class TruthDecision:
     reason: TradeNotAcceptedReason | None
     event_identity: EventIdentity | None
 
+    def __post_init__(self) -> None:
+        """Take immutable ownership of the contributing capture references."""
+        contributing_capture_ids = tuple(self.contributing_capture_ids)
+        if not all(isinstance(capture_id, str) for capture_id in contributing_capture_ids):
+            raise TypeError("contributing capture IDs must be strings")
+        object.__setattr__(self, "contributing_capture_ids", contributing_capture_ids)
+
 
 @dataclass(frozen=True, slots=True)
 class EventAnchor:

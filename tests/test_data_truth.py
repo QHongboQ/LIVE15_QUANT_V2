@@ -1,11 +1,12 @@
 import json
-from dataclasses import replace
+from dataclasses import FrozenInstanceError, replace
 from typing import Literal
 
 import pytest
 from kalshi.ws.models.trade import TradeMessage
 
 from live15_quant_v2.data.asset import AssetId
+from live15_quant_v2.data.data_truth import TruthDecisionCategory
 from live15_quant_v2.data.storage.capture import CaptureFact
 
 
@@ -185,6 +186,69 @@ def test_internally_inconsistent_event_anchor_fails_closed() -> None:
         DataTruth(
             FakeTruthDecisionHistory(anchors={anchor.event_identity: invalid_anchor})
         ).decide(subject)
+
+
+@pytest.mark.parametrize(
+    "corrupt_anchor",
+    [
+        lambda anchor: replace(
+            anchor,
+            event_identity=replace(anchor.event_identity, trade_id="other-trade"),
+        ),
+        lambda anchor: replace(
+            anchor,
+            accepted_decision=replace(
+                anchor.accepted_decision,
+                category=TruthDecisionCategory.CONFLICT,
+            ),
+        ),
+        lambda anchor: replace(
+            anchor,
+            accepted_decision=replace(anchor.accepted_decision, event_identity=None),
+        ),
+        lambda anchor: replace(
+            anchor,
+            accepted_fact=replace(
+                anchor.accepted_fact,
+                source_id="OTHER-MARKET",
+                payload=_trade_payload(market_ticker="OTHER-MARKET"),
+            ),
+        ),
+        lambda anchor: replace(anchor, accepted_fact=replace(anchor.accepted_fact, payload="not JSON")),
+        lambda anchor: replace(
+            anchor,
+            accepted_decision=replace(anchor.accepted_decision, subject_capture_id="other-capture"),
+        ),
+        lambda anchor: replace(
+            anchor,
+            accepted_decision=replace(
+                anchor.accepted_decision,
+                contributing_capture_ids=("other-capture",),
+            ),
+        ),
+    ],
+    ids=[
+        "anchor-event-identity",
+        "decision-category",
+        "decision-event-identity",
+        "accepted-fact-identity",
+        "accepted-fact-invalid-evidence",
+        "decision-subject-capture-id",
+        "decision-contributing-capture-ids",
+    ],
+)
+def test_every_representable_corrupt_event_anchor_fails_before_append(corrupt_anchor) -> None:
+    from live15_quant_v2.data.data_truth import DataTruth, TruthDecisionInvariantError
+
+    accepted = _trade_fact()
+    subject = replace(accepted, capture_id="capture-trade-2")
+    anchor = _accepted_anchor(accepted)
+    history = FakeTruthDecisionHistory(anchors={anchor.event_identity: corrupt_anchor(anchor)})
+
+    with pytest.raises(TruthDecisionInvariantError):
+        DataTruth(history).decide(subject)
+
+    assert history.append_calls == 0
 
 
 @pytest.mark.parametrize(
@@ -415,6 +479,19 @@ def test_missing_trade_identity_has_no_capture_or_timestamp_or_payload_fallback(
     assert decision.event_identity is None
 
 
+def test_equally_invalid_trade_payloads_are_not_a_semantic_duplicate() -> None:
+    from live15_quant_v2.data.data_truth import DataTruth, TruthDecisionCategory
+
+    first = replace(_trade_fact(), capture_id="invalid-trade-1", payload=_trade_payload(trade_id=""))
+    second = replace(first, capture_id="invalid-trade-2")
+    history = FakeTruthDecisionHistory()
+    truth = DataTruth(history)
+
+    assert truth.decide(first).category is TruthDecisionCategory.NOT_ACCEPTED
+    assert truth.decide(second).category is TruthDecisionCategory.NOT_ACCEPTED
+    assert history.event_lookups == []
+
+
 def test_truth_decisions_are_immutable_and_deterministically_equal() -> None:
     from live15_quant_v2.data.data_truth import DataTruth
 
@@ -424,3 +501,36 @@ def test_truth_decisions_are_immutable_and_deterministically_equal() -> None:
     assert first == second
     with pytest.raises(AttributeError):
         first.category = first.category
+
+
+def test_public_authority_models_are_deeply_immutable() -> None:
+    from live15_quant_v2.data.data_truth import (
+        EventAnchor,
+        EventIdentity,
+        TruthDecision,
+        TruthDecisionCategory,
+    )
+
+    fact = _trade_fact()
+    identity = EventIdentity("kalshi", fact.source_id, "trade", "trade-1")
+    caller_references = [fact.capture_id]
+    decision = TruthDecision(
+        subject_capture_id=fact.capture_id,
+        category=TruthDecisionCategory.ACCEPTED,
+        policy_version="data-truth/v1",
+        contributing_capture_ids=caller_references,
+        reason=None,
+        event_identity=identity,
+    )
+    anchor = EventAnchor(identity, decision, fact)
+
+    caller_references.append("later-capture")
+
+    assert type(decision.contributing_capture_ids) is tuple
+    assert decision.contributing_capture_ids == (fact.capture_id,)
+    with pytest.raises(FrozenInstanceError):
+        decision.contributing_capture_ids = ()
+    with pytest.raises(FrozenInstanceError):
+        identity.trade_id = "other-trade"
+    with pytest.raises(FrozenInstanceError):
+        anchor.accepted_fact = fact
