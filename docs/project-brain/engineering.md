@@ -32,29 +32,39 @@ Responsibility ownership
 
 ## Independent review visibility
 
-Local implementation remains allowed. Codex or another local execution agent
-may implement in the local repository, run local tests, inspect local diffs,
-perform local self-review, and prepare a bounded candidate. GitHub publication
-is required only at the formal ChatGPT independent implementation or
-architecture review boundary, not for every intermediate local edit.
+Local implementation and repository changes remain allowed. Codex or another
+local execution agent may work in the local repository, run local validation,
+inspect local diffs, perform local self-review, and prepare a bounded
+candidate. GitHub publication is required only at the formal ChatGPT
+independent review boundary for a repository change, not for every
+intermediate local edit.
 
-ChatGPT does not directly access the user's local worktree. When a candidate
+ChatGPT does not directly access the user's local worktree. When a change
 exists only locally, ChatGPT may assess a Codex report, reported test results,
 reported Git state, and reported local audit findings; that assessment is not
-ChatGPT independent code review, direct code audit, or independent
-implementation review because the actual candidate source was not inspected.
-A local agent reviewing its own work remains local/self-review evidence.
+formal independent review of the actual repository change. It is not an
+independent code review, direct code audit, independent implementation review,
+independent architecture review, independent authority/Project Brain review,
+or independent status-closure review because ChatGPT has not inspected the
+actual changed files. A local agent reviewing its own work remains
+local/self-review evidence.
 
-Before formal ChatGPT independent implementation or architecture review:
+Before formal ChatGPT independent review of a repository change — including
+implementation/source, tests, architecture, contracts/interfaces, Project
+Brain authority, lifecycle/status, engineering governance, or other
+Git-tracked changes —:
 
 1. publish the candidate branch to GitHub;
 2. open a Draft PR with the intended base SHA preserved; and
-3. expose the actual candidate source and tests remotely.
+3. expose the actual changed repository files remotely; source and tests are
+   included where applicable.
 
 The formal review inspects the GitHub-visible PR metadata, base and head SHAs,
-changed files, actual source and tests, commit history, relevant
-architecture/status documentation, and Hosted CI as applicable. Its result is
-bound to the exact reviewed GitHub head SHA.
+changed files and diff, commit history, relevant repository authority, and
+Hosted CI where applicable. For a code change this normally includes actual
+source and tests; for a docs-only authority or status change it includes the
+actual changed documentation. Its result is bound to the exact reviewed GitHub
+head SHA.
 
 A Draft PR is a review surface only. Publishing it does not mean
 implementation PASS, review PASS, approval to merge, runtime authorization, or
@@ -65,30 +75,36 @@ branch. The PR then updates and ChatGPT remotely re-audits the new exact head.
 Do not amend, rebase, or force-push merely to make review history look cleaner;
 preserve audit/fix ancestry unless separately authorized otherwise.
 
-If source, tests, contracts, or materially relevant authority documentation
-changes after the reviewed head, the previous formal review PASS does not cover
-the new head; the changed scope requires remote re-audit. Pure PR metadata or
-separately bounded status-only changes may receive bounded remote verification
-without unnecessarily reopening the entire implementation review.
+If source, tests, contracts, materially relevant authority documentation, or
+another actual changed repository file changes after the reviewed head, the
+previous formal review PASS does not cover the new head; the changed scope
+requires remote re-audit. Pure PR metadata or separately bounded status-only
+changes may receive bounded remote verification without unnecessarily reopening
+the entire implementation review. Git-tracked status or authority changes
+still require GitHub visibility when they are formally reviewed.
 
 Hosted CI PASS does not substitute for independent review PASS, and Codex local
 review PASS does not substitute for ChatGPT independent review PASS. They are
 separate evidence inputs with different ownership. If a candidate cannot be
-made visible on GitHub, ChatGPT must not claim to have independently audited
-the actual code; the workflow remains pending independent remote review.
+made visible on GitHub, ChatGPT must not claim formal independent review PASS
+for the actual repository change; the workflow remains pending formal
+independent remote review.
 
-The normal formal flow, when ChatGPT independent code or architecture review is
-required, is:
+The normal formal flow, when ChatGPT independent review is required, is:
 
 ```text
-Local implementation
+Local implementation / repository change
 → local validation / local self-review
 → publish candidate branch
 → GitHub Draft PR
-→ ChatGPT direct remote code audit
+→ ChatGPT direct remote review of actual changed files
 → bounded fixes on same PR when required
 → ChatGPT remote re-audit of exact head
-→ exact-head Hosted CI
+→ exact-head Hosted CI when applicable
 → guarded merge
 → post-merge validation / seal as required
 ```
+
+For code, the remote review may be called a ChatGPT direct remote code audit.
+For documentation or authority changes, use the appropriate ChatGPT direct
+remote authority or status review; do not call a docs-only review a code audit.
