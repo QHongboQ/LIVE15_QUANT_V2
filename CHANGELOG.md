@@ -1,5 +1,50 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-QUESTDB-RECONCILIATION-POC-EXECUTION-001
+
+**Change:** Added and executed a test-only, opt-in QuestDB TruthDecision-history
+reconciliation POC on a disposable task-owned QuestDB 10.0.1 process. The POC
+uses the sealed SubjectDecisionKey `(policy_version, subject_capture_id)`, a
+UUID-scoped `truth_history_poc_<uuid>` table, a physical-only designated
+timestamp, and no DEDUP or UPSERT configuration.
+
+**Reason:** The pre-Slice-2 gate required real-server evidence that a
+TruthDecision subject can reconcile after the server commits a frame while the
+original caller never receives an acknowledgement result, without creating a
+production `questdb_history.py` adapter or changing current authority.
+
+**Validation / result:** Authorized local POC PASS on the exact main baseline
+`276c5b1542fef77dcaed9980cb30f454c9d47428`, using QuestDB Server 10.0.1 and
+Python `questdb==5.0.0`. The task-owned `D:\LIVE15_POC_RUN_C9D3` base used a
+temporary root, four unique loopback ports, and UUID-scoped disposable tables;
+all task resources were removed after execution. Cases A–L passed: normal ACK
+and exact lookup; bounded visibility; definite pre-write rejection; a real
+child-process frame commit followed by a fresh exact subject read and child
+termination before caller ACK return; absent ambiguous outcome remains
+IN_DOUBT without a second append; conflicting and multiple authority fail
+closed; repeat invocation performs no second append; distinct subjects remain
+append-only; no DEDUP/UPSERT metadata; and success/exception cleanup. Normal
+append count = 1; committed/no-caller-ACK physical append count = 1;
+ambiguous-absent physical append count = 0 after one logical attempt;
+conflict new-append count = 0; second-invocation second-append count = 0.
+No blind reappend, canonical root/table/runtime/service/server.conf, canonical
+SF/DEDUP, or production data was used. Focused opt-in POC PASS (12 passed);
+ordinary module collection PASS (12 skipped); full pytest PASS (183 passed,
+23 skipped); Ruff PASS; MyPy PASS; and `git diff --check` PASS.
+
+**Commit / PR:** Test-only POC commit
+`e169d2ec3528d605d773f78f9c4c84abfaf8e6fe`; evidence commit pending. Draft
+PR publication and ChatGPT remote POC review are pending; no PR is ready for
+merge.
+
+**Next:** Commit this bounded evidence, publish the two-commit branch as a
+Draft PR, and obtain formal ChatGPT review of the GitHub-visible POC harness
+and evidence. Slice 2 remains NOT AUTHORIZED.
+
+**Safety:** No production TruthDecision history adapter, Slice 1 contract,
+Project Brain authority/status, runtime configuration, canonical table, or
+production-data change. Slice 2 remains NOT AUTHORIZED.
+
 ## 2026-09-07 — LIVE15-V2-GLOBAL-ENGINEERING-GITHUB-FIRST-REMOTE-REVIEW-AUTHORITY-REMOTE-AUDIT-FIX-001
 
 **Change:** Generalized the global GitHub-first authority so formal ChatGPT
