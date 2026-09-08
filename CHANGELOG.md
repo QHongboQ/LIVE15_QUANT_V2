@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-07 — LIVE15-V2-DATA-TRUTH-IMPLEMENTATION-PLAN-AUTHORITY-CANDIDATE-001
+
+**Change:** Added the bounded Data Truth implementation-plan authority
+candidate, its two production slices, single-writer initial authority,
+TruthDecision subject-key/retry rules, and the mandatory pre-Slice-2 QuestDB
+reconciliation POC. Added the global V2 engineering lifecycle authority:
+Responsibility → Contract / Interface → Leaf Implementation → Adapter →
+Composition → Integration Test → Runtime Deployment → Canonical
+Activation.
+
+**Reason:** Convert the passed implementation-planning/upstream-fit and
+decision-closure results into durable authority without reopening the sealed
+Data Truth semantic contract or authorizing implementation.
+
+**Validation / result:** Data Truth contract remains FINAL CLOSED;
+implementation remains NOT IMPLEMENTED. TruthDecision DEDUP is disabled,
+QuestDB TruthDecision-history fit remains PARTIAL_FIT, and the disposable POC
+is mandatory before Slice 2. No database, runtime, dependency, source, test,
+or canonical activation was introduced. Decision closure PASS; Ruff PASS;
+pytest PASS (114 passed, 11 skipped); MyPy PASS; and `git diff --check` PASS.
+
+**Commit / PR:** Pending local candidate commit; PR NOT OPENED / PENDING
+independent review.
+
+**Next:** Independent review of this implementation-plan authority candidate.
+Slice 1, the Slice-2 QuestDB POC, and Data Truth implementation remain
+unauthorized.
+
+**Safety:** Documentation authority only: no QuestDB runtime, canonical
+`hot_capture_facts`, canonical DEDUP, canonical SF, or production-data change.
+
 ## 2026-09-07 — LIVE15-V2-DATA-TRUTH-CONTRACT-POST-MERGE-AUTHORITY-CLOSURE-001
 
 **Change:** Corrected the stale current-authority wording left after the

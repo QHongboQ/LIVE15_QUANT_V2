@@ -4,6 +4,9 @@
 
 **Contract authority:** FINAL CLOSED.
 
+**Implementation-plan authority:** CANDIDATE pending independent review and
+merge; see [implementation-plan.md](implementation-plan.md).
+
 **Implementation:** NOT IMPLEMENTED.
 
 This sealed authority records the approved semantic boundary only. It creates
