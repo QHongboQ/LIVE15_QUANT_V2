@@ -62,9 +62,12 @@ reopening.
 Observation Facts is stateless. One shared policy covers OrderbookSnapshot,
 OrderbookDelta, Ticker, MarketLifecycle, EventFeeUpdate, CFBenchmarksValue,
 and PythValue. A valid fact means only that its provider reported that
-observation, state, or value for that source. There is no observation semantic
-deduplication, latest-state machinery, watermark, completeness assertion,
-source precedence, or correction chain.
+observation, state, or value for that source. These seven approved families
+already carry sufficient provider/source/message evidence through the sealed
+CaptureFact contract for this provider-observation meaning; no CaptureFact
+field is requested. There is no observation semantic deduplication,
+latest-state machinery, watermark, completeness assertion, source precedence,
+or correction chain.
 
 Event Facts remains Trade only. Its identity has no fallback from capture ID,
 timestamps, `sid`, `seq`, payload hash, database order, or WAL order.
@@ -106,8 +109,8 @@ append(decision)
 
 There is no generic CRUD, update, delete, arbitrary query layer, repository
 framework, or public evidence-resolver interface. A concrete history adapter
-internally composes the sealed provider-neutral HotStore `read_capture()` to
-resolve accepted evidence.
+internally composes the sealed provider-neutral
+`HotStore.read_capture(capture_id)` to resolve accepted evidence.
 
 Initial authority permits one ordered DataTruth writer for one
 TruthDecisionHistory. Concurrent `decide()` and multi-process writers are not

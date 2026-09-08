@@ -21,7 +21,8 @@ is mandatory before Slice 2. No database, runtime, dependency, source, test,
 or canonical activation was introduced. Decision closure PASS; Ruff PASS;
 pytest PASS (114 passed, 11 skipped); MyPy PASS; and `git diff --check` PASS.
 
-**Commit / PR:** Pending local candidate commit; PR NOT OPENED / PENDING
+**Commit / PR:** Original candidate commit
+`95a5b8698f83440fbd9232e16b249662a3065f75`; PR NOT OPENED / PENDING
 independent review.
 
 **Next:** Independent review of this implementation-plan authority candidate.
