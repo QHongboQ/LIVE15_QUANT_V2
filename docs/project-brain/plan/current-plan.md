@@ -28,19 +28,20 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   merge, post-merge CI, and final local seal passed.
 - Data Truth contract authority = FINAL CLOSED. Implementation-plan authority
   = FINAL CLOSED. Overall implementation remains NOT IMPLEMENTED. The Slice 1
-  semantic library is a LOCAL CANDIDATE pending independent review and merge;
-  it provides no persistent TruthDecision authority. The plan defines two
-  production slices and a mandatory QuestDB reconciliation POC before Slice 2;
-  the POC and Slice 2 remain NOT AUTHORIZED. Replay & As-Of, Canonical Dataset,
-  Model, Trading, and broad Operations functionality remain unimplemented.
+  semantic library is a DRAFT PR CANDIDATE — PR #33, pending direct remote
+  implementation review/fix; it provides no persistent TruthDecision authority.
+  The plan defines two production slices and a mandatory QuestDB reconciliation
+  POC before Slice 2; the POC and Slice 2 remain NOT AUTHORIZED. Replay & As-Of,
+  Canonical Dataset, Model, Trading, and broad Operations functionality remain
+  unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → independent review of the Data Truth Slice 1
-semantic-library candidate**. Slice 1 is not FINAL CLOSED. The required QuestDB
+Current NEXT: **Data System → direct remote review / bounded fix of Data Truth
+Slice 1 Draft PR #33**. Slice 1 is not FINAL CLOSED. The required QuestDB
 reconciliation POC and Slice 2 remain NOT AUTHORIZED; the POC remains mandatory
 before Slice 2. Replay & As-Of and Canonical Dataset remain unimplemented;
 canonical runtime activation remains unauthorized.

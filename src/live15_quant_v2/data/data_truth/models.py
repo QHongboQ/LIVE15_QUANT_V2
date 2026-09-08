@@ -57,9 +57,10 @@ class TruthDecision:
         contributing_capture_ids: object = self.contributing_capture_ids
         if not isinstance(contributing_capture_ids, (list, tuple)):
             raise TypeError("contributing capture IDs must be a list or tuple")
-        if not all(isinstance(capture_id, str) for capture_id in contributing_capture_ids):
+        capture_ids = tuple(contributing_capture_ids)
+        if not all(isinstance(capture_id, str) for capture_id in capture_ids):
             raise TypeError("contributing capture IDs must be strings")
-        object.__setattr__(self, "contributing_capture_ids", tuple(contributing_capture_ids))
+        object.__setattr__(self, "contributing_capture_ids", capture_ids)
 
 
 @dataclass(frozen=True, slots=True)

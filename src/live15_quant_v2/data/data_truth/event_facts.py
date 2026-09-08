@@ -63,6 +63,8 @@ class EventFacts:
     ) -> _TradeProjection:
         if anchor.event_identity != event_identity:
             raise TruthDecisionInvariantError("accepted event anchor identity differs")
+        if anchor.accepted_decision.policy_version != _POLICY_VERSION:
+            raise TruthDecisionInvariantError("event anchor decision policy differs")
         if (
             anchor.accepted_decision.category is not TruthDecisionCategory.ACCEPTED
             or anchor.accepted_decision.event_identity != event_identity

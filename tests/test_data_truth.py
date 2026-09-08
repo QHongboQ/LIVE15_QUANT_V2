@@ -251,6 +251,24 @@ def test_every_representable_corrupt_event_anchor_fails_before_append(corrupt_an
     assert history.append_calls == 0
 
 
+def test_wrong_policy_event_anchor_fails_closed_before_append() -> None:
+    from live15_quant_v2.data.data_truth import DataTruth, TruthDecisionInvariantError
+
+    accepted = _trade_fact()
+    subject = replace(accepted, capture_id="capture-trade-2")
+    anchor = _accepted_anchor(accepted)
+    wrong_policy_anchor = replace(
+        anchor,
+        accepted_decision=replace(anchor.accepted_decision, policy_version="data-truth/v0"),
+    )
+    history = FakeTruthDecisionHistory(anchors={anchor.event_identity: wrong_policy_anchor})
+
+    with pytest.raises(TruthDecisionInvariantError):
+        DataTruth(history).decide(subject)
+
+    assert history.append_calls == 0
+
+
 @pytest.mark.parametrize(
     ("fact", "reason"),
     [
@@ -554,6 +572,36 @@ def test_truth_decision_accepts_tuple_references() -> None:
     )
 
     assert decision.contributing_capture_ids == (fact.capture_id,)
+
+
+def test_truth_decision_validates_and_stores_one_stateful_list_snapshot() -> None:
+    from live15_quant_v2.data.data_truth import EventIdentity, TruthDecision
+
+    class ChangingReferenceList(list[str]):
+        def __init__(self, valid_capture_id: str) -> None:
+            super().__init__([valid_capture_id])
+            self.iteration_count = 0
+
+        def __iter__(self):
+            self.iteration_count += 1
+            if self.iteration_count == 1:
+                return iter([self[0]])
+            return iter([1])
+
+    fact = _trade_fact()
+    references = ChangingReferenceList(fact.capture_id)
+    decision = TruthDecision(
+        subject_capture_id=fact.capture_id,
+        category=TruthDecisionCategory.ACCEPTED,
+        policy_version="data-truth/v1",
+        contributing_capture_ids=references,
+        reason=None,
+        event_identity=EventIdentity("kalshi", fact.source_id, "trade", "trade-1"),
+    )
+
+    assert references.iteration_count == 1
+    assert decision.contributing_capture_ids == (fact.capture_id,)
+    assert all(type(capture_id) is str for capture_id in decision.contributing_capture_ids)
 
 
 @pytest.mark.parametrize(

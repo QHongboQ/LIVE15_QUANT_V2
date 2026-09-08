@@ -9,13 +9,13 @@
 
 **Implementation:** NOT IMPLEMENTED.
 
-**Slice 1 semantic-library implementation:** LOCAL CANDIDATE pending
-independent review and merge. It provides no persistent `TruthDecision`
-authority.
+**Slice 1 semantic-library implementation:** DRAFT PR CANDIDATE — PR #33,
+pending direct remote implementation review/fix. It provides no persistent
+`TruthDecision` authority.
 
-This sealed authority records the approved semantic boundary. The local Slice 1
-candidate creates no schema, table, runtime component, canonical activation, or
-implementation authority beyond its bounded semantic library.
+This sealed authority records the approved semantic boundary. The Slice 1 Draft
+PR candidate creates no schema, table, runtime component, canonical activation,
+or implementation authority beyond its bounded semantic library.
 
 ## Closure evidence
 
@@ -125,10 +125,11 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-The implementation-plan authority is FINAL CLOSED. Current NEXT is Data Truth
-Slice 1 semantic-library candidate independent review. Slice 1 is a local
-candidate only and is not FINAL CLOSED. The required QuestDB reconciliation POC
-and Slice 2 remain NOT AUTHORIZED; the POC remains mandatory before Slice 2.
-Any newly identified generic mechanical need must first undergo upstream-fit
-review before custom infrastructure is introduced. This authority does not
-authorize persistent TruthDecision authority or canonical runtime activation.
+The implementation-plan authority is FINAL CLOSED. Current NEXT is direct
+remote review / bounded fix of Data Truth Slice 1 Draft PR #33. Slice 1 is a
+Draft PR candidate only and is not FINAL CLOSED. The required QuestDB
+reconciliation POC and Slice 2 remain NOT AUTHORIZED; the POC remains mandatory
+before Slice 2. Any newly identified generic mechanical need must first undergo
+upstream-fit review before custom infrastructure is introduced. This authority
+does not authorize persistent TruthDecision authority or canonical runtime
+activation.
