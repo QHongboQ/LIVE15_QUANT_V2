@@ -2,13 +2,22 @@
 
 ## Status
 
-**Contract authority:** CANDIDATE — pending independent review and merge.
+**Contract authority:** FINAL CLOSED.
 
 **Implementation:** NOT IMPLEMENTED.
 
-This candidate records the approved semantic boundary only. It creates no
-source code, schema, table, runtime component, canonical activation, or Data
+This sealed authority records the approved semantic boundary only. It creates
+no source code, schema, table, runtime component, canonical activation, or Data
 Truth implementation authorization.
+
+## Closure evidence
+
+- DT-S1 through DT-S4 approved the two-child semantic tree,
+  provider-observation truth, provider-proven event identity only, and
+  append-only authority.
+- Independent Standards, Spec, and Architecture re-reviews passed.
+- PR #30 merged as `089e7aba2c78a8b66cbedd5e195cdf2325b4c51f`.
+- Post-merge Windows, Ubuntu, and CI Gate checks passed.
 
 ## Responsibility
 
@@ -109,6 +118,7 @@ invariant, not a future refactoring preference.
 
 ## Implementation gate
 
-After independent review and merge, implementation planning may begin only
-under separate authorization and a fresh upstream-fit check for any newly
-identified mechanical need. This candidate does not authorize implementation.
+Implementation planning is the next responsibility, but implementation itself
+requires separate authorization. Any newly identified generic mechanical need
+must first undergo an upstream-fit review. This authority does not authorize
+implementation.

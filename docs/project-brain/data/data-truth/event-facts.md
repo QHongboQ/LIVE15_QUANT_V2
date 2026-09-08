@@ -2,11 +2,14 @@
 
 ## Status and ownership
 
-This child authority is a candidate pending independent review and merge. It
-owns event-specific semantic adjudication only. It receives immutable shared
-`CaptureFact` evidence through the Data Truth parent and produces a conceptual
-append-only `TruthDecision`; it owns no storage, transport, runtime, or public
-parent contract.
+**Contract authority:** FINAL CLOSED.
+
+**Implementation:** NOT IMPLEMENTED.
+
+This child owns event-specific semantic adjudication only. It receives immutable
+shared `CaptureFact` evidence through the Data Truth parent and produces a
+conceptual append-only `TruthDecision`; it owns no storage, transport, runtime,
+or public parent contract.
 
 ## V1 approved scope
 
