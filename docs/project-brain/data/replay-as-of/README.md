@@ -2,11 +2,19 @@
 
 ## Status and responsibility
 
-**Contract authority:** DRAFT CANDIDATE / PENDING INDEPENDENT REVIEW.
+**Contract authority:** FINAL CLOSED.
 **Implementation:** NOT IMPLEMENTED.
 **Implementation plan:** NOT YET AUTHORIZED; the next gate after contract
 closure is implementation-plan / availability-mechanism fit preparation.
+**Availability evidence mechanism:** NOT SELECTED / NOT IMPLEMENTED.
 **Canonical activation:** NOT AUTHORIZED.
+
+**Closure evidence:** PR #40 first reviewed head
+`77fa8264f48994fe6ab2158184651c4b9c0823e2` required changes; corrected head
+`a838ebfd6d0bd9cc427e0ec90ce08c952d794d61` passed ChatGPT re-audit and
+exact-head CI. Normal merge `528815ef2883b3757515b9b9d8e3dcadc92981b6` and
+its Ubuntu, Windows, and CI Gate checks passed; the local docs seal passed. No
+runtime, code, or data change occurred.
 
 Replay & As-Of is a direct Data System child. It owns a research-facing,
 read-only projection of already persisted immutable evidence and already
@@ -246,7 +254,12 @@ and Market Ingress. Its composition adapter depends on their public physical
 read authorities, while its contract remains provider-neutral. Canonical
 Dataset is a future consumer, not an owner or prerequisite.
 
-After independent contract review and closure, the only authorized next
-activity is implementation-plan / availability-mechanism fit preparation.
-Implementation code, availability storage, canonical runtime or table
-activation, and canonical dataset work require separate authorization.
+## Current next
+
+**Current NEXT:** Replay & As-Of implementation-plan / availability-mechanism
+fit preparation.
+
+This NEXT authorizes planning and upstream-fit investigation only. It does not
+authorize Replay implementation. Implementation code, availability storage,
+canonical runtime or table activation, and Canonical Dataset work require
+separate authorization.
