@@ -111,9 +111,12 @@ class QuestDBAvailabilityStore:
         except AvailabilitySupportError:
             self._in_doubt.add(record.key)
             raise
+        if verified is None:
+            self._in_doubt.add(record.key)
+            raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "append is not yet visible")
         if verified != record:
             self._in_doubt.add(record.key)
-            raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "append was not exactly visible")
+            self._conflict("visible record differs from immutable candidate")
         return verified
 
     def _database_for_use(self) -> questdb.QuestDB:

@@ -7,7 +7,8 @@
 
 **Change:** Preserved exact in-doubt candidates for reconciliation, contained
 visibility-barrier failures as in doubt, distinguished terminal from pending
-sender diagnostics, and expanded Slice 2 acceptance coverage.
+sender diagnostics, and completed and validated the required Slice 2
+clock, controlled-failure, and disposable-QuestDB acceptance matrix.
 
 **Safety:** Slice 2 remains an implementation candidate; the production
 `CLOCK_SAFETY` gate remains open. No Slice 3/4 or canonical runtime, table, or
