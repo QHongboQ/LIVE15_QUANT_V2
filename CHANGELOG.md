@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-AVAILABILITY-SUPPORT-REMOTE-REVIEW-FIX-001
+
+**Review result:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`f2361333d8c3b231a53feca3128e64119f12e814`.
+
+**Change:** Preserved exact in-doubt candidates for reconciliation, contained
+visibility-barrier failures as in doubt, distinguished terminal from pending
+sender diagnostics, and completed and validated the required Slice 2
+clock, controlled-failure, and disposable-QuestDB acceptance matrix.
+Final acceptance closure includes the post-barrier zero-row `IN_DOUBT` and
+second-call no-blind-reappend regression.
+
+**Safety:** Slice 2 remains an implementation candidate; the production
+`CLOCK_SAFETY` gate remains open. No Slice 3/4 or canonical runtime, table, or
+data change occurred.
+
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-AVAILABILITY-SUPPORT-IMPLEMENTATION-001
+
+**Change:** Created the Slice 2 Availability Support implementation candidate:
+provider-neutral immutable availability models, narrow recording port and
+writer, conservative monotonic proof clock, no-blind-reappend behavior, and a
+disposable QuestDB availability adapter with WAL enabled and no DEDUP or
+UPSERT.
+
+**Safety:** Task-owned disposable QuestDB acceptance only. No canonical
+runtime, table, or production-data change occurred; Slice 3 and Slice 4 remain
+unauthorized. The production `CLOCK_SAFETY` operational gate remains open.
+
+**Next:** Independent ChatGPT implementation review is required before merge.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-1-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed Replay & As-Of Slice 1 Pure Replay Core as FINAL CLOSED.
