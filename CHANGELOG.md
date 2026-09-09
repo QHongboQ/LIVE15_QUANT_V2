@@ -1,5 +1,38 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-DATA-TRUTH-SLICE-2-PERSISTENT-HISTORY-PUBLISH-CANDIDATE-001
+
+**Change:** Added the private `QuestDBTruthDecisionHistory` persistent Data
+Truth adapter. It uses a WAL-enabled, append-only QuestDB table without DEDUP
+or UPSERT; resolves subject and accepted-event evidence through the
+provider-neutral `HotStore` port; maps direct append acknowledgement to the
+existing taxonomy; and uses QuestDB's `wait_wal_table` as the explicit
+post-acknowledgement visibility barrier. The opt-in real-server harness now
+uses a Windows Job Object to contain its disposable QuestDB process.
+
+**Reason:** Slice 2 required a bounded, directly persistent history candidate
+whose post-append visibility is an upstream server barrier rather than
+semantic lookup, reconciliation, retry, or polling logic in the adapter.
+
+**Validation / result:** Candidate validation PASS: focused history units (38
+passed); Data Truth plus HotStore architecture checks (18 passed); opt-in real
+QuestDB integration (3 passed); ordinary suite (222 passed, 26 skipped); Ruff
+PASS; MyPy PASS; and `git diff --check` PASS. The implementation remains a
+candidate pending independent GitHub-visible review. No canonical QuestDB
+root, table, service, server configuration, or production activation was
+changed or authorized.
+
+**Commit / PR:** Implementation commit `0bfc647`; candidate changelog commit
+pending. Publish only as a Draft PR against main at
+`8ca91440ccaf30955f92d26fede98161e9fbfa29`.
+
+**Next:** Run the final local seal, publish the two commits as a Draft PR, wait
+for CI on the exact candidate head, then obtain the mandatory ChatGPT remote
+audit. Production activation remains NOT AUTHORIZED.
+
+**Safety:** No canonical runtime/data mutation, service restart, dependency or
+CI configuration change, merge, push force, or production activation.
+
 ## 2026-09-08 — LIVE15-V2-DATA-TRUTH-QUESTDB-RECONCILIATION-POC-FINAL-STATUS-CLOSURE-PR-001
 
 **Change:** Closed the Data Truth QuestDB reconciliation POC gate in current

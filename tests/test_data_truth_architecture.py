@@ -76,7 +76,7 @@ def test_semantic_tree_is_exactly_event_and_observation_facts() -> None:
     modules = {path.stem for path in DATA_TRUTH.glob("*.py")}
 
     assert {"event_facts", "observation_facts"} <= modules
-    assert "questdb_history" not in modules
+    assert "questdb_history" in modules
 
 
 def test_history_protocol_has_exactly_three_public_methods() -> None:
@@ -121,7 +121,8 @@ def test_package_exports_only_provider_neutral_contracts() -> None:
 
     assert "EventFacts" not in data_truth.__all__
     assert "ObservationFacts" not in data_truth.__all__
-    assert "QuestDB" not in " ".join(data_truth.__all__)
+    assert "QuestDBTruthDecisionHistory" not in data_truth.__all__
+    assert "QuestDBTruthDecisionHistory" not in vars(data_truth)
 
 
 def test_capture_fact_contract_remains_exact_and_immutable() -> None:
@@ -135,11 +136,31 @@ def test_capture_fact_contract_remains_exact_and_immutable() -> None:
         fact.payload = "mutated"
 
 
-def test_slice_one_contains_no_persistent_or_multi_writer_infrastructure() -> None:
-    source = "\n".join(path.read_text(encoding="utf-8").lower() for path in DATA_TRUTH.glob("*.py"))
+def test_questdb_history_is_the_only_questdb_support_adapter() -> None:
+    questdb_history_imports = _module_imports("questdb_history.py")
 
-    for forbidden in ("import questdb", "threading", "multiprocessing", "lock(", "dedup", "upsert"):
-        assert forbidden not in source
+    assert "questdb" in questdb_history_imports
+    assert "live15_quant_v2.data.storage.hot_store.port.HotStore" in questdb_history_imports
+    for forbidden in ("questdb_adapter", "QuestDBHotStore"):
+        assert not _has_forbidden_import(questdb_history_imports, forbidden)
+    for module_name in ("event_facts.py", "observation_facts.py", "history.py", "composition.py", "models.py"):
+        assert not _has_forbidden_import(_module_imports(module_name), "questdb")
+
+
+def test_data_truth_has_no_multi_writer_or_history_dedup_infrastructure() -> None:
+    source = "\n".join(path.read_text(encoding="utf-8") for path in DATA_TRUTH.glob("*.py"))
+    trees = [ast.parse(path.read_text(encoding="utf-8")) for path in DATA_TRUTH.glob("*.py")]
+    defined_names = {
+        node.name.casefold()
+        for tree in trees
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef))
+    }
+
+    assert "Kafka" not in source
+    assert not {"lock", "lease", "scheduler", "daemon"} & defined_names
+    assert "DEDUP" not in source
+    assert "UPSERT" not in source
 
 
 def test_production_package_contains_no_fake_history_or_stateful_observation_policy() -> None:
@@ -162,5 +183,5 @@ def test_production_package_contains_no_fake_history_or_stateful_observation_pol
 def test_production_package_contains_no_fake_or_memory_backed_history_module() -> None:
     modules = {path.name for path in DATA_TRUTH.glob("*.py")}
 
-    assert "questdb_history.py" not in modules
+    assert "questdb_history.py" in modules
     assert not any("fake" in module or "memory" in module for module in modules)
