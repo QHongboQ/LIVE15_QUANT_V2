@@ -6,15 +6,15 @@
 
 **Implementation-plan authority:** FINAL CLOSED.
 
-**Implementation:** NOT IMPLEMENTED. Slice 1 is FINAL CLOSED. The required
+**Implementation:** FINAL CLOSED. Slice 1 is FINAL CLOSED. The required
 QuestDB TruthDecision-history reconciliation POC is FINAL CLOSED, PASS /
-ACCEPTED. Slice 2 remains NOT AUTHORIZED and requires separate explicit
-authorization.
+ACCEPTED. Slice 2 Persistent History is FINAL CLOSED under the approved
+single-writer constraint.
 
 Replay & As-Of, Canonical Dataset, Model, and Trading remain UNIMPLEMENTED.
-Canonical runtime activation remains UNAUTHORIZED. This plan creates neither
-source, tests, schema, table, runtime process, database, dependency, nor
-canonical activation.
+Canonical TruthDecision-table creation and runtime activation remain NOT
+AUTHORIZED / NOT PERFORMED. Concurrent `decide()` and multi-process/multi-writer
+authority remain unsupported. This plan did not authorize canonical activation.
 
 ## Scope and shape
 
@@ -157,11 +157,12 @@ conflicting/multiple authority, and append-only operation without DEDUP or
 UPSERT. The POC did not use canonical tables, alter `server.conf`, or enable
 canonical SF or DEDUP.
 
-That accepted mechanical result does not implement Slice 2, a production
-`questdb_history.py`, production `find_accepted_event` behavior, Hot Store
-evidence resolution, multi-writer safety, concurrent `decide()`, a canonical
-TruthDecision table, or canonical runtime activation. Slice 2 remains NOT
-AUTHORIZED pending separate explicit authorization.
+That accepted mechanical result alone did not implement Slice 2, a production
+`questdb_history.py`, production `find_accepted_event` behavior, or Hot Store
+evidence resolution. Slice 2 was subsequently authorized, implemented,
+independently reviewed, merged as PR #38, and is now FINAL CLOSED. It does not
+add multi-writer safety, concurrent `decide()`, a canonical TruthDecision
+table, or canonical runtime activation.
 
 One conceptual append-only TruthDecision-history table may be needed. It keeps
 the subject key, policy version, category, contributing CaptureFact IDs,
@@ -187,19 +188,19 @@ not import one another. `questdb_history.py` is the explicit adapter and owns
 no semantic policy; `__init__.py` exports only provider-neutral supported
 types.
 
-There are exactly two production slices:
+The two production slices are FINAL CLOSED:
 
-1. **Slice 1 — Semantic Library Candidate:** models, history protocol/errors,
+1. **Slice 1 — Semantic Library:** models, history protocol/errors,
    parent composition, Trade Event Facts, stateless Observation Facts,
    test-only in-memory history, and unit/architecture tests. It contains no
    QuestDB adapter, persistent authority, canonical table, runtime activation,
    Replay & As-Of, or Canonical Dataset. It cannot close Data Truth
    implementation.
-2. **Slice 2 — Persistent History Candidate:** only after the POC passes;
+2. **Slice 2 — Persistent History:** after the POC passed; the private
    QuestDB adapter, persistent append-only authority, subject/Event lookup,
    sealed HotStore evidence resolution, and disposable integration tests. It
-   does not activate canonical runtime and still requires review, PR, CI,
-   merge, validation, and local seal before FINAL CLOSED status.
+   does not activate canonical runtime. Review, PR, CI, merge, validation, and
+   local seal completed before its FINAL CLOSED status.
 
 ## Required future validation
 
