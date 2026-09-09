@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-001
+
+**Change:** Added one opt-in, disposable Windows QuestDB POC that tests a
+candidate source-snapshot membership fingerprint and keyset continuation for
+Replay & As-Of. This is POC evidence only; it does not add Replay production
+code, an availability mechanism, or a contract change.
+
+**Reason:** Availability-mechanism fit identified source snapshot identity and
+paged membership stability as the remaining pre-plan technical blocker.
+
+**Validation / result:** A real task-owned QuestDB 10.0.1 run using Python
+client 5.0.0 passed normal late-append and late-recovery-marker continuation,
+reader recreation, and a task-owned contained server restart. Page 1 bound
+`[A, B]` with fingerprint
+`1cac25e5b0cf95c6295abf93e303865c82733c6c3586262861faff645d3798c2`.
+The explicit clock rollback adversary proved the last-marker floor alone is
+insufficient: `max(200, 100 + 1) = 200 <= cutoff 900`. The changed membership
+and a duplicate physical TruthDecision authority both failed closed before a
+mixed continuation page. Result: `PASS_WITH_FAIL_CLOSED_DRIFT`; clock policy:
+`MEMBERSHIP_FINGERPRINT_FAIL_CLOSED_SUFFICIENT` for this POC.
+
+**Safety:** The POC used UUID-named task root, ports, tables, and a Windows Job
+Object with `KILL_ON_JOB_CLOSE`; it made no canonical runtime, service, table,
+or production-data change. The root, listeners, and contained Java process
+were verified absent after cleanup.
+
+**Next:** Independent POC review is required. The Replay implementation plan
+remains unauthorized pending that review.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-CONTRACT-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed Replay & As-Of contract authority as FINAL CLOSED. The
