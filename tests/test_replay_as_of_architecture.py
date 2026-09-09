@@ -54,6 +54,7 @@ def test_slice_one_source_contains_no_data_truth_call_or_offset_pagination() -> 
     assert "DataTruth.decide" not in source
     assert "OFFSET" not in source
     assert "questdb" not in source.casefold()
+    assert "sql" not in source.casefold()
 
 
 def test_package_exports_only_provider_neutral_slice_one_api() -> None:
@@ -65,6 +66,7 @@ def test_package_exports_only_provider_neutral_slice_one_api() -> None:
         "AuthoritativeReplayRecord",
         "ReplayAsOf",
         "ReplayAsOfError",
+        "ReplayCandidateScope",
         "ReplayErrorCode",
         "ReplayOrdering",
         "ReplaySource",

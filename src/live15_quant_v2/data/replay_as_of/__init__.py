@@ -11,7 +11,7 @@ from live15_quant_v2.data.replay_as_of.models import (
     SelectionWindow,
 )
 from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
-from live15_quant_v2.data.replay_as_of.source import ReplaySource
+from live15_quant_v2.data.replay_as_of.source import ReplayCandidateScope, ReplaySource
 
 __all__ = [
     "AsOfReplayView",
@@ -19,6 +19,7 @@ __all__ = [
     "AuthoritativeReplayRecord",
     "ReplayAsOf",
     "ReplayAsOfError",
+    "ReplayCandidateScope",
     "ReplayErrorCode",
     "ReplayOrdering",
     "ReplaySource",

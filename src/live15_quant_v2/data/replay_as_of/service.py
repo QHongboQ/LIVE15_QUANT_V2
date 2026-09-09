@@ -4,7 +4,7 @@ import base64
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import NoReturn, TypeGuard
+from typing import NoReturn, TypeGuard, cast
 
 from live15_quant_v2.data.asset import AssetId
 from live15_quant_v2.data.replay_as_of.models import (
@@ -22,6 +22,7 @@ from live15_quant_v2.data.replay_as_of.models import (
     SelectionWindow,
 )
 from live15_quant_v2.data.replay_as_of.source import (
+    ReplayCandidateScope,
     ReplaySource,
     ReplaySourceRecord,
     SourceAuthorityIdentities,
@@ -57,6 +58,15 @@ class _ValidatedAvailability:
     reference: str
 
 
+@dataclass(frozen=True, slots=True)
+class _DecodedCursor:
+    version: str
+    ordering: ReplayOrdering
+    request_identity: str
+    source_snapshot_identity: str
+    last_key: list[object]
+
+
 class ReplayAsOf:
     """The Slice 1 provider-neutral Replay read service."""
 
@@ -71,7 +81,7 @@ class ReplayAsOf:
         validated = _validate_request(request, self._max_page_size)
         request_identity = _request_identity(validated)
         authorities = self._source.source_authorities()
-        candidates = tuple(self._source.candidate_records())
+        candidates = tuple(self._source.candidate_records(_candidate_scope(validated)))
         qualified, exclusions = _qualify(candidates, validated)
         selected = _select(qualified, validated.request.selection_window)
         _require_ordering_timestamps(selected, validated.request.ordering)
@@ -109,7 +119,7 @@ class ReplayAsOf:
             ORDERING_RULE_VERSION,
             snapshot_identity,
             CompletenessState.NOT_ASSERTED,
-            tuple(exclusions),
+            tuple(sorted(exclusions, key=lambda exclusion: (exclusion.capture_id, exclusion.code.value))),
             next_cursor,
         )
 
@@ -185,6 +195,22 @@ def _request_identity(validated: _ValidatedRequest) -> str:
     )
 
 
+def _candidate_scope(validated: _ValidatedRequest) -> ReplayCandidateScope:
+    """Expose only validated semantic bounds to the provider-neutral source."""
+    request = validated.request
+    window = request.selection_window
+    return ReplayCandidateScope(
+        request.authority_policy_version,
+        request.as_of_cutoff_ns,
+        window.axis,
+        window.start_ns,
+        window.end_ns,
+        validated.assets,
+        validated.channels,
+        request.ordering,
+    )
+
+
 def _qualify(
     candidates: tuple[ReplaySourceRecord, ...],
     validated: _ValidatedRequest,
@@ -252,7 +278,11 @@ def _availability_state(
         )
     if not timestamp_present:
         return None
-    if not _is_int(availability.available_at_ns) or not isinstance(availability.reference, str):
+    if (
+        not _is_int(availability.available_at_ns)
+        or not isinstance(availability.reference, str)
+        or not availability.reference
+    ):
         _raise(
             ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING,
             f"invalid {name} availability for {capture_id}",
@@ -330,15 +360,15 @@ def _cursor_last_key(
     if cursor is None:
         return None
     payload = _decode_cursor(cursor)
-    if payload.get("version") != CURSOR_VERSION:
+    if payload.version != CURSOR_VERSION:
         _raise(ReplayErrorCode.INVALID_CURSOR, "unsupported cursor version")
-    if payload.get("request_identity") != request_identity:
+    if payload.request_identity != request_identity:
         _raise(ReplayErrorCode.CURSOR_MISMATCH, "cursor is bound to another request")
-    if payload.get("source_snapshot_identity") != snapshot_identity:
+    if payload.source_snapshot_identity != snapshot_identity:
         _raise(ReplayErrorCode.SOURCE_UNAVAILABLE, "source snapshot cannot be reproduced")
-    if payload.get("ordering") != ordering.value:
+    if payload.ordering is not ordering:
         _raise(ReplayErrorCode.INVALID_CURSOR, "cursor ordering is inconsistent")
-    key = _decode_ordering_key(payload.get("last_key"), ordering)
+    key = _decode_ordering_key(payload.last_key, ordering)
     if key not in {_ordering_key(item.source_record, ordering) for item in selected}:
         _raise(ReplayErrorCode.INVALID_CURSOR, "cursor key is not in rebuilt membership")
     return key
@@ -361,7 +391,7 @@ def _encode_cursor(
     return base64.urlsafe_b64encode(encoded).decode("ascii").rstrip("=")
 
 
-def _decode_cursor(cursor: object) -> dict[str, object]:
+def _decode_cursor(cursor: object) -> _DecodedCursor:
     if not isinstance(cursor, str):
         _raise(ReplayErrorCode.INVALID_CURSOR, "cursor must be a string")
     try:
@@ -372,7 +402,36 @@ def _decode_cursor(cursor: object) -> dict[str, object]:
         _raise(ReplayErrorCode.INVALID_CURSOR, "cursor is not valid URL-safe JSON")
     if not isinstance(payload, dict):
         _raise(ReplayErrorCode.INVALID_CURSOR, "cursor must contain an object")
-    return payload
+    typed_payload = cast(dict[str, object], payload)
+    required_fields = {
+        "version",
+        "ordering",
+        "request_identity",
+        "source_snapshot_identity",
+        "last_key",
+    }
+    if set(typed_payload) != required_fields:
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor has an unsupported shape")
+    version = typed_payload["version"]
+    ordering = typed_payload["ordering"]
+    request_identity = typed_payload["request_identity"]
+    snapshot_identity = typed_payload["source_snapshot_identity"]
+    last_key = typed_payload["last_key"]
+    if not isinstance(version, str):
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor text fields must be strings")
+    if not isinstance(ordering, str):
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor text fields must be strings")
+    if not isinstance(request_identity, str):
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor text fields must be strings")
+    if not isinstance(snapshot_identity, str):
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor text fields must be strings")
+    if not isinstance(last_key, list):
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor key must be a list")
+    try:
+        parsed_ordering = ReplayOrdering(ordering)
+    except ValueError:
+        _raise(ReplayErrorCode.INVALID_CURSOR, "cursor ordering is unsupported")
+    return _DecodedCursor(version, parsed_ordering, request_identity, snapshot_identity, last_key)
 
 
 def _decode_ordering_key(raw: object, ordering: ReplayOrdering) -> _OrderingKey:

@@ -19,6 +19,7 @@ from live15_quant_v2.data.replay_as_of import (
 from live15_quant_v2.data.replay_as_of.source import (
     AvailabilityEvidence,
     InMemoryReplaySource,
+    ReplayCandidateScope,
     ReplaySourceRecord,
     SourceAuthorityIdentities,
 )
@@ -164,6 +165,73 @@ def test_read_returns_one_paired_arrival_record() -> None:
     assert view.next_cursor is None
 
 
+def test_replay_source_receives_validated_canonical_candidate_scope() -> None:
+    class CapturingSource:
+        def __init__(self) -> None:
+            self.scopes: list[ReplayCandidateScope] = []
+
+        def candidate_records(
+            self,
+            scope: ReplayCandidateScope,
+        ) -> tuple[ReplaySourceRecord, ...]:
+            self.scopes.append(scope)
+            return (_record(),)
+
+        def source_authorities(self) -> SourceAuthorityIdentities:
+            return SourceAuthorityIdentities("evidence/v1", "truth/v1", "availability/v1")
+
+    source = CapturingSource()
+    ReplayAsOf(source, max_page_size=20).read(
+        _request(assets=(AssetId.ETH, AssetId.BTC), channels=("book", "trade"))
+    )
+
+    assert source.scopes == [
+        ReplayCandidateScope(
+            "data-truth/v1",
+            50,
+            SelectionAxis.ARRIVAL_TIME,
+            0,
+            100,
+            (AssetId.BTC, AssetId.ETH),
+            ("book", "trade"),
+            ReplayOrdering.ARRIVAL,
+        )
+    ]
+
+
+def test_candidate_scope_excludes_delivery_state_and_changes_only_with_semantics() -> None:
+    class CapturingSource:
+        def __init__(self) -> None:
+            self.scopes: list[ReplayCandidateScope] = []
+
+        def candidate_records(
+            self,
+            scope: ReplayCandidateScope,
+        ) -> tuple[ReplaySourceRecord, ...]:
+            self.scopes.append(scope)
+            return (_record("capture-a"), _record("capture-b", received_timestamp=21))
+
+        def source_authorities(self) -> SourceAuthorityIdentities:
+            return SourceAuthorityIdentities("evidence/v1", "truth/v1", "availability/v1")
+
+    source = CapturingSource()
+    service = ReplayAsOf(source, max_page_size=20)
+    first = service.read(_request(page_size=1))
+    service.read(_request(page_size=2, cursor=first.next_cursor))
+    service.read(_request(cutoff=51))
+    service.read(_request(axis=SelectionAxis.EVENT_TIME))
+    service.read(_request(assets=None))
+    service.read(_request(channels=None))
+
+    assert not hasattr(source.scopes[0], "cursor")
+    assert not hasattr(source.scopes[0], "page_size")
+    assert source.scopes[0] == source.scopes[1]
+    assert source.scopes[0] != source.scopes[2]
+    assert source.scopes[0] != source.scopes[3]
+    assert source.scopes[0] != source.scopes[4]
+    assert source.scopes[0] != source.scopes[5]
+
+
 @pytest.mark.parametrize(
     "as_of_request",
     [
@@ -266,6 +334,23 @@ def test_unavailable_evidence_or_authority_is_a_bounded_exclusion(
     ],
 )
 def test_partial_availability_fails_closed(
+    evidence: AvailabilityEvidence,
+    authority: AvailabilityEvidence,
+) -> None:
+    with pytest.raises(ReplayAsOfError) as error:
+        _read(_request(), _record(evidence=evidence, authority=authority))
+
+    assert error.value.code is ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING
+
+
+@pytest.mark.parametrize(
+    "evidence,authority",
+    [
+        (AvailabilityEvidence(30, ""), AvailabilityEvidence(40, "authority-1")),
+        (AvailabilityEvidence(30, "evidence-1"), AvailabilityEvidence(40, "")),
+    ],
+)
+def test_empty_availability_reference_fails_closed(
     evidence: AvailabilityEvidence,
     authority: AvailabilityEvidence,
 ) -> None:
@@ -443,6 +528,53 @@ def test_source_authority_or_membership_drift_fails_closed(
         drifted.read(_request(page_size=1, cursor=first.next_cursor))
 
     assert error.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda payload: payload.__setitem__("extra", "forbidden"),
+        lambda payload: payload.pop("version"),
+        lambda payload: payload.pop("request_identity"),
+        lambda payload: payload.pop("source_snapshot_identity"),
+        lambda payload: payload.pop("ordering"),
+        lambda payload: payload.pop("last_key"),
+        lambda payload: payload.__setitem__("request_identity", 1),
+        lambda payload: payload.__setitem__("request_identity", []),
+        lambda payload: payload.__setitem__("source_snapshot_identity", 1),
+        lambda payload: payload.__setitem__("source_snapshot_identity", []),
+        lambda payload: payload.__setitem__("ordering", 1),
+        lambda payload: payload.__setitem__("last_key", "not-a-list"),
+    ],
+)
+def test_cursor_v1_rejects_any_structural_shape_or_type_defect(mutation: object) -> None:
+    record = _record("capture-a")
+    baseline = _read(_request(), record)
+    payload: dict[str, object] = {
+        "version": "replay-as-of-cursor/v1",
+        "request_identity": baseline.request_identity,
+        "source_snapshot_identity": baseline.source_snapshot_identity,
+        "ordering": "arrival",
+        "last_key": [20, "capture-a"],
+    }
+    mutation(payload)
+
+    with pytest.raises(ReplayAsOfError) as error:
+        _read(_request(cursor=_encode_cursor(payload)), record)
+
+    assert error.value.code is ReplayErrorCode.INVALID_CURSOR
+
+
+def test_exclusions_are_canonical_and_independent_of_source_input_order() -> None:
+    first = _record("capture-a", evidence=AvailabilityEvidence(51, "evidence-a"))
+    second = _record("capture-b", authority=AvailabilityEvidence(51, "authority-b"))
+
+    left = _read(_request(), first, second)
+    right = _read(_request(), second, first)
+
+    assert left.exclusions == right.exclusions
+    assert left.request_identity == right.request_identity
+    assert left.source_snapshot_identity == right.source_snapshot_identity
 
 
 def test_cursor_with_wrong_ordering_or_unknown_last_key_is_invalid() -> None:
