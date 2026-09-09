@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-CONTRACT-DEFINITION-001
+
+**Change:** Created the Canonical Dataset Data System child contract candidate.
+
+**Authority and policy:** It consumes one complete bounded Replay As-Of view
+and its recorded Data Truth authority. V1 candidate membership includes only
+`ACCEPTED` authority; `DUPLICATE`, `CONFLICT`, and `NOT_ACCEPTED` remain
+auditable exclusions.
+
+**Determinism:** The candidate defines immutable dataset snapshots,
+cryptographic identity, complete pagination, source-snapshot binding, and
+page-size independence.
+
+**Safety and references:** Completeness remains `NOT_ASSERTED`; no features,
+labels, training, physical storage selection, runtime activation, or canonical
+table/data change occurred. V1 Research Data Authority, V1 Parquet+ZSTD, and
+V1 COLD → RDA → runner are bounded reference evidence only.
+
+**Status:** Contract candidate pending independent ChatGPT review.
+
 ## 2026-09-09 — LIVE15-V2-PROJECT-BRAIN-DATA-TRUTH-STALE-STATUS-CLEANUP-001
 
 **Change:** Removed stale active downstream-state claims from the FINAL CLOSED
