@@ -1,5 +1,51 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-4-RECORDER-COMPOSITION-REMOTE-REVIEW-FIX-001
+
+**Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`5f9bc6f87da5ca3f71f5e96ae0402406b32d8b90`. No production composition defect
+was established.
+
+**Acceptance closeout:** Added real `AvailabilityWriter` composition recovery
+coverage for exact `IN_DOUBT` reconciliation/no blind reappend and explicit
+post-definite-failure re-entry; completed the public Data Truth error matrix;
+proved same-ID immutable read-back mismatch rejection; linked marker failures
+from a composition result to existing Replay exclusion semantics; and extended
+the task-owned QuestDB path with post-success idempotent recovery and exact
+evidence, TruthDecision, and semantic-marker counts.
+
+**Hygiene:** The exact task-owned pytest base
+`D:\LIVE15_QUANT_V2\.pytest-recorder-reviewfix-35201875748e450e90b26fcafda3c93b`
+contained no files or `server.conf`; its only descendant was an empty pytest
+case directory. After the real harness confirmed contained process, ports,
+QuestDB root, and SF cleanup, one ordinary deletion returned `AccessDenied`.
+No ACL repair or further deletion was attempted. This is a separate final
+hygiene item, not a runtime-correctness blocker.
+
+**Next:** Keep Slice 4 as an implementation candidate pending exact-head
+re-audit. No canonical activation, runtime/table/data change, or FINAL CLOSED
+claim occurred.
+
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-4-RECORDER-COMPOSITION-IMPLEMENTATION-001
+
+**Change:** Added the upper Data System `RecorderComposition` candidate. It
+uses only sealed public seams to capture a typed message, persist the immutable
+CaptureFact, require one exact Hot Store readback, record evidence availability,
+obtain the public Data Truth decision, and record authority availability.
+
+**Safety / validation:** Terminal persistence outcomes stop before lower calls;
+nonterminal outcomes make one readback attempt and never claim proof without an
+exact fact. Typed availability failures are reported without retry, Data Truth
+failures propagate, and explicit recovery never re-persists. Controlled tests,
+Replay exclusion coverage, static dependency checks, and opt-in Job-Object
+contained QuestDB acceptance passed. The acceptance test removed its server and
+Store-and-Forward resources; Windows denied removal of its empty isolated pytest
+base after verification, with no ACL repair or broader cleanup attempted.
+
+**Next:** Run the remaining bounded validation matrix and obtain independent
+exact-head review before any merge decision. No canonical runtime/table/data or
+production activation occurred.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed the Slice 3 QuestDB Replay Source engineering implementation
