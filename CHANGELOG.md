@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-IMPLEMENTATION-PLAN-DRAFT-001
+
+**Change:** Drafted the Replay & As-Of implementation-plan authority candidate.
+
+**Reason:** The FINAL CLOSED contract, COMPLETED availability-mechanism fit
+preparation, and FINAL CLOSED snapshot-membership POC provide bounded input to
+planning, not implementation.
+
+**Status / safety:** Replay implementation and availability production remain
+NOT IMPLEMENTED; canonical activation remains unauthorized. The candidate
+preserves sealed Storage/Data Truth contracts, plans disposable-only QuestDB
+acceptance, and requires independent review before any implementation authority
+can close.
+
+**Next:** Independent review of this implementation-plan candidate. No source,
+test, runtime, table, data, Canonical Dataset, Model/training, or Trading work
+is authorized by this entry.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-FINAL-STATUS-REVIEW-FIX-001
 
 **Change:** Corrected the POC final-status classification after ChatGPT
