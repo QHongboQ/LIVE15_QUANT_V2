@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-4-RECORDER-COMPOSITION-IMPLEMENTATION-001
+
+**Change:** Added the upper Data System `RecorderComposition` candidate. It
+uses only sealed public seams to capture a typed message, persist the immutable
+CaptureFact, require one exact Hot Store readback, record evidence availability,
+obtain the public Data Truth decision, and record authority availability.
+
+**Safety / validation:** Terminal persistence outcomes stop before lower calls;
+nonterminal outcomes make one readback attempt and never claim proof without an
+exact fact. Typed availability failures are reported without retry, Data Truth
+failures propagate, and explicit recovery never re-persists. Controlled tests,
+Replay exclusion coverage, static dependency checks, and opt-in Job-Object
+contained QuestDB acceptance passed. The acceptance test removed its server and
+Store-and-Forward resources; Windows denied removal of its empty isolated pytest
+base after verification, with no ACL repair or broader cleanup attempted.
+
+**Next:** Run the remaining bounded validation matrix and obtain independent
+exact-head review before any merge decision. No canonical runtime/table/data or
+production activation occurred.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed the Slice 3 QuestDB Replay Source engineering implementation
