@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-PROJECT-BRAIN-DATA-TRUTH-STALE-STATUS-CLEANUP-001
+
+**Change:** Removed stale active downstream-state claims from the FINAL CLOSED
+Data Truth leaf after Replay engineering closure.
+
+**Before / after:** The leaf described Replay as unimplemented and Replay
+planning as Current NEXT. It now records Replay engineering as FINAL CLOSED and
+Canonical Dataset contract / responsibility definition as Current NEXT.
+
+**Safety / reason:** No Data Truth semantic change, Replay change, Canonical
+Dataset design or implementation, or runtime, data, config, source, or test
+change occurred. This prevents recursive Project Brain recovery through the
+Data Truth leaf from restoring an obsolete project phase.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-ENGINEERING-FINAL-STATUS-REMOTE-REVIEW-FIX-001
 
 **Reviewed head:** `7229f9a9a7ae12430e3511e79050760df7f5927b` received

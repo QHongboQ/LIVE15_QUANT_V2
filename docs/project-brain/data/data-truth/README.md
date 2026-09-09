@@ -7,7 +7,7 @@
 **Implementation-plan authority:** FINAL CLOSED; see
 [implementation-plan.md](implementation-plan.md).
 
-**Implementation:** FINAL CLOSED.
+**Data Truth engineering implementation:** FINAL CLOSED.
 
 **Slice 1 semantic-library implementation:** FINAL CLOSED. It provides no
 persistent `TruthDecision` authority.
@@ -21,11 +21,19 @@ PASS / ACCEPTED under the approved single-writer constraint.
 CLOSED under the approved single-writer constraint. Concurrent `decide()` and
 multi-process/multi-writer authority are NOT SUPPORTED.
 
-**Canonical TruthDecision table:** NOT CREATED.
+**Canonical TruthDecision table:** NOT CREATED / NOT AUTHORIZED.
 
 **Canonical Data Truth runtime activation:** NOT AUTHORIZED / NOT PERFORMED.
 
-**Replay & As-Of, Canonical Dataset, Model, and Trading:** UNIMPLEMENTED.
+**Replay & As-Of engineering implementation:** FINAL CLOSED.
+
+**Canonical Replay activation:** NOT AUTHORIZED / NOT PERFORMED.
+
+**Canonical Dataset:** CURRENT NEXT / UNIMPLEMENTED.
+
+**Model:** UNIMPLEMENTED.
+
+**Trading:** UNIMPLEMENTED.
 
 This sealed authority records the approved semantic boundary and final
 implementation state. Slice 1 created no persistent authority by itself; the
@@ -179,9 +187,15 @@ evidence resolution, append-only WAL history without DEDUP or UPSERT,
 visibility barrier, and no blind write retry.
 
 Canonical TruthDecision-table creation and canonical runtime activation remain
-NOT AUTHORIZED / NOT PERFORMED. Concurrent `decide()`, multi-process and
-multi-writer authority, Replay & As-Of, Canonical Dataset, Model, and Trading
-remain unsupported or unimplemented as stated above. Current NEXT is Data
-System → Replay & As-Of authority / planning preparation only; it does not
-authorize Replay implementation, runtime deployment, Canonical Dataset work,
-Model/training work, or Trading work.
+NOT AUTHORIZED / NOT PERFORMED. Concurrent `decide()`, multi-process, and
+multi-writer authority remain unsupported. Replay & As-Of engineering
+implementation is FINAL CLOSED; canonical Replay/runtime activation remains
+NOT AUTHORIZED / NOT PERFORMED.
+
+Current NEXT is Data System → Canonical Dataset → Contract / responsibility
+definition. Canonical Dataset is CURRENT NEXT / UNIMPLEMENTED.
+`SAFE_TO_BEGIN_CANONICAL_DATASET_CONTRACT_DEFINITION = YES` permits only a
+separately reviewed contract/responsibility-definition task. It does not
+authorize Canonical Dataset implementation, canonical Replay activation,
+canonical TruthDecision activation, production Recorder deployment,
+Model/training, or Trading.
