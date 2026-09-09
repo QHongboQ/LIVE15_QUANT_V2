@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-IMPLEMENTATION-PLAN-REMOTE-REVIEW-FIX-001
+
+**Change:** Corrected the Replay & As-Of implementation-plan candidate after
+the mandatory GitHub-visible ChatGPT review recorded `CHANGES_REQUIRED` on
+reviewed head `86d51d89f02f7c3bc5e5c15a2260848c8f5d4dfb`.
+
+**Reason:** The accepted architecture required six bounded planning fixes:
+deterministic request identity; source/proof-schema-bound availability;
+clock-floor port and post-proof sampling; exact recorder persistence/proof/
+marker boundaries; executable append definite-failure/in-doubt handling; and
+the FINAL CLOSED error taxonomy mapping.
+
+**Status / safety:** Implementation remains NOT IMPLEMENTED. No source, test,
+runtime, table, data, config, or dependency change occurred; canonical
+activation remains unauthorized.
+
+**Next:** Keep PR #44 draft-only for exact-new-head ChatGPT implementation-plan
+re-audit. No implementation work is authorized by this correction.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-IMPLEMENTATION-PLAN-DRAFT-001
 
 **Change:** Drafted the Replay & As-Of implementation-plan authority candidate.
