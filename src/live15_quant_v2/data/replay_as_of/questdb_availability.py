@@ -94,15 +94,17 @@ class QuestDBAvailabilityStore:
         assert sender is not None
         try:
             acknowledged = sender.await_acked_fsn(fsn, timeout_millis=self._timeout)
-            pending = any(True for error in _sender_errors(sender) if error.from_fsn <= fsn <= error.to_fsn)
+            rejection = _rejection_for_fsn(sender, fsn)
             lost = sender.error_events_dropped() != sender_dropped or database.error_events_dropped != database_dropped
         except (OSError, questdb.QuestDBError) as error:
             self._close_sender(sender); self._in_doubt.add(record.key)
             raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "acknowledgement is in doubt") from error
         self._close_sender(sender)
-        if lost or pending or not acknowledged:
+        if lost or rejection == "pending" or not acknowledged:
             self._in_doubt.add(record.key)
             raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "append acknowledgement is in doubt")
+        if rejection == "terminal":
+            raise AvailabilitySupportError(AvailabilitySupportErrorCode.DEFINITE_REJECTION, "QuestDB terminally rejected append")
         try:
             self._wait_visibility(database)
             verified = self.find(record.key)
@@ -168,7 +170,10 @@ class QuestDBAvailabilityStore:
             raise AvailabilitySupportError(AvailabilitySupportErrorCode.INVARIANT_CONFLICT, "malformed availability row") from error
 
     def _wait_visibility(self, database: questdb.QuestDB) -> None:
-        rows = database.query(f"SELECT wait_wal_table('{self._table_name}')", []).to_pandas().to_dict(orient="records")
+        try:
+            rows = database.query(f"SELECT wait_wal_table('{self._table_name}')", []).to_pandas().to_dict(orient="records")
+        except (OSError, questdb.QuestDBError) as error:
+            raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "WAL visibility is in doubt") from error
         if len(rows) != 1 or len(rows[0]) != 1 or next(iter(rows[0].values())) is not True:
             raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "WAL visibility unavailable")
 
@@ -195,3 +200,14 @@ class QuestDBAvailabilityStore:
 def _sender_errors(sender: Any):
     while (error := sender.poll_error()) is not None:
         yield error
+
+
+def _rejection_for_fsn(sender: Any, fsn: int) -> str | None:
+    result: str | None = None
+    for error in _sender_errors(sender):
+        if not error.from_fsn <= fsn <= error.to_fsn:
+            continue
+        if error.applied_policy is questdb.SenderErrorPolicy.Terminal:
+            return "terminal"
+        result = "pending"
+    return result

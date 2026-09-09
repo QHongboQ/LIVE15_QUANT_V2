@@ -9,6 +9,8 @@ from live15_quant_v2.data.replay_as_of.availability import (
     AvailabilityKey,
     AvailabilityKind,
     AvailabilityRecord,
+    AvailabilitySupportError,
+    AvailabilitySupportErrorCode,
     AvailabilityWriter,
 )
 
@@ -85,3 +87,36 @@ def test_writer_samples_after_entry_clamps_to_floor_and_reconciles_existing() ->
 
     assert first.available_at_ns == 101
     assert repeated is first
+
+
+def test_in_doubt_reconciles_only_the_exact_attempted_immutable_record() -> None:
+    class InDoubtStore(_Store):
+        def append(self, record: AvailabilityRecord) -> AvailabilityRecord:
+            self.attempted = record
+            raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "ambiguous")
+
+    store = InDoubtStore()
+    writer = AvailabilityWriter(store, wall_time_ns=lambda: 10, monotonic_ns=lambda: 1)
+    arguments = {"kind": AvailabilityKind.EVIDENCE, "capture_id": "capture-2", "policy_version": None, "source_authority_identity": "source/v1"}
+    with pytest.raises(AvailabilitySupportError) as first:
+        writer.record_proven(**arguments)
+    assert first.value.code is AvailabilitySupportErrorCode.IN_DOUBT
+    store.records[store.attempted.key] = store.attempted
+    assert writer.record_proven(**arguments) == store.attempted
+
+
+def test_in_doubt_different_visible_record_fails_closed_without_reappend() -> None:
+    class InDoubtStore(_Store):
+        def append(self, record: AvailabilityRecord) -> AvailabilityRecord:
+            self.attempts = getattr(self, "attempts", 0) + 1
+            self.record = record
+            raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "ambiguous")
+
+    store = InDoubtStore()
+    writer = AvailabilityWriter(store, wall_time_ns=lambda: 10, monotonic_ns=lambda: 1)
+    arguments = {"kind": AvailabilityKind.EVIDENCE, "capture_id": "capture-3", "policy_version": None, "source_authority_identity": "source/v1"}
+    with pytest.raises(AvailabilitySupportError): writer.record_proven(**arguments)
+    store.records[store.record.key] = AvailabilityRecord(AvailabilityKind.EVIDENCE, "capture-3", None, 99, SUPPORTED_PROOF_SCHEMA_VERSION, "source/v1")
+    with pytest.raises(AvailabilitySupportError) as error: writer.record_proven(**arguments)
+    assert error.value.code is AvailabilitySupportErrorCode.INVARIANT_CONFLICT
+    assert store.attempts == 1

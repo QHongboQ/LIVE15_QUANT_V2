@@ -59,6 +59,7 @@ class AvailabilityStore(Protocol):
 
 class AvailabilitySupportErrorCode(StrEnum):
     DEFINITE_PREPUBLICATION_FAILURE = "definite_prepublication_failure"
+    DEFINITE_REJECTION = "definite_rejection"
     IN_DOUBT = "in_doubt"
     INVARIANT_CONFLICT = "invariant_conflict"
     SOURCE_UNAVAILABLE = "source_unavailable"
@@ -91,7 +92,7 @@ class AvailabilityWriter:
             raise AvailabilitySupportError(AvailabilitySupportErrorCode.SOURCE_UNAVAILABLE, "invalid committed floor")
         self._committed_floor = floor
         self._last_issued: int | None = None
-        self._in_doubt: set[AvailabilityKey] = set()
+        self._in_doubt: dict[AvailabilityKey, AvailabilityRecord] = {}
 
     def record_proven(
         self,
@@ -104,8 +105,11 @@ class AvailabilityWriter:
         key = AvailabilityKey(kind, capture_id, policy_version)
         existing = self._store.find(key)
         if existing is not None:
+            unresolved = self._in_doubt.get(key)
+            if unresolved is not None and existing != unresolved:
+                raise AvailabilitySupportError(AvailabilitySupportErrorCode.INVARIANT_CONFLICT, "in-doubt candidate differs from visible record")
             self._require_compatible(existing, key, source_authority_identity)
-            self._in_doubt.discard(key)
+            self._in_doubt.pop(key, None)
             return existing
         if key in self._in_doubt:
             raise AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "append remains unresolved")
@@ -117,7 +121,7 @@ class AvailabilityWriter:
             result = self._store.append(record)
         except AvailabilitySupportError as error:
             if error.code is AvailabilitySupportErrorCode.IN_DOUBT:
-                self._in_doubt.add(key)
+                self._in_doubt[key] = record
             raise
         self._require_compatible(result, key, source_authority_identity)
         if result != record:

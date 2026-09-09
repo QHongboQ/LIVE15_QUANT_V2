@@ -77,3 +77,15 @@ def test_package_exports_only_provider_neutral_slice_one_api() -> None:
     ]
     assert "InMemoryReplaySource" not in vars(replay_as_of)
     assert "AvailabilityReference" not in vars(replay_as_of)
+
+
+def test_slice_two_adapter_has_no_replacement_or_future_composition_surface() -> None:
+    adapter = (REPLAY / "questdb_availability.py").read_text(encoding="utf-8")
+
+    assert "UPDATE " not in adapter
+    assert "DELETE " not in adapter
+    assert "UPSERT" not in adapter
+    assert "OFFSET" not in adapter
+    assert "DataTruth.decide" not in adapter
+    assert "recorder_composition" not in adapter
+    assert "table_name: str =" not in adapter

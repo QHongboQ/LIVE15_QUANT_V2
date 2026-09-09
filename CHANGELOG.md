@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-AVAILABILITY-SUPPORT-REMOTE-REVIEW-FIX-001
+
+**Review result:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`f2361333d8c3b231a53feca3128e64119f12e814`.
+
+**Change:** Preserved exact in-doubt candidates for reconciliation, contained
+visibility-barrier failures as in doubt, distinguished terminal from pending
+sender diagnostics, and expanded Slice 2 acceptance coverage.
+
+**Safety:** Slice 2 remains an implementation candidate; the production
+`CLOCK_SAFETY` gate remains open. No Slice 3/4 or canonical runtime, table, or
+data change occurred.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-AVAILABILITY-SUPPORT-IMPLEMENTATION-001
 
 **Change:** Created the Slice 2 Availability Support implementation candidate:
