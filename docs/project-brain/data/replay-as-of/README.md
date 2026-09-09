@@ -7,12 +7,14 @@
 **Implementation:** IN PROGRESS / PARTIALLY IMPLEMENTED.
 **Slice 1 — Pure Replay Core:** FINAL CLOSED.
 **Slice 2 — Availability Support:** FINAL CLOSED.
-**Slice 3 — QuestDB Replay Source:** NOT IMPLEMENTED.
-**Slice 4 — Recorder Composition:** NOT IMPLEMENTED.
+**Slice 3 — QuestDB Replay Source:** FINAL CLOSED.
+**Slice 4 — Recorder Composition:** NOT IMPLEMENTED / CURRENT NEXT.
 **Availability-mechanism fit preparation:** COMPLETED.
 **Availability Support engineering implementation:** FINAL CLOSED.
 **Canonical availability activation:** NOT AUTHORIZED / NOT PERFORMED.
+**Canonical Replay activation:** NOT AUTHORIZED.
 **Recorder production composition:** NOT IMPLEMENTED.
+**Production `CLOCK_SAFETY` operational gate:** NOT AUTHORIZED / NOT CLOSED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
 DDL and production activation remain undecided and unauthorized. The candidate
 direction is Replay-owned availability support observed and recorded from upper
@@ -56,6 +58,35 @@ Ubuntu, Windows, and CI Gate checks. PR #48 merged normally as
 `5119271b71450fa83a15de4b709fb07034a837e4`; merge-SHA CI, exact-merge
 technical seal, and task-owned QuestDB teardown passed. No canonical runtime,
 table, or data change occurred.
+
+**Slice 3 closure evidence:** PR #50's initial reviewed head
+`ced4d6820f8335a255251c2e15a97533cac8be01` received ChatGPT
+`CHANGES_REQUIRED`; identity-corrected head
+`725c6cdd8673d13528183776c7772f60a26178f6` received a second
+`CHANGES_REQUIRED`; acceptance-corrected head
+`6c9c61df5c3ec381cac987a3aa87d3487cde34c9` was followed by final approved
+head `d98d5798004c48aae735fef6fb6236982bb67d34`, which passed the final
+ChatGPT exact-head re-audit and Ubuntu, Windows, and CI Gate checks. PR #50
+merged normally as `4a1809d72aa0451cf357a3845451da294ea33a5a` with parents
+`08b87512d9ae6e266a549f055ed19c33bc7dc7c0` and
+`d98d5798004c48aae735fef6fb6236982bb67d34`; merge-SHA CI, the exact-merge
+technical seal, task-owned real QuestDB acceptance, and teardown passed. No
+canonical runtime, table, or production-data change occurred.
+
+**Accepted Slice 3 engineering result:** `QuestDBReplaySource` is a
+Replay-owned, read-only physical adapter with explicit evidence, TruthDecision,
+and availability tables and no canonical defaults. It validates sealed physical
+schemas and models without creation, migration, or repair; reconstructs direct
+sealed `CaptureFact` and `TruthDecision` values for the exact requested policy;
+keeps every valid TruthDecision category replayable; and fails closed for
+malformed/duplicate evidence and authority. Availability markers use sealed
+`AvailabilityRecord` validation and logical EVIDENCE/AUTHORITY proof identities,
+while composite source identities bind logical identity, table, and schema
+provenance only. The source is connection-string-independent, restart-stable,
+deterministic, free of source-side semantic pagination and `OFFSET`, preserves
+EVENT_TIME-null candidates for ReplayAsOf, and supports keyset continuation,
+configuration/source drift failure, future-cutoff stability, and fail-closed
+backdated membership drift.
 
 **Accepted Slice 2 engineering result:** immutable semantic availability
 records under `replay-availability-proof/v1`; a narrow provider-neutral
@@ -355,25 +386,38 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** a separately reviewed Slice 3 — QuestDB Replay Source
-implementation task. `SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_3_IMPLEMENTATION = YES`
-because Slice 1 and Slice 2 engineering prerequisites are FINAL CLOSED. This
-status record does not authorize Slice 3 implementation.
+**Current NEXT:** a separately reviewed Slice 4 — Data System Recorder
+Composition implementation task.
+`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_4_IMPLEMENTATION = YES` because Slices 1–3
+engineering prerequisites are FINAL CLOSED. This status record does not begin
+Slice 4.
 
-Slice 3 owns only the Replay-owned physical read adapter
-`src/live15_quant_v2/data/replay_as_of/questdb_source.py`, with planned
-integration coverage in `tests/test_questdb_replay_as_of_source_integration.py`.
-It reconstructs the approved provider-neutral `ReplaySource.candidate_records(scope)`
-input from physical evidence, TruthDecision, and availability authorities
-without widening HotStore, CaptureRange, TruthDecisionHistory, DataTruth,
-CaptureFact, or TruthDecision. It preserves the exact requested-policy and
-provider-neutral source seam; fail-closed malformed/source-drift mappings;
-matching availability proof schema/source identity; Slice 1 snapshot semantics;
-no `OFFSET`, latest-row selection, fabricated baseline, or completeness claim.
-It does not include Recorder composition, canonical activation, production
-deployment, Canonical Dataset, Model/training, or Trading.
+Slice 4 is owned by the upper Data System composition layer, not by a new Replay
+leaf. Its planned files are `src/live15_quant_v2/data/recorder_composition.py`,
+`tests/test_replay_as_of_recorder_composition.py`, and
+`tests/test_questdb_replay_as_of_end_to_end.py`. It composes sealed public seams
+without widening CaptureFact, Capture Boundary, Durable Persistence, HotStore,
+CaptureRange, DataTruth, TruthDecision, TruthDecisionHistory, AvailabilityStore,
+AvailabilityWriter, ReplaySource, or ReplayAsOf, and must not use sibling
+private helpers or own SQL, QuestDB sender/WAL mechanics, clocks, cursor logic,
+retry/disk queues, leases, schedulers, or distributed infrastructure.
 
-`SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because Replay & As-Of
-contract authority is FINAL CLOSED, availability-mechanism fit preparation is
-COMPLETED, and the required snapshot-membership POC gate is FINAL CLOSED and
-accepted. The implementation-plan authority and Slices 1–2 are FINAL CLOSED.
+The sealed sequence is Market Ingress → Capture Boundary → Durable Persistence
+→ exact Hot Store read-back proof → EVIDENCE marker attempt →
+`DataTruth.decide()` → AUTHORITY marker attempt. `LOCAL_PERSISTENCE_FAILED` or
+`DEFINITELY_REJECTED` creates no evidence marker and performs no Data Truth;
+`PERSISTED_PENDING`, `ACKNOWLEDGED_OK`, and `IN_DOUBT` are not proof without an
+exact immutable read-back. A marker failure or `IN_DOUBT` after successful proof
+does not invalidate evidence, block Data Truth, roll back authority, or permit
+blind reappend; fresh public proof/reconciliation is required.
+
+Slice 4 acceptance must cover the persistence and read-back status matrix,
+marker definite/ambiguous failure isolation, Data Truth failure/re-entry,
+Replay exclusion while markers are unavailable, and no rollback of lower
+authority. Its real end-to-end path is task-owned disposable infrastructure only:
+Capture Boundary → Durable Persistence → read-back → markers → Data Truth →
+markers → ReplayAsOf. It excludes canonical tables/runtime/service activation,
+production Recorder deployment, canonical availability/TruthDecision/Replay
+activation, production `CLOCK_SAFETY` closure, Canonical Dataset, Model/training,
+Trading, and Operations expansion. `LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` and
+the canonical `CLOCK_SAFETY` gate remain preserved and open.

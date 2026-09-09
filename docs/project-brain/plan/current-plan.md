@@ -45,9 +45,11 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   FINAL CLOSED following PR #46 normal merge
   `62f8c2f672ca3627d9690727ff47b80d805266d5`. Slice 2 Availability Support is
   FINAL CLOSED following PR #48 normal merge
-  `a78b731a8c24879b0da41ec4d6f28bb43ebe2daf`; overall Replay implementation is
-  IN PROGRESS. Slice 3 QuestDB Replay Source, Slice 4 Recorder Composition,
-  and recorder production composition remain NOT IMPLEMENTED. Canonical
+  `a78b731a8c24879b0da41ec4d6f28bb43ebe2daf`. Slice 3 QuestDB Replay Source is
+  FINAL CLOSED following PR #50 normal merge
+  `4a1809d72aa0451cf357a3845451da294ea33a5a`; overall Replay implementation is
+  IN PROGRESS. Slice 4 Recorder Composition and recorder production composition
+  remain NOT IMPLEMENTED. Canonical
   availability activation and canonical Replay activation remain NOT AUTHORIZED.
   Canonical Dataset, Model, Trading, and broad
   Operations functionality remain unimplemented.
@@ -57,27 +59,24 @@ implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of → Slice 3 — QuestDB Replay Source
-implementation**. `SLICE_2_AVAILABILITY_SUPPORT = FINAL CLOSED` at merge
-`a78b731a8c24879b0da41ec4d6f28bb43ebe2daf`.
-`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_3_IMPLEMENTATION = YES` because Slice 1 and
-Slice 2 engineering prerequisites are closed. Slice 3 still requires its own
-separately reviewed implementation task.
+Current NEXT: **Data System → Replay & As-Of → Slice 4 — Data System Recorder
+Composition implementation**. `SLICE_3_QUESTDB_REPLAY_SOURCE = FINAL CLOSED`
+at merge `4a1809d72aa0451cf357a3845451da294ea33a5a`.
+`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_4_IMPLEMENTATION = YES` because Slices 1–3
+engineering prerequisites are closed. Slice 4 still requires its own separately
+reviewed implementation task; this status update does not begin it.
 
-Slice 3 owns only Replay's physical read adapter
-`src/live15_quant_v2/data/replay_as_of/questdb_source.py` and planned test
-`tests/test_questdb_replay_as_of_source_integration.py`. It reconstructs the
-approved provider-neutral `ReplaySource.candidate_records(scope)` input from
-physical evidence, TruthDecision, and availability authorities. It may push
-down only semantics-preserving bounds; keeps exact policy, replayable valid
-TruthDecision categories, availability schema/source-identity validation, and
-Slice 1 snapshot semantics; fails closed for malformed evidence/authority and
-source unavailability/drift; and uses no `OFFSET`, latest-row selection,
-fabricated baseline, or completeness claim. It must not widen HotStore,
-CaptureRange, TruthDecisionHistory, DataTruth, CaptureFact, or TruthDecision.
+Slice 4 is upper Data System composition, not a Replay leaf. Its planned files
+are `src/live15_quant_v2/data/recorder_composition.py`,
+`tests/test_replay_as_of_recorder_composition.py`, and
+`tests/test_questdb_replay_as_of_end_to_end.py`. It composes the sealed sequence
+Market Ingress → Capture Boundary → Durable Persistence → exact Hot Store
+read-back proof → EVIDENCE marker → `DataTruth.decide()` → AUTHORITY marker.
+No persistence status alone is proof; marker failure does not roll back
+already-proved lower authority; blind marker reappend is forbidden.
 
-Slice 3 excludes `recorder_composition.py`, Slice 4, canonical availability or
-Replay activation, production Recorder deployment, Canonical Dataset,
-Model/training, and Trading. `LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains
-preserved, and the canonical `CLOCK_SAFETY` operational gate remains NOT
-AUTHORIZED / NOT CLOSED.
+Slice 4 excludes canonical tables, runtime/service or Replay/availability/Data
+Truth activation, production Recorder deployment, production `CLOCK_SAFETY`
+closure, Canonical Dataset, Model/training, Trading, and Operations expansion.
+`LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains preserved, and the canonical
+`CLOCK_SAFETY` operational gate remains NOT AUTHORIZED / NOT CLOSED.
