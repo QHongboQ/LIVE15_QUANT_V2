@@ -8,6 +8,10 @@ from uuid import uuid4
 
 import pytest
 
+_LOGICAL_EVIDENCE_AUTHORITY = "capture-authority/v1"
+_LOGICAL_TRUTH_AUTHORITY = "truth-authority/v1"
+_LOGICAL_AVAILABILITY_AUTHORITY = "availability-authority/v1"
+
 
 class _Frame:
     def __init__(self, rows: list[dict[str, Any]]) -> None:
@@ -34,12 +38,14 @@ class _Database:
         truth: list[dict[str, Any]] | None = None,
         availability: list[dict[str, Any]] | None = None,
         tables: list[dict[str, Any]] | None = None,
+        table_names: tuple[str, str, str] = ("evidence", "truth", "availability"),
     ) -> None:
         self.queries: list[tuple[str, list[Any]]] = []
         self.evidence = list(evidence or [])
         self.truth = list(truth or [])
         self.availability = list(availability or [])
         self.tables = tables
+        self.table_names = table_names
 
     def query(self, sql: str, binds: list[Any]) -> _Result:
         self.queries.append((sql, binds))
@@ -49,21 +55,21 @@ class _Database:
             return _Result(
                 [
                     {
-                        "table_name": "evidence",
+                        "table_name": self.table_names[0],
                         "designatedTimestamp": "received_timestamp",
                         "partitionBy": "DAY",
                         "walEnabled": True,
                         "dedup": True,
                     },
                     {
-                        "table_name": "truth",
+                        "table_name": self.table_names[1],
                         "designatedTimestamp": "physical_written_at",
                         "partitionBy": "DAY",
                         "walEnabled": True,
                         "dedup": False,
                     },
                     {
-                        "table_name": "availability",
+                        "table_name": self.table_names[2],
                         "designatedTimestamp": "written_at_ns",
                         "partitionBy": "DAY",
                         "walEnabled": True,
@@ -73,8 +79,9 @@ class _Database:
             )
         if "FROM table_columns" in sql:
             table = sql.split("table_columns('", 1)[1].split("')", 1)[0]
+            evidence_name, truth_name, availability_name = self.table_names
             columns = {
-                "evidence": {
+                evidence_name: {
                     "capture_id": "VARCHAR",
                     "asset": "SYMBOL",
                     "provider": "SYMBOL",
@@ -89,7 +96,7 @@ class _Database:
                     "payload": "VARCHAR",
                     "received_timestamp": "TIMESTAMP_NS",
                 },
-                "truth": {
+                truth_name: {
                     "policy_version": "VARCHAR",
                     "subject_capture_id": "VARCHAR",
                     "category": "VARCHAR",
@@ -101,7 +108,7 @@ class _Database:
                     "event_trade_id": "VARCHAR",
                     "physical_written_at": "TIMESTAMP_NS",
                 },
-                "availability": {
+                availability_name: {
                     "kind": "VARCHAR",
                     "capture_id": "VARCHAR",
                     "policy_version": "VARCHAR",
@@ -122,7 +129,7 @@ class _Database:
                             "physical_written_at",
                             "written_at_ns",
                         },
-                        "upsertKey": table == "evidence"
+                        "upsertKey": table == evidence_name
                         and name in {"received_timestamp", "capture_id"},
                     }
                     for name, value in columns.items()
@@ -154,21 +161,29 @@ def _source(
     monkeypatch: pytest.MonkeyPatch,
     connection: str = "ws::addr=127.0.0.1:9000;",
     database: _Database | None = None,
+    evidence_table: str = "evidence",
+    truth_decision_table: str = "truth",
+    availability_table: str = "availability",
+    evidence_authority_identity: str = _LOGICAL_EVIDENCE_AUTHORITY,
+    truth_decision_authority_identity: str = _LOGICAL_TRUTH_AUTHORITY,
+    availability_authority_identity: str = _LOGICAL_AVAILABILITY_AUTHORITY,
 ) -> tuple[Any, _Database]:
     from live15_quant_v2.data.replay_as_of import questdb_source
 
-    database = database or _Database()
+    database = database or _Database(
+        table_names=(evidence_table, truth_decision_table, availability_table)
+    )
     monkeypatch.setattr(
         questdb_source.questdb, "connect", lambda *_args, **_kwargs: database
     )
     source = questdb_source.QuestDBReplaySource(
         connection,
-        evidence_table="evidence",
-        truth_decision_table="truth",
-        availability_table="availability",
-        evidence_authority_identity="capture-authority/v1",
-        truth_decision_authority_identity="truth-authority/v1",
-        availability_authority_identity="availability-authority/v1",
+        evidence_table=evidence_table,
+        truth_decision_table=truth_decision_table,
+        availability_table=availability_table,
+        evidence_authority_identity=evidence_authority_identity,
+        truth_decision_authority_identity=truth_decision_authority_identity,
+        availability_authority_identity=availability_authority_identity,
     )
     return source, database
 
@@ -256,12 +271,14 @@ def test_candidate_records_decode_physical_authorities_and_are_read_only(
 ) -> None:
     database = _Database(evidence=[_evidence()], truth=[_truth()])
     source, _ = _source(monkeypatch, database=database)
-    identities = source.source_authorities()
     database.availability.extend(
         [
-            _availability("evidence", "capture-1", None, identities.evidence),
+            _availability("evidence", "capture-1", None, _LOGICAL_EVIDENCE_AUTHORITY),
             _availability(
-                "authority", "capture-1", "data-truth/v1", identities.truth_decision
+                "authority",
+                "capture-1",
+                "data-truth/v1",
+                _LOGICAL_TRUTH_AUTHORITY,
             ),
         ]
     )
@@ -277,6 +294,157 @@ def test_candidate_records_decode_physical_authorities_and_are_read_only(
         "SELECT" in sql or "tables()" in sql or "table_columns" in sql
         for sql, _ in database.queries
     )
+
+
+@pytest.mark.parametrize("kind", ["evidence", "authority"])
+def test_composite_source_identity_is_rejected_as_an_availability_marker(
+    monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+
+    database = _Database(evidence=[_evidence()], truth=[_truth()])
+    source, _ = _source(monkeypatch, database=database)
+    composite = source.source_authorities()
+    if kind == "evidence":
+        database.availability.extend(
+            [
+                _availability("evidence", "capture-1", None, composite.evidence),
+                _availability(
+                    "authority",
+                    "capture-1",
+                    "data-truth/v1",
+                    _LOGICAL_TRUTH_AUTHORITY,
+                ),
+            ]
+        )
+    else:
+        database.availability.extend(
+            [
+                _availability(
+                    "evidence", "capture-1", None, _LOGICAL_EVIDENCE_AUTHORITY
+                ),
+                _availability(
+                    "authority",
+                    "capture-1",
+                    "data-truth/v1",
+                    composite.truth_decision,
+                ),
+            ]
+        )
+
+    with pytest.raises(ReplayAsOfError) as raised:
+        source.candidate_records(_scope())
+
+    assert raised.value.code is ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING
+
+
+def test_slice_two_logical_availability_records_remain_readable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from live15_quant_v2.data.replay_as_of.availability import (
+        SUPPORTED_PROOF_SCHEMA_VERSION,
+        AvailabilityKind,
+        AvailabilityRecord,
+    )
+
+    evidence_marker = AvailabilityRecord(
+        AvailabilityKind.EVIDENCE,
+        "capture-1",
+        None,
+        10,
+        SUPPORTED_PROOF_SCHEMA_VERSION,
+        _LOGICAL_EVIDENCE_AUTHORITY,
+    )
+    authority_marker = AvailabilityRecord(
+        AvailabilityKind.AUTHORITY,
+        "capture-1",
+        "data-truth/v1",
+        11,
+        SUPPORTED_PROOF_SCHEMA_VERSION,
+        _LOGICAL_TRUTH_AUTHORITY,
+    )
+    database = _Database(
+        evidence=[_evidence()],
+        truth=[_truth()],
+        availability=[
+            _availability(
+                evidence_marker.kind.value,
+                evidence_marker.capture_id,
+                evidence_marker.policy_version,
+                evidence_marker.source_authority_identity,
+            ),
+            _availability(
+                authority_marker.kind.value,
+                authority_marker.capture_id,
+                authority_marker.policy_version,
+                authority_marker.source_authority_identity,
+            ),
+        ],
+    )
+    database.availability[0]["available_at_ns"] = evidence_marker.available_at_ns
+    database.availability[1]["available_at_ns"] = authority_marker.available_at_ns
+    source, _ = _source(monkeypatch, database=database)
+
+    record = source.candidate_records(_scope())[0]
+
+    assert record.evidence_availability.available_at_ns == 10
+    assert record.authority_availability.available_at_ns == 11
+
+
+def test_logical_and_table_reconfiguration_change_only_the_relevant_composite_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    baseline, _ = _source(monkeypatch)
+    base = baseline.source_authorities()
+    changed_evidence_logical, _ = _source(
+        monkeypatch, evidence_authority_identity="capture-authority/v2"
+    )
+    evidence_logical = changed_evidence_logical.source_authorities()
+    changed_truth_logical, _ = _source(
+        monkeypatch, truth_decision_authority_identity="truth-authority/v2"
+    )
+    truth_logical = changed_truth_logical.source_authorities()
+    changed_availability_logical, _ = _source(
+        monkeypatch, availability_authority_identity="availability-authority/v2"
+    )
+    availability_logical = changed_availability_logical.source_authorities()
+    changed_evidence_table, _ = _source(monkeypatch, evidence_table="evidence_alt")
+    evidence_table = changed_evidence_table.source_authorities()
+
+    assert evidence_logical == type(base)(
+        evidence_logical.evidence,
+        base.truth_decision,
+        base.availability,
+    )
+    assert truth_logical == type(base)(
+        base.evidence,
+        truth_logical.truth_decision,
+        base.availability,
+    )
+    assert availability_logical == type(base)(
+        base.evidence,
+        base.truth_decision,
+        availability_logical.availability,
+    )
+    assert evidence_table == type(base)(
+        evidence_table.evidence,
+        base.truth_decision,
+        base.availability,
+    )
+
+
+def test_close_and_recreate_preserves_identical_source_authorities(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first, _ = _source(monkeypatch)
+    expected = first.source_authorities()
+    first.close()
+    recreated, _ = _source(monkeypatch)
+
+    assert recreated.source_authorities() == expected
 
 
 @pytest.mark.parametrize(
@@ -383,9 +551,7 @@ def test_malformed_availability_marker_is_bounded_failure(
 
     database = _Database(evidence=[_evidence()], truth=[_truth()])
     source, _ = _source(monkeypatch, database=database)
-    marker = _availability(
-        "evidence", "capture-1", None, source.source_authorities().evidence
-    )
+    marker = _availability("evidence", "capture-1", None, _LOGICAL_EVIDENCE_AUTHORITY)
     marker[field] = value
     database.availability.append(marker)
     with pytest.raises(ReplayAsOfError) as raised:
@@ -477,9 +643,9 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
             evidence_table=evidence,
             truth_decision_table=truth,
             availability_table=availability,
-            evidence_authority_identity="capture-authority/v1",
-            truth_decision_authority_identity="truth-authority/v1",
-            availability_authority_identity="availability-authority/v1",
+            evidence_authority_identity=_LOGICAL_EVIDENCE_AUTHORITY,
+            truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
+            availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
         )
         with database.sender() as sender:
             sender.row(
@@ -520,7 +686,6 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
                 fsn, timeout_millis=15_000
             )
         assert source.source_authorities().evidence
-        identities = source.source_authorities()
         with database.sender() as sender:
             sender.row(
                 availability,
@@ -530,7 +695,7 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
                     "policy_version": None,
                     "available_at_ns": questdb.TimestampNanos(10),
                     "proof_schema_version": "replay-availability-proof/v1",
-                    "source_authority_identity": identities.evidence,
+                    "source_authority_identity": _LOGICAL_EVIDENCE_AUTHORITY,
                 },
                 at=questdb.TimestampNanos(11),
             )
@@ -542,7 +707,7 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
                     "policy_version": "data-truth/v1",
                     "available_at_ns": questdb.TimestampNanos(10),
                     "proof_schema_version": "replay-availability-proof/v1",
-                    "source_authority_identity": identities.truth_decision,
+                    "source_authority_identity": _LOGICAL_TRUTH_AUTHORITY,
                 },
                 at=questdb.TimestampNanos(12),
             )

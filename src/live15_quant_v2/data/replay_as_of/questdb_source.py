@@ -100,11 +100,9 @@ class QuestDBReplaySource:
         self._evidence_table = evidence_table
         self._truth_table = truth_decision_table
         self._availability_table = availability_table
-        self._configured_identities = (
-            evidence_authority_identity,
-            truth_decision_authority_identity,
-            availability_authority_identity,
-        )
+        self._evidence_authority_identity = evidence_authority_identity
+        self._truth_decision_authority_identity = truth_decision_authority_identity
+        self._availability_authority_identity = availability_authority_identity
         self._authorities = SourceAuthorityIdentities(
             _identity(
                 "evidence",
@@ -287,9 +285,9 @@ class QuestDBReplaySource:
             stored_policy = _nullable(row["policy_version"])
             available_at_ns = _timestamp(row["available_at_ns"])
             expected_identity = (
-                self._authorities.evidence
+                self._evidence_authority_identity
                 if kind is AvailabilityKind.EVIDENCE
-                else self._authorities.truth_decision
+                else self._truth_decision_authority_identity
             )
             if (
                 stored_kind is not kind

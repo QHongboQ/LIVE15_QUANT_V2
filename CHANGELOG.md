@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REMOTE-REVIEW-FIX-001
+
+**Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`ced4d6820f8335a255251c2e15a97533cac8be01`.
+
+**Fix:** Separated the logical evidence and TruthDecision proof-authority
+identities used by Availability markers from the composite Replay
+source/snapshot provenance identities. Fixtures and regressions now prove
+logical Slice 2 markers qualify while composite source identities fail closed.
+
+**Safety:** Slice 3 remains an implementation candidate. No Slice 4, canonical
+activation, runtime, table, or production-data change occurred.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-IMPLEMENTATION-001
 
 **Change:** Added a read-only, explicitly configured QuestDB Replay source
