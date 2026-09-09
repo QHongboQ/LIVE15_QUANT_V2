@@ -26,7 +26,7 @@ def _imports(module_name: str) -> set[str]:
     return imports
 
 
-def test_slice_two_module_tree_is_exact_and_excludes_future_slices() -> None:
+def test_slice_three_module_tree_is_exact_and_excludes_future_slices() -> None:
     assert {path.name for path in REPLAY.glob("*.py")} == {
         "__init__.py",
         "models.py",
@@ -34,11 +34,17 @@ def test_slice_two_module_tree_is_exact_and_excludes_future_slices() -> None:
         "source.py",
         "availability.py",
         "questdb_availability.py",
+        "questdb_source.py",
     }
 
 
 def test_slice_two_core_never_imports_provider_or_physical_runtime_details() -> None:
-    imports = set().union(*(_imports(name) for name in ("models.py", "service.py", "source.py", "availability.py")))
+    imports = set().union(
+        *(
+            _imports(name)
+            for name in ("models.py", "service.py", "source.py", "availability.py")
+        )
+    )
 
     for forbidden in (
         "questdb",
@@ -51,7 +57,16 @@ def test_slice_two_core_never_imports_provider_or_physical_runtime_details() -> 
 
 
 def test_slice_two_core_contains_no_data_truth_call_or_offset_pagination() -> None:
-    source = "\n".join((REPLAY / name).read_text(encoding="utf-8") for name in ("__init__.py", "models.py", "service.py", "source.py", "availability.py"))
+    source = "\n".join(
+        (REPLAY / name).read_text(encoding="utf-8")
+        for name in (
+            "__init__.py",
+            "models.py",
+            "service.py",
+            "source.py",
+            "availability.py",
+        )
+    )
 
     assert "DataTruth.decide" not in source
     assert "OFFSET" not in source
@@ -89,3 +104,28 @@ def test_slice_two_adapter_has_no_replacement_or_future_composition_surface() ->
     assert "DataTruth.decide" not in adapter
     assert "recorder_composition" not in adapter
     assert "table_name: str =" not in adapter
+
+
+def test_slice_three_source_is_read_only_and_has_no_runtime_or_composition_coupling() -> (
+    None
+):
+    adapter = (REPLAY / "questdb_source.py").read_text(encoding="utf-8")
+
+    for forbidden in (
+        "CREATE ",
+        "ALTER ",
+        "INSERT ",
+        "UPDATE ",
+        "DELETE ",
+        "UPSERT",
+        "OFFSET",
+        ".sender(",
+        ".row(",
+        ".flush",
+        "DataTruth.decide",
+        "recorder_composition",
+        "QuestDBHotStore",
+        "QuestDBTruthDecisionHistory",
+        "QuestDBAvailabilityStore",
+    ):
+        assert forbidden not in adapter

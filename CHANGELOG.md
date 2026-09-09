@@ -1,5 +1,66 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REAL-ACCEPTANCE-CLOSEOUT-001
+
+**Prior head:** `6c9c61df5c3ec381cac987a3aa87d3487cde34c9`.
+
+**Reason:** The controlled matrix and core real QuestDB path passed, while the
+remaining real-server duplicate, source-drift, future, and backdated cases
+remained open.
+
+**Closeout evidence:** Task-owned real QuestDB acceptance now proves
+fail-closed duplicate evidence, TruthDecision authority, and availability
+markers; source-table reconfiguration drift; future-after-cutoff stability;
+backdated eligible-membership drift; malformed-row bounded mapping; and clean
+task-owned teardown.
+
+**Safety / next:** Slice 3 remains an implementation candidate. No canonical
+activation, runtime, table, or production-data change occurred; Slice 4 has not
+started. The next step is the mandatory ChatGPT exact-head Slice 3 re-audit.
+
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REMOTE-REVIEW-FIX-002
+
+**Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`725c6cdd8673d13528183776c7772f60a26178f6`. The logical-versus-composite
+marker identity separation remains correct.
+
+**Fix:** Physical availability decoding now reuses sealed `AvailabilityRecord`
+semantics, including non-negative proof times. Expanded controlled acceptance
+proves schema, reconstruction, pagination, restart, source drift, and
+future/backdated membership behavior.
+
+**Safety:** Slice 3 remains an implementation candidate. No Slice 4 or
+canonical runtime, table, or production-data activation occurred.
+
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REMOTE-REVIEW-FIX-001
+
+**Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`ced4d6820f8335a255251c2e15a97533cac8be01`.
+
+**Fix:** Separated the logical evidence and TruthDecision proof-authority
+identities used by Availability markers from the composite Replay
+source/snapshot provenance identities. Fixtures and regressions now prove
+logical Slice 2 markers qualify while composite source identities fail closed.
+
+**Safety:** Slice 3 remains an implementation candidate. No Slice 4, canonical
+activation, runtime, table, or production-data change occurred.
+
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-IMPLEMENTATION-001
+
+**Change:** Added a read-only, explicitly configured QuestDB Replay source
+candidate. It verifies the physical CaptureFact, TruthDecision, and
+Availability schemas; decodes their immutable records; binds deterministic
+source identities without connection details; and provides no schema creation,
+writer, or composition path.
+
+**Safety:** The adapter is not activated in canonical composition and creates
+no canonical table or runtime change. Controlled tests and an opt-in,
+Job-Object-contained UUID-table QuestDB acceptance test cover the candidate;
+Slice 4 Recorder composition remains out of scope.
+
+**Next:** Run the full bounded validation matrix, then obtain independent
+exact-head review before any merge decision.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed the Slice 2 Availability Support engineering implementation
