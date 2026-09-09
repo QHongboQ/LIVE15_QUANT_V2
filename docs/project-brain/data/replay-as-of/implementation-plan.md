@@ -3,7 +3,7 @@
 ## Status and authority
 
 **Implementation-plan authority:** FINAL CLOSED.
-**Implementation:** NOT IMPLEMENTED.
+**Implementation:** IN PROGRESS.
 **Canonical activation:** NOT AUTHORIZED.
 
 The FINAL CLOSED Replay & As-Of contract outranks this plan. If an
@@ -25,6 +25,18 @@ normally as `13af6e1cea4c087c547bfc9f6a25311ab6690b6b` with parents
 Windows, and CI Gate checks passed; the local docs seal passed; and the remote
 branch state became main-only. No source, runtime, table, or data change
 occurred.
+
+### Implementation progress
+
+- Slice 1 — Pure Replay Core: **FINAL CLOSED**.
+- Slice 2 — Availability Support: **NEXT / NOT IMPLEMENTED**.
+- Slice 3 — Replay QuestDB Source: **NOT IMPLEMENTED**.
+- Slice 4 — Data System Recorder Composition: **NOT IMPLEMENTED**.
+- Overall Replay implementation: **IN PROGRESS**.
+
+Slice 1 closed through PR #46 normal merge
+`62f8c2f672ca3627d9690727ff47b80d805266d5`. This progress update does not
+alter the sealed Slice 2 design requirements below.
 
 ## Scope, ownership, and seams
 
@@ -437,7 +449,7 @@ Replay package.
 
 | Slice | Planned files and tests | Dependencies / gates | Still unauthorized after merge |
 | --- | --- | --- | --- |
-| 1 — Pure Replay Core | `models.py`, `service.py`, `source.py`, exports; `tests/test_replay_as_of.py` for deterministic `REQUEST_IDENTITY`, filter canonicalization, request validation, paired records, selection/order, cursor/digest/keyset with an in-memory source; `tests/test_replay_as_of_architecture.py` for public-seam and no-widening checks | FINAL CLOSED contract; independent remote review before merge | QuestDB, availability persistence, recorder composition, canonical activation |
+| 1 — Pure Replay Core — FINAL CLOSED | `models.py`, `service.py`, `source.py`, exports; `tests/test_replay_as_of.py` for deterministic `REQUEST_IDENTITY`, filter canonicalization, request validation, paired records, selection/order, cursor/digest/keyset with an in-memory source; `tests/test_replay_as_of_architecture.py` for public-seam and no-widening checks | PR #46 merged and technically sealed | QuestDB, availability persistence, recorder composition, canonical activation |
 | 2 — Availability Support | `availability.py`, `questdb_availability.py`; `tests/test_replay_as_of_availability.py` for keys, supported proof schema/source identity, post-proof sampling, committed-floor strict advancement, reconciliation, and clock policy; `tests/test_questdb_replay_as_of_availability_integration.py` for disposable definite-failure/ambiguous-zero/no-reappend behavior and append/read-back acceptance | existing QuestDB 5.0.0; `CLOCK_SAFETY` gate and independent review | canonical availability table/runtime, Replay physical reads, recorder composition |
 | 3 — Replay QuestDB Source | `questdb_source.py`; `tests/test_questdb_replay_as_of_source_integration.py` for disposable schema, pairing, qualification, all contract error mappings, fingerprint recomputation, source reconfiguration drift, keyset, and restart | accepted PR #42 POC is evidence only; independent review and disposable acceptance | recorder composition and all canonical activation |
 | 4 — Data System Recorder Composition | `data/recorder_composition.py`; `tests/test_replay_as_of_recorder_composition.py` for durable-status matrix, no Data Truth before exact evidence proof, and decoupled marker failure/isolation; `tests/test_questdb_replay_as_of_end_to_end.py` for disposable Capture Boundary → Durable Persistence → read-back → markers → Data Truth → markers → Replay | public sealed Storage/Data Truth seams; separate review, with Slice 3/4 retained separately for ownership and review blast radius | canonical tables, runtime/service activation, Canonical Dataset, Model/training, Trading |
