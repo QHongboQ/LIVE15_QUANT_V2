@@ -4,8 +4,8 @@
 
 **Contract authority:** FINAL CLOSED.
 **Implementation:** NOT IMPLEMENTED.
-**Implementation-plan authority:** NOT YET CLOSED. Drafting is now safe, but
-plan drafting does not authorize implementation.
+**Implementation-plan authority:** DRAFT CANDIDATE / PENDING INDEPENDENT
+REVIEW. Implementation remains unauthorized.
 **Availability-mechanism fit preparation:** COMPLETED.
 **Availability mechanism implementation:** NOT IMPLEMENTED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
@@ -295,17 +295,17 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** Data System → Replay & As-Of implementation-plan authority
-drafting.
+**Current NEXT:** independent review of the Replay & As-Of implementation-plan
+candidate.
 
-This NEXT authorizes implementation-plan documentation, exact module
-responsibility, availability-marker failure/reconciliation, recorder
-composition, disposable QuestDB implementation-slice, and test-matrix
-planning. It does not authorize production Replay implementation, a production
-availability table, canonical activation, Canonical Dataset, Model/training,
-or Trading work.
+This candidate plans exact module responsibility, availability-marker
+failure/reconciliation, recorder composition, disposable QuestDB slices, and a
+test matrix. It does not authorize production Replay implementation, a
+production availability table, canonical activation, Canonical Dataset,
+Model/training, or Trading work.
 
 `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because Replay & As-Of
 contract authority is FINAL CLOSED, availability-mechanism fit preparation is
 COMPLETED, and the required snapshot-membership POC gate is FINAL CLOSED and
-accepted. That status authorizes plan drafting only, not implementation.
+accepted. It authorizes this candidate's independent review only, not
+implementation.
