@@ -18,8 +18,8 @@ from live15_quant_v2.data.data_truth.models import (
     TruthDecisionCategory,
 )
 from live15_quant_v2.data.replay_as_of.availability import (
-    SUPPORTED_PROOF_SCHEMA_VERSION,
     AvailabilityKind,
+    AvailabilityRecord,
 )
 from live15_quant_v2.data.replay_as_of.models import (
     AvailabilityReference,
@@ -284,6 +284,14 @@ class QuestDBReplaySource:
             stored_kind = AvailabilityKind(row["kind"])
             stored_policy = _nullable(row["policy_version"])
             available_at_ns = _timestamp(row["available_at_ns"])
+            marker = AvailabilityRecord(
+                stored_kind,
+                row["capture_id"],
+                stored_policy,
+                available_at_ns,
+                row["proof_schema_version"],
+                row["source_authority_identity"],
+            )
             expected_identity = (
                 self._evidence_authority_identity
                 if kind is AvailabilityKind.EVIDENCE
@@ -291,10 +299,9 @@ class QuestDBReplaySource:
             )
             if (
                 stored_kind is not kind
-                or row["capture_id"] != capture_id
-                or stored_policy != policy_version
-                or row["proof_schema_version"] != SUPPORTED_PROOF_SCHEMA_VERSION
-                or row["source_authority_identity"] != expected_identity
+                or marker.capture_id != capture_id
+                or marker.policy_version != policy_version
+                or marker.source_authority_identity != expected_identity
             ):
                 raise ValueError(
                     "availability marker does not bind the requested source"
@@ -303,11 +310,11 @@ class QuestDBReplaySource:
                 kind,
                 capture_id,
                 policy_version,
-                available_at_ns,
-                row["proof_schema_version"],
-                row["source_authority_identity"],
+                marker.available_at_ns,
+                marker.proof_schema_version,
+                marker.source_authority_identity,
             )
-            return AvailabilityReference(available_at_ns, reference)
+            return AvailabilityReference(marker.available_at_ns, reference)
         except (KeyError, TypeError, ValueError) as error:
             self._error(
                 ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING,
@@ -328,7 +335,7 @@ class QuestDBReplaySource:
                 _nullable_text(row["event_subtype"]),
                 _integer(row["sid"]),
                 _nullable_integer(row["seq"]),
-                _nullable_integer(row["provider_timestamp"]),
+                _nullable_timestamp(row["provider_timestamp"]),
                 _timestamp(row["received_timestamp"]),
                 _text(row["schema_version"]),
                 _text(row["payload"]),
@@ -492,6 +499,11 @@ def _integer(value: Any) -> int:
 def _nullable_integer(value: Any) -> int | None:
     value = _nullable(value)
     return None if value is None else _integer(value)
+
+
+def _nullable_timestamp(value: Any) -> int | None:
+    value = _nullable(value)
+    return None if value is None else _timestamp(value)
 
 
 def _timestamp(value: Any) -> int:

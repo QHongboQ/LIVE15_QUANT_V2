@@ -266,6 +266,75 @@ def _availability(
     }
 
 
+def _paired_database(
+    *rows: tuple[str, int, int | None, str, int, int],
+) -> _Database:
+    evidence: list[dict[str, Any]] = []
+    truth: list[dict[str, Any]] = []
+    availability: list[dict[str, Any]] = []
+    for (
+        capture_id,
+        received,
+        provider_time,
+        category,
+        evidence_time,
+        authority_time,
+    ) in rows:
+        fact = _evidence(capture_id)
+        fact["received_timestamp"] = received
+        fact["provider_timestamp"] = provider_time
+        decision = _truth(capture_id, category)
+        decision["contributing_capture_ids"] = f'["{capture_id}"]'
+        evidence.append(fact)
+        truth.append(decision)
+        availability.extend(
+            [
+                _availability("evidence", capture_id, None, _LOGICAL_EVIDENCE_AUTHORITY)
+                | {"available_at_ns": evidence_time},
+                _availability(
+                    "authority",
+                    capture_id,
+                    "data-truth/v1",
+                    _LOGICAL_TRUTH_AUTHORITY,
+                )
+                | {"available_at_ns": authority_time},
+            ]
+        )
+    return _Database(evidence=evidence, truth=truth, availability=availability)
+
+
+def _request(
+    *,
+    axis: str = "arrival",
+    ordering: str = "arrival",
+    page_size: int = 10,
+    cursor: str | None = None,
+) -> Any:
+    from live15_quant_v2.data.replay_as_of.models import (
+        AsOfRequest,
+        ReplayOrdering,
+        SelectionAxis,
+        SelectionWindow,
+    )
+
+    selection_axis = (
+        SelectionAxis.ARRIVAL_TIME if axis == "arrival" else SelectionAxis.EVENT_TIME
+    )
+    replay_ordering = (
+        ReplayOrdering.ARRIVAL if ordering == "arrival" else ReplayOrdering.STRICT_EVENT
+    )
+    return AsOfRequest(
+        20,
+        "data-truth/v1",
+        SelectionWindow(selection_axis, 0, 30),
+        replay_ordering,
+        None,
+        None,
+        page_size,
+        cursor,
+    )
+
+
 def test_candidate_records_decode_physical_authorities_and_are_read_only(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -341,6 +410,34 @@ def test_composite_source_identity_is_rejected_as_an_availability_marker(
     assert raised.value.code is ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING
 
 
+@pytest.mark.parametrize("kind", ["evidence", "authority"])
+def test_negative_availability_marker_is_rejected(
+    monkeypatch: pytest.MonkeyPatch, kind: str
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+
+    database = _Database(evidence=[_evidence()], truth=[_truth()])
+    source, _ = _source(monkeypatch, database=database)
+    evidence_marker = _availability(
+        "evidence", "capture-1", None, _LOGICAL_EVIDENCE_AUTHORITY
+    )
+    authority_marker = _availability(
+        "authority", "capture-1", "data-truth/v1", _LOGICAL_TRUTH_AUTHORITY
+    )
+    (evidence_marker if kind == "evidence" else authority_marker)[
+        "available_at_ns"
+    ] = -1
+    database.availability.extend([evidence_marker, authority_marker])
+
+    with pytest.raises(ReplayAsOfError) as raised:
+        source.candidate_records(_scope())
+
+    assert raised.value.code is ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING
+
+
 def test_slice_two_logical_availability_records_remain_readable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -394,6 +491,125 @@ def test_slice_two_logical_availability_records_remain_readable(
     assert record.authority_availability.available_at_ns == 11
 
 
+def test_replay_as_of_preserves_categories_and_fails_closed_for_null_event_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    source, _ = _source(
+        monkeypatch,
+        database=_paired_database(
+            ("capture-a", 1, None, "accepted", 10, 10),
+            ("capture-b", 2, 2, "duplicate", 10, 10),
+            ("capture-c", 3, 3, "conflict", 10, 10),
+            ("capture-d", 4, 4, "not_accepted", 10, 10),
+        ),
+    )
+    replay = ReplayAsOf(source, max_page_size=10)
+
+    arrival = replay.read(_request())
+    assert [record.truth_decision.category.value for record in arrival.records] == [
+        "accepted",
+        "duplicate",
+        "conflict",
+        "not_accepted",
+    ]
+    with pytest.raises(ReplayAsOfError) as event:
+        replay.read(_request(axis="event"))
+    with pytest.raises(ReplayAsOfError) as strict:
+        replay.read(_request(ordering="strict"))
+    assert event.value.code is ReplayErrorCode.UNSUPPORTED_EVENT_TIME
+    assert strict.value.code is ReplayErrorCode.UNSUPPORTED_EVENT_TIME
+
+
+def test_pagination_restart_and_membership_drift_are_bound_to_source_snapshot(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    database = _paired_database(
+        ("capture-a", 1, 1, "accepted", 10, 10),
+        ("capture-b", 2, 2, "duplicate", 10, 10),
+    )
+    first_source, _ = _source(monkeypatch, database=database)
+    first_page = ReplayAsOf(first_source, max_page_size=10).read(_request(page_size=1))
+    assert first_page.next_cursor is not None
+    first_source.close()
+    restarted_source, _ = _source(monkeypatch, database=database)
+    restarted_page = ReplayAsOf(restarted_source, max_page_size=10).read(
+        _request(page_size=1, cursor=first_page.next_cursor)
+    )
+    assert [record.capture_fact.capture_id for record in restarted_page.records] == [
+        "capture-b"
+    ]
+    assert (
+        restarted_page.source_snapshot_identity == first_page.source_snapshot_identity
+    )
+
+    future = _paired_database(("capture-future", 3, 3, "conflict", 21, 21))
+    database.evidence.extend(future.evidence)
+    database.truth.extend(future.truth)
+    database.availability.extend(future.availability)
+    continued = ReplayAsOf(restarted_source, max_page_size=10).read(
+        _request(page_size=1, cursor=first_page.next_cursor)
+    )
+    assert [record.capture_fact.capture_id for record in continued.records] == [
+        "capture-b"
+    ]
+    assert continued.source_snapshot_identity == first_page.source_snapshot_identity
+
+    backdated = _paired_database(("capture-backdated", 4, 4, "conflict", 10, 10))
+    database.evidence.extend(backdated.evidence)
+    database.truth.extend(backdated.truth)
+    database.availability.extend(backdated.availability)
+    with pytest.raises(ReplayAsOfError) as raised:
+        ReplayAsOf(restarted_source, max_page_size=10).read(
+            _request(page_size=1, cursor=first_page.next_cursor)
+        )
+    assert raised.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+
+
+def test_table_reconfiguration_rejects_a_previously_bound_cursor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    first_database = _paired_database(
+        ("capture-a", 1, 1, "accepted", 10, 10),
+        ("capture-b", 2, 2, "duplicate", 10, 10),
+    )
+    first_source, _ = _source(monkeypatch, database=first_database)
+    first_page = ReplayAsOf(first_source, max_page_size=10).read(_request(page_size=1))
+    replacement_database = _paired_database(
+        ("capture-a", 1, 1, "accepted", 10, 10),
+        ("capture-b", 2, 2, "duplicate", 10, 10),
+    )
+    replacement_database.table_names = ("evidence_alt", "truth", "availability")
+    replacement_source, _ = _source(
+        monkeypatch,
+        database=replacement_database,
+        evidence_table="evidence_alt",
+    )
+
+    with pytest.raises(ReplayAsOfError) as raised:
+        ReplayAsOf(replacement_source, max_page_size=10).read(
+            _request(page_size=1, cursor=first_page.next_cursor)
+        )
+    assert raised.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+
+
 def test_logical_and_table_reconfiguration_change_only_the_relevant_composite_identity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -413,6 +629,12 @@ def test_logical_and_table_reconfiguration_change_only_the_relevant_composite_id
     availability_logical = changed_availability_logical.source_authorities()
     changed_evidence_table, _ = _source(monkeypatch, evidence_table="evidence_alt")
     evidence_table = changed_evidence_table.source_authorities()
+    changed_truth_table, _ = _source(monkeypatch, truth_decision_table="truth_alt")
+    truth_table = changed_truth_table.source_authorities()
+    changed_availability_table, _ = _source(
+        monkeypatch, availability_table="availability_alt"
+    )
+    availability_table = changed_availability_table.source_authorities()
 
     assert evidence_logical == type(base)(
         evidence_logical.evidence,
@@ -433,6 +655,12 @@ def test_logical_and_table_reconfiguration_change_only_the_relevant_composite_id
         evidence_table.evidence,
         base.truth_decision,
         base.availability,
+    )
+    assert truth_table == type(base)(
+        base.evidence, truth_table.truth_decision, base.availability
+    )
+    assert availability_table == type(base)(
+        base.evidence, base.truth_decision, availability_table.availability
     )
 
 
@@ -474,12 +702,30 @@ def test_malformed_evidence_has_bounded_error(
     assert raised.value.code is ReplayErrorCode.MALFORMED_EVIDENCE
 
 
+@pytest.mark.parametrize("facts", [[], [_evidence(), _evidence()]])
+def test_absent_or_duplicate_physical_evidence_is_malformed(
+    monkeypatch: pytest.MonkeyPatch, facts: list[dict[str, Any]]
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+
+    source, _ = _source(
+        monkeypatch, database=_Database(evidence=facts, truth=[_truth()])
+    )
+    with pytest.raises(ReplayAsOfError) as raised:
+        source.candidate_records(_scope())
+    assert raised.value.code is ReplayErrorCode.MALFORMED_EVIDENCE
+
+
 @pytest.mark.parametrize(
     "field,value",
     [
         ("category", "unexpected"),
         ("contributing_capture_ids", "{}"),
         ("event_provider", "kalshi"),
+        ("reason", "unexpected"),
     ],
 )
 def test_malformed_truth_authority_has_bounded_error(
@@ -498,6 +744,31 @@ def test_malformed_truth_authority_has_bounded_error(
     with pytest.raises(ReplayAsOfError) as raised:
         source.candidate_records(_scope())
     assert raised.value.code is ReplayErrorCode.MALFORMED_AUTHORITY
+
+
+def test_complete_event_identity_and_other_policy_rows_are_not_latest_selected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    exact = _truth()
+    exact.update(
+        {
+            "event_provider": "kalshi",
+            "event_source_id": "KXBTC",
+            "event_message_type": "trade",
+            "event_trade_id": "trade-1",
+        }
+    )
+    other = _truth()
+    other["policy_version"] = "other-policy/v1"
+    source, _ = _source(
+        monkeypatch, database=_Database(evidence=[_evidence()], truth=[exact, other])
+    )
+
+    records = source.candidate_records(_scope())
+
+    assert len(records) == 1
+    assert records[0].truth_decision.event_identity is not None
+    assert records[0].truth_decision.policy_version == "data-truth/v1"
 
 
 @pytest.mark.parametrize(
@@ -601,6 +872,56 @@ def test_missing_or_incompatible_schema_is_source_unavailable(
     assert raised.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("missing", ["evidence", "truth", "availability"])
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("walEnabled", False),
+        ("dedup", True),
+        ("partitionBy", "MONTH"),
+        ("designatedTimestamp", "wrong_timestamp"),
+    ],
+)
+def test_missing_or_wrong_physical_table_metadata_is_source_unavailable(
+    monkeypatch: pytest.MonkeyPatch, missing: str, field: str, value: Any
+) -> None:
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+
+    database = _Database()
+    tables = (
+        database.query("SELECT table_name FROM tables()", [])
+        .to_pandas()
+        .to_dict(orient="records")
+    )
+    if missing == "evidence":
+        tables = [row for row in tables if row["table_name"] != "evidence"]
+    elif missing == "truth":
+        tables = [row for row in tables if row["table_name"] != "truth"]
+    else:
+        tables = [row for row in tables if row["table_name"] != "availability"]
+    missing_source, _ = _source(monkeypatch, database=_Database(tables=tables))
+    with pytest.raises(ReplayAsOfError) as missing_error:
+        missing_source.source_authorities()
+    assert missing_error.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+
+    incompatible = _Database()
+    incompatible_tables = (
+        incompatible.query("SELECT table_name FROM tables()", [])
+        .to_pandas()
+        .to_dict(orient="records")
+    )
+    incompatible_tables[1 if field == "dedup" else 0][field] = value
+    incompatible_source, _ = _source(
+        monkeypatch, database=_Database(tables=incompatible_tables)
+    )
+    with pytest.raises(ReplayAsOfError) as incompatible_error:
+        incompatible_source.source_authorities()
+    assert incompatible_error.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+
+
 @pytest.mark.integration
 @pytest.mark.skipif(
     os.getenv("LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION") != "1",
@@ -613,6 +934,8 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
 
     from live15_quant_v2.data.replay_as_of.models import (
         AsOfRequest,
+        ReplayAsOfError,
+        ReplayErrorCode,
         ReplayOrdering,
         SelectionAxis,
         SelectionWindow,
@@ -647,70 +970,85 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
             truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
             availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
         )
+        captures = (
+            ("capture-1", None, "accepted", 5),
+            ("capture-2", 6, "duplicate", 6),
+            ("capture-3", 7, "conflict", 7),
+            ("capture-4", 8, "not_accepted", 8),
+        )
         with database.sender() as sender:
-            sender.row(
-                evidence,
-                columns={
-                    "capture_id": "capture-1",
-                    "asset": "BTC",
-                    "provider": "kalshi",
-                    "source_id": "KXBTC",
-                    "channel": "trade",
-                    "message_type": "trade",
-                    "event_subtype": None,
-                    "sid": 1,
-                    "seq": None,
-                    "provider_timestamp": None,
-                    "schema_version": "market-ingress/v1",
-                    "payload": "{}",
-                },
-                at=questdb.TimestampNanos(5),
-            )
-            sender.row(
-                truth,
-                columns={
-                    "policy_version": "data-truth/v1",
-                    "subject_capture_id": "capture-1",
-                    "category": "accepted",
-                    "contributing_capture_ids": '["capture-1"]',
-                    "reason": None,
-                    "event_provider": None,
-                    "event_source_id": None,
-                    "event_message_type": None,
-                    "event_trade_id": None,
-                },
-                at=questdb.TimestampNanos(6),
-            )
+            for (
+                capture_id,
+                provider_timestamp,
+                category,
+                received_timestamp,
+            ) in captures:
+                sender.row(
+                    evidence,
+                    columns={
+                        "capture_id": capture_id,
+                        "asset": "BTC",
+                        "provider": "kalshi",
+                        "source_id": "KXBTC",
+                        "channel": "trade",
+                        "message_type": "trade",
+                        "event_subtype": None,
+                        "sid": 1,
+                        "seq": None,
+                        "provider_timestamp": None
+                        if provider_timestamp is None
+                        else questdb.TimestampNanos(provider_timestamp),
+                        "schema_version": "market-ingress/v1",
+                        "payload": "{}",
+                    },
+                    at=questdb.TimestampNanos(received_timestamp),
+                )
+                sender.row(
+                    truth,
+                    columns={
+                        "policy_version": "data-truth/v1",
+                        "subject_capture_id": capture_id,
+                        "category": category,
+                        "contributing_capture_ids": f'["{capture_id}"]',
+                        "reason": None,
+                        "event_provider": None,
+                        "event_source_id": None,
+                        "event_message_type": None,
+                        "event_trade_id": None,
+                    },
+                    at=questdb.TimestampNanos(received_timestamp + 10),
+                )
             fsn = sender.flush_and_get_fsn()
             assert fsn is not None and sender.await_acked_fsn(
                 fsn, timeout_millis=15_000
             )
         assert source.source_authorities().evidence
         with database.sender() as sender:
-            sender.row(
-                availability,
-                columns={
-                    "kind": "evidence",
-                    "capture_id": "capture-1",
-                    "policy_version": None,
-                    "available_at_ns": questdb.TimestampNanos(10),
-                    "proof_schema_version": "replay-availability-proof/v1",
-                    "source_authority_identity": _LOGICAL_EVIDENCE_AUTHORITY,
-                },
-                at=questdb.TimestampNanos(11),
-            )
-            sender.row(
-                availability,
-                columns={
-                    "kind": "authority",
-                    "capture_id": "capture-1",
-                    "policy_version": "data-truth/v1",
-                    "available_at_ns": questdb.TimestampNanos(10),
-                    "proof_schema_version": "replay-availability-proof/v1",
-                    "source_authority_identity": _LOGICAL_TRUTH_AUTHORITY,
-                },
-                at=questdb.TimestampNanos(12),
-            )
+            for capture_id, _, _, received_timestamp in captures:
+                sender.row(
+                    availability,
+                    columns={
+                        "kind": "evidence",
+                        "capture_id": capture_id,
+                        "policy_version": None,
+                        "available_at_ns": questdb.TimestampNanos(10),
+                        "proof_schema_version": "replay-availability-proof/v1",
+                        "source_authority_identity": _LOGICAL_EVIDENCE_AUTHORITY,
+                    },
+                    at=questdb.TimestampNanos(received_timestamp + 20),
+                )
+                sender.row(
+                    availability,
+                    columns={
+                        "kind": "authority",
+                        "capture_id": capture_id,
+                        "policy_version": "data-truth/v1",
+                        "available_at_ns": questdb.TimestampNanos(10),
+                        "proof_schema_version": "replay-availability-proof/v1",
+                        "source_authority_identity": _LOGICAL_TRUTH_AUTHORITY,
+                    },
+                    at=questdb.TimestampNanos(received_timestamp + 30),
+                )
             fsn = sender.flush_and_get_fsn()
             assert fsn is not None and sender.await_acked_fsn(
                 fsn, timeout_millis=15_000
@@ -734,7 +1072,68 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
             )
         )
         assert [record.capture_fact.capture_id for record in view.records] == [
-            "capture-1"
+            "capture-1",
+            "capture-2",
+            "capture-3",
+            "capture-4",
         ]
+        assert [record.truth_decision.category.value for record in view.records] == [
+            "accepted",
+            "duplicate",
+            "conflict",
+            "not_accepted",
+        ]
+        with pytest.raises(ReplayAsOfError) as event:
+            ReplayAsOf(source, max_page_size=10).read(
+                AsOfRequest(
+                    20,
+                    "data-truth/v1",
+                    SelectionWindow(SelectionAxis.EVENT_TIME, 0, 20),
+                    ReplayOrdering.ARRIVAL,
+                    None,
+                    None,
+                    10,
+                    None,
+                )
+            )
+        assert event.value.code is ReplayErrorCode.UNSUPPORTED_EVENT_TIME
+        first_page = ReplayAsOf(source, max_page_size=10).read(
+            AsOfRequest(
+                20,
+                "data-truth/v1",
+                SelectionWindow(SelectionAxis.ARRIVAL_TIME, 0, 20),
+                ReplayOrdering.ARRIVAL,
+                None,
+                None,
+                1,
+                None,
+            )
+        )
+        assert first_page.next_cursor is not None
         source.close()
+        restarted = QuestDBReplaySource(
+            server.connection_string,
+            evidence_table=evidence,
+            truth_decision_table=truth,
+            availability_table=availability,
+            evidence_authority_identity=_LOGICAL_EVIDENCE_AUTHORITY,
+            truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
+            availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
+        )
+        second_page = ReplayAsOf(restarted, max_page_size=10).read(
+            AsOfRequest(
+                20,
+                "data-truth/v1",
+                SelectionWindow(SelectionAxis.ARRIVAL_TIME, 0, 20),
+                ReplayOrdering.ARRIVAL,
+                None,
+                None,
+                1,
+                first_page.next_cursor,
+            )
+        )
+        assert [record.capture_fact.capture_id for record in second_page.records] == [
+            "capture-2"
+        ]
+        restarted.close()
     _assert_lifecycle(server)

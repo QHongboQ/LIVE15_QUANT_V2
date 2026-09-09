@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REMOTE-REVIEW-FIX-002
+
+**Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`725c6cdd8673d13528183776c7772f60a26178f6`. The logical-versus-composite
+marker identity separation remains correct.
+
+**Fix:** Physical availability decoding now reuses sealed `AvailabilityRecord`
+semantics, including non-negative proof times. Expanded controlled acceptance
+proves schema, reconstruction, pagination, restart, source drift, and
+future/backdated membership behavior.
+
+**Safety:** Slice 3 remains an implementation candidate. No Slice 4 or
+canonical runtime, table, or production-data activation occurred.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REMOTE-REVIEW-FIX-001
 
 **Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
