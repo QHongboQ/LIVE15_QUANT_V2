@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-4-AND-ENGINEERING-FINAL-STATUS-CLOSURE-001
+
+**Status:** Closed Slice 4 Recorder Composition and the overall Replay & As-Of
+engineering implementation as FINAL CLOSED. All four engineering slices are
+now FINAL CLOSED.
+
+**Evidence:** PR #52's first reviewed head
+`5f9bc6f87da5ca3f71f5e96ae0402406b32d8b90` received ChatGPT
+`CHANGES_REQUIRED`; final head `75e0ef54bf8755eb81c994d96756c067e5161626`
+received `PASS_WITH_HYGIENE` and passed exact-head CI. Normal merge
+`306924cae59dc5a2ec9f5737e7c4103a0c5e7227` has parents
+`c2b62ca6a600db9af8e9557b38b9f776b1461c19` and
+`75e0ef54bf8755eb81c994d96756c067e5161626`; merge-SHA CI, the merged-main
+technical seal, controlled and real task-owned Job-Object QuestDB end-to-end
+acceptance, idempotent recovery with exact physical counts of one, and teardown
+passed.
+
+**Hygiene and safety:** Two empty task-owned pytest bases remain inaccessible
+after verification; they are a local hygiene item, not a runtime-correctness
+blocker. No ACL repair is authorized. No canonical activation, runtime, table,
+data, production Recorder deployment, or production `CLOCK_SAFETY` closure
+occurred.
+
+**Next:** Canonical Dataset contract / responsibility definition through a
+separate reviewable task. This does not authorize Canonical Dataset
+implementation or canonical Replay/runtime activation.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-4-RECORDER-COMPOSITION-REMOTE-REVIEW-FIX-001
 
 **Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head

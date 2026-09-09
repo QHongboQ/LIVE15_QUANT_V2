@@ -47,11 +47,12 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   FINAL CLOSED following PR #48 normal merge
   `a78b731a8c24879b0da41ec4d6f28bb43ebe2daf`. Slice 3 QuestDB Replay Source is
   FINAL CLOSED following PR #50 normal merge
-  `4a1809d72aa0451cf357a3845451da294ea33a5a`; overall Replay implementation is
-  IN PROGRESS. Slice 4 Recorder Composition and recorder production composition
-  remain NOT IMPLEMENTED. Canonical
-  availability activation and canonical Replay activation remain NOT AUTHORIZED.
-  Canonical Dataset, Model, Trading, and broad
+  `4a1809d72aa0451cf357a3845451da294ea33a5a`. Slice 4 Recorder Composition and
+  overall Replay & As-Of engineering implementation are FINAL CLOSED following
+  PR #52 normal merge `306924cae59dc5a2ec9f5737e7c4103a0c5e7227`. Production
+  Recorder deployment, canonical availability activation, and canonical Replay
+  activation remain NOT AUTHORIZED / NOT PERFORMED. Canonical Dataset is CURRENT
+  NEXT / UNIMPLEMENTED; Model, Trading, and broad
   Operations functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
@@ -59,24 +60,28 @@ implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of → Slice 4 — Data System Recorder
-Composition implementation**. `SLICE_3_QUESTDB_REPLAY_SOURCE = FINAL CLOSED`
-at merge `4a1809d72aa0451cf357a3845451da294ea33a5a`.
-`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_4_IMPLEMENTATION = YES` because Slices 1–3
-engineering prerequisites are closed. Slice 4 still requires its own separately
-reviewed implementation task; this status update does not begin it.
+Current NEXT: **Data System → Canonical Dataset → Contract / responsibility
+definition**. `REPLAY_AS_OF_ENGINEERING_IMPLEMENTATION = FINAL CLOSED` at merge
+`306924cae59dc5a2ec9f5737e7c4103a0c5e7227`.
+`CANONICAL_DATASET = CURRENT NEXT / UNIMPLEMENTED`.
+`SAFE_TO_BEGIN_CANONICAL_DATASET_CONTRACT_DEFINITION = YES`.
 
-Slice 4 is upper Data System composition, not a Replay leaf. Its planned files
-are `src/live15_quant_v2/data/recorder_composition.py`,
-`tests/test_replay_as_of_recorder_composition.py`, and
-`tests/test_questdb_replay_as_of_end_to_end.py`. It composes the sealed sequence
-Market Ingress → Capture Boundary → Durable Persistence → exact Hot Store
-read-back proof → EVIDENCE marker → `DataTruth.decide()` → AUTHORITY marker.
-No persistence status alone is proof; marker failure does not roll back
-already-proved lower authority; blind marker reappend is forbidden.
+The bounded next task is contract/responsibility definition only: determine
+responsibility and non-responsibility; input authority from final Replay and
+Data Truth; admissible `TruthDecision` categories and filtering; identity,
+version, and provenance; deterministic research/training materialization;
+strict As-Of behavior; future-information leakage prevention; completeness
+nonclaims; and revision/rebuild behavior. It does not authorize Canonical
+Dataset implementation, canonical Replay/runtime activation, Model/training,
+or Trading.
 
-Slice 4 excludes canonical tables, runtime/service or Replay/availability/Data
-Truth activation, production Recorder deployment, production `CLOCK_SAFETY`
-closure, Canonical Dataset, Model/training, Trading, and Operations expansion.
-`LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains preserved, and the canonical
-`CLOCK_SAFETY` operational gate remains NOT AUTHORIZED / NOT CLOSED.
+`LOCAL_REPLAY_TEST_HYGIENE = PASS_WITH_HYGIENE`.
+`EMPTY_TASK_PYTEST_BASE_RESIDUES = 2`.
+`RUNTIME_CORRECTNESS_BLOCKER = NO`.
+`ACL_REPAIR_AUTHORIZED = NO`.
+
+Canonical physical materialization, canonical availability/TruthDecision/Replay
+activation, production Recorder deployment, configuration/runtime changes, and
+production `CLOCK_SAFETY` closure remain NOT AUTHORIZED / NOT PERFORMED.
+`LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains preserved; the canonical
+`CLOCK_SAFETY` operational gate is NOT AUTHORIZED / NOT CLOSED.

@@ -10,8 +10,8 @@ Data System
 ├─ Market Ingress — FINAL CLOSED
 ├─ Storage — FINAL CLOSED
 ├─ Data Truth — FINAL CLOSED
-├─ Replay & As-Of — SLICES 1–3 FINAL CLOSED; IMPLEMENTATION IN PROGRESS
-└─ Canonical Dataset — FUTURE / UNIMPLEMENTED
+├─ Replay & As-Of — ENGINEERING FINAL CLOSED; ACTIVATION NOT AUTHORIZED
+└─ Canonical Dataset — CURRENT NEXT / UNIMPLEMENTED
 ```
 
 Market Ingress and Storage are FINAL CLOSED. Storage owns the sealed shared
@@ -20,12 +20,13 @@ Boundary, and Durable Persistence](storage/README.md) responsibilities.
 Data Truth contract and engineering implementation authority are FINAL CLOSED
 after Slice 1, the accepted reconciliation POC, and Slice 2 Persistent History
 closure. Replay & As-Of contract authority and implementation-plan authority
-are FINAL CLOSED; Slices 1–3 are FINAL CLOSED; Slice 4 is NOT IMPLEMENTED; and
-overall Replay implementation is IN PROGRESS. It owns
+are FINAL CLOSED; Slices 1–4 and the overall Replay & As-Of engineering
+implementation are FINAL CLOSED. It owns
 historical evidence replay, recorded-authority replay, and strict bounded
 As-Of views; it does not own transport replay, physical replay, ingress
-recovery, or Data Truth adjudication. Canonical Dataset remains FUTURE /
-UNIMPLEMENTED; canonical Data Truth activation remains NOT AUTHORIZED. Data
+recovery, or Data Truth adjudication. Canonical Dataset is CURRENT NEXT /
+UNIMPLEMENTED; canonical Data Truth activation remains NOT AUTHORIZED / NOT
+PERFORMED. Data
 Truth and Replay & As-Of are Data System responsibilities, not Storage
 children; Market Ingress does not own any of those deferred responsibilities.
 

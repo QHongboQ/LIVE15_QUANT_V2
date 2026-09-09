@@ -3,8 +3,8 @@
 ## Status and authority
 
 **Implementation-plan authority:** FINAL CLOSED.
-**Implementation:** IN PROGRESS.
-**Canonical activation:** NOT AUTHORIZED.
+**Implementation:** FINAL CLOSED.
+**Canonical activation:** NOT AUTHORIZED / NOT PERFORMED.
 
 The FINAL CLOSED Replay & As-Of contract outranks this plan. If an
 implementation convenience conflicts with the contract, implementation must
@@ -31,8 +31,8 @@ occurred.
 - Slice 1 — Pure Replay Core: **FINAL CLOSED**.
 - Slice 2 — Availability Support: **FINAL CLOSED**.
 - Slice 3 — Replay QuestDB Source: **FINAL CLOSED**.
-- Slice 4 — Data System Recorder Composition: **NEXT / NOT IMPLEMENTED**.
-- Overall Replay implementation: **IN PROGRESS**.
+- Slice 4 — Data System Recorder Composition: **FINAL CLOSED**.
+- Overall Replay implementation: **FINAL CLOSED**.
 
 Slice 1 closed through PR #46 normal merge
 `62f8c2f672ca3627d9690727ff47b80d805266d5`. Slice 2 closed through PR #48
@@ -42,8 +42,17 @@ technical seal. Slice 3 closed through PR #50 normal merge
 `4a1809d72aa0451cf357a3845451da294ea33a5a` after final approved head
 `d98d5798004c48aae735fef6fb6236982bb67d34` passed exact-head review and CI,
 merge-SHA CI, real task-owned QuestDB acceptance, teardown, and the exact-merge
-technical seal. This progress update does not alter the sealed Slice 4 design
-requirements below, including the still-open production `CLOCK_SAFETY` gate.
+technical seal. Slice 4 closed through PR #52 normal merge
+`306924cae59dc5a2ec9f5737e7c4103a0c5e7227` after initial head
+`5f9bc6f87da5ca3f71f5e96ae0402406b32d8b90` received `CHANGES_REQUIRED` and
+approved head `75e0ef54bf8755eb81c994d96756c067e5161626` received
+`PASS_WITH_HYGIENE`, exact-head CI passed, and merge-SHA CI, the merged-main
+technical seal, controlled validation, real task-owned Job-Object QuestDB
+acceptance, idempotent recovery, exact physical counts, and teardown passed.
+Two empty inaccessible task pytest bases remain a non-blocking local hygiene
+item; no ACL repair is authorized. This closure does not alter the sealed Slice
+4 design requirements below, including the still-open production `CLOCK_SAFETY`
+gate.
 
 ## Scope, ownership, and seams
 

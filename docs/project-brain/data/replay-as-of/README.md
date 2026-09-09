@@ -4,16 +4,16 @@
 
 **Contract authority:** FINAL CLOSED.
 **Implementation-plan authority:** FINAL CLOSED.
-**Implementation:** IN PROGRESS / PARTIALLY IMPLEMENTED.
+**Implementation:** FINAL CLOSED.
 **Slice 1 — Pure Replay Core:** FINAL CLOSED.
 **Slice 2 — Availability Support:** FINAL CLOSED.
 **Slice 3 — QuestDB Replay Source:** FINAL CLOSED.
-**Slice 4 — Recorder Composition:** NOT IMPLEMENTED / CURRENT NEXT.
+**Slice 4 — Recorder Composition:** FINAL CLOSED.
 **Availability-mechanism fit preparation:** COMPLETED.
 **Availability Support engineering implementation:** FINAL CLOSED.
 **Canonical availability activation:** NOT AUTHORIZED / NOT PERFORMED.
-**Canonical Replay activation:** NOT AUTHORIZED.
-**Recorder production composition:** NOT IMPLEMENTED.
+**Canonical Replay activation:** NOT AUTHORIZED / NOT PERFORMED.
+**Production Recorder deployment:** NOT AUTHORIZED / NOT PERFORMED.
 **Production `CLOCK_SAFETY` operational gate:** NOT AUTHORIZED / NOT CLOSED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
 DDL and production activation remain undecided and unauthorized. The candidate
@@ -72,6 +72,31 @@ merged normally as `4a1809d72aa0451cf357a3845451da294ea33a5a` with parents
 `d98d5798004c48aae735fef6fb6236982bb67d34`; merge-SHA CI, the exact-merge
 technical seal, task-owned real QuestDB acceptance, and teardown passed. No
 canonical runtime, table, or production-data change occurred.
+
+**Slice 4 closure evidence:** PR #52's initial reviewed head
+`5f9bc6f87da5ca3f71f5e96ae0402406b32d8b90` received ChatGPT
+`CHANGES_REQUIRED`; approved head
+`75e0ef54bf8755eb81c994d96756c067e5161626` received
+`PASS_WITH_HYGIENE` and passed exact-head Ubuntu, Windows, and CI Gate checks.
+PR #52 merged normally as `306924cae59dc5a2ec9f5737e7c4103a0c5e7227` with
+parents `c2b62ca6a600db9af8e9557b38b9f776b1461c19` and
+`75e0ef54bf8755eb81c994d96756c067e5161626`; merge-SHA CI, the merged-main
+technical seal, controlled validation, and real task-owned Job-Object QuestDB
+end-to-end acceptance passed. Recovery was idempotent with exact physical
+counts of one, and teardown left no task Java process, listener port, QuestDB
+root, or Store-and-Forward residue. Two empty task-owned pytest bases remained
+inaccessible after verification; they are a final local hygiene item, not a
+runtime-correctness blocker, and no ACL repair was authorized.
+
+**Accepted Slice 4 engineering result:** upper Data System composition invokes
+the sealed sequence typed ingress → Capture Boundary → immutable `CaptureFact`
+→ Durable Persistence → exact Hot Store proof → EVIDENCE marker evidence →
+Data Truth → AUTHORITY marker evidence. It uses only public sealed seams and
+preserves the required boundaries: no persistence status alone is proof;
+terminal persistence failure stops before lower calls; marker failure does not
+roll back lower proven authority; ambiguous outcomes reconcile from public
+proof with no blind marker reappend; Replay excludes records without required
+availability markers; and recovery is explicit and idempotent.
 
 **Accepted Slice 3 engineering result:** `QuestDBReplaySource` is a
 Replay-owned, read-only physical adapter with explicit evidence, TruthDecision,
@@ -386,38 +411,10 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** a separately reviewed Slice 4 — Data System Recorder
-Composition implementation task.
-`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_4_IMPLEMENTATION = YES` because Slices 1–3
-engineering prerequisites are FINAL CLOSED. This status record does not begin
-Slice 4.
+**Replay & As-Of engineering implementation:** FINAL CLOSED.
+**Canonical runtime activation:** NOT AUTHORIZED / NOT PERFORMED.
 
-Slice 4 is owned by the upper Data System composition layer, not by a new Replay
-leaf. Its planned files are `src/live15_quant_v2/data/recorder_composition.py`,
-`tests/test_replay_as_of_recorder_composition.py`, and
-`tests/test_questdb_replay_as_of_end_to_end.py`. It composes sealed public seams
-without widening CaptureFact, Capture Boundary, Durable Persistence, HotStore,
-CaptureRange, DataTruth, TruthDecision, TruthDecisionHistory, AvailabilityStore,
-AvailabilityWriter, ReplaySource, or ReplayAsOf, and must not use sibling
-private helpers or own SQL, QuestDB sender/WAL mechanics, clocks, cursor logic,
-retry/disk queues, leases, schedulers, or distributed infrastructure.
-
-The sealed sequence is Market Ingress → Capture Boundary → Durable Persistence
-→ exact Hot Store read-back proof → EVIDENCE marker attempt →
-`DataTruth.decide()` → AUTHORITY marker attempt. `LOCAL_PERSISTENCE_FAILED` or
-`DEFINITELY_REJECTED` creates no evidence marker and performs no Data Truth;
-`PERSISTED_PENDING`, `ACKNOWLEDGED_OK`, and `IN_DOUBT` are not proof without an
-exact immutable read-back. A marker failure or `IN_DOUBT` after successful proof
-does not invalidate evidence, block Data Truth, roll back authority, or permit
-blind reappend; fresh public proof/reconciliation is required.
-
-Slice 4 acceptance must cover the persistence and read-back status matrix,
-marker definite/ambiguous failure isolation, Data Truth failure/re-entry,
-Replay exclusion while markers are unavailable, and no rollback of lower
-authority. Its real end-to-end path is task-owned disposable infrastructure only:
-Capture Boundary → Durable Persistence → read-back → markers → Data Truth →
-markers → ReplayAsOf. It excludes canonical tables/runtime/service activation,
-production Recorder deployment, canonical availability/TruthDecision/Replay
-activation, production `CLOCK_SAFETY` closure, Canonical Dataset, Model/training,
-Trading, and Operations expansion. `LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` and
-the canonical `CLOCK_SAFETY` gate remain preserved and open.
+Current NEXT is Data System → Canonical Dataset → Contract / responsibility
+definition. That future work does not authorize Canonical Dataset
+implementation, canonical availability or Replay activation, production
+Recorder deployment, or production `CLOCK_SAFETY` closure.
