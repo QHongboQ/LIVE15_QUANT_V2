@@ -1,18 +1,25 @@
 from __future__ import annotations
 
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 from typing import cast
 
 import pytest
 
 from live15_quant_v2.data.asset import AssetId
-from live15_quant_v2.data.data_truth import TruthDecisionAppendInDoubtError
+from live15_quant_v2.data.data_truth import (
+    TruthDecisionAppendInDoubtError,
+    TruthDecisionAppendRejectedError,
+    TruthDecisionInvariantError,
+    TruthDecisionVerificationError,
+    UnsupportedDataTruthInputError,
+)
 from live15_quant_v2.data.data_truth.composition import DataTruth
 from live15_quant_v2.data.data_truth.models import (
     TruthDecision,
     TruthDecisionCategory,
 )
+from live15_quant_v2.data.market_ingress.ingress_boundary import VerifiedMarketIdentity
 from live15_quant_v2.data.recorder_composition import RecorderComposition
 from live15_quant_v2.data.replay_as_of import (
     AsOfRequest,
@@ -23,6 +30,7 @@ from live15_quant_v2.data.replay_as_of import (
 )
 from live15_quant_v2.data.replay_as_of.availability import (
     SUPPORTED_PROOF_SCHEMA_VERSION,
+    AvailabilityKey,
     AvailabilityKind,
     AvailabilityRecord,
     AvailabilitySupportError,
@@ -162,6 +170,48 @@ class _AvailabilityWriter:
         )
 
 
+class _ControlledAvailabilityStore:
+    """External availability boundary controlled only at its public store seam."""
+
+    def __init__(
+        self,
+        calls: list[str],
+        *,
+        append_errors: dict[AvailabilityKind, AvailabilitySupportError] | None = None,
+    ) -> None:
+        self._calls = calls
+        self._append_errors = append_errors or {}
+        self.visible: dict[AvailabilityKey, AvailabilityRecord] = {}
+        self.attempted: dict[AvailabilityKey, AvailabilityRecord] = {}
+        self.append_count: dict[AvailabilityKey, int] = {}
+
+    def find(self, key: AvailabilityKey) -> AvailabilityRecord | None:
+        self._calls.append(f"find:{key.kind.value}")
+        return self.visible.get(key)
+
+    def read_committed_floor(self) -> int | None:
+        self._calls.append("read_floor")
+        return None
+
+    def append(self, record: AvailabilityRecord) -> AvailabilityRecord:
+        self._calls.append(f"append:{record.kind.value}")
+        self.attempted[record.key] = record
+        self.append_count[record.key] = self.append_count.get(record.key, 0) + 1
+        error = self._append_errors.get(record.kind)
+        if error is not None:
+            raise error
+        self.visible[record.key] = record
+        return record
+
+    def set_append_error(
+        self, kind: AvailabilityKind, error: AvailabilitySupportError | None
+    ) -> None:
+        if error is None:
+            self._append_errors.pop(kind, None)
+        else:
+            self._append_errors[kind] = error
+
+
 class _DataTruth:
     def __init__(
         self,
@@ -211,6 +261,29 @@ def _composition(
             truth_decision_authority_identity="test-truth-authority/v1",
         ),
         writer,
+    )
+
+
+def _real_writer_composition(
+    calls: list[str],
+    *,
+    store: _ControlledAvailabilityStore,
+    fact: CaptureFact | None = None,
+    truth_error: Exception | None = None,
+) -> RecorderComposition:
+    actual_fact = fact or _fact()
+    return RecorderComposition(
+        capture_boundary=cast(CaptureBoundary, _Boundary(actual_fact, calls)),
+        durable_persistence=_Persistence(calls, PersistenceStatus.ACKNOWLEDGED_OK),
+        hot_store=cast(HotStore, _HotStore(actual_fact, calls)),
+        availability_writer=AvailabilityWriter(
+            store,
+            wall_time_ns=lambda: 1_000,
+            monotonic_ns=iter(range(100)).__next__,
+        ),
+        data_truth=cast(DataTruth, _DataTruth(calls, actual_fact, error=truth_error)),
+        evidence_authority_identity="test-evidence-authority/v1",
+        truth_decision_authority_identity="test-truth-authority/v1",
     )
 
 
@@ -315,6 +388,20 @@ def test_mismatched_readback_raises_before_availability_or_truth() -> None:
     assert calls == ["capture_market", "persist", "read_back:capture-1"]
 
 
+def test_same_id_readback_with_different_immutable_payload_is_rejected() -> None:
+    from live15_quant_v2.data.recorder_composition import (
+        RecorderCompositionInvariantError,
+    )
+
+    calls: list[str] = []
+    composition, _ = _composition(calls, read_back=replace(_fact(), payload="changed"))
+
+    with pytest.raises(RecorderCompositionInvariantError):
+        composition.record_market(object(), object())
+
+    assert calls == ["capture_market", "persist", "read_back:capture-1"]
+
+
 def test_hot_store_error_propagates_unchanged_without_lower_calls() -> None:
     calls: list[str] = []
     error = RuntimeError("hot-store unavailable")
@@ -397,12 +484,134 @@ def test_unrelated_availability_error_propagates_without_data_truth() -> None:
     ]
 
 
-def test_data_truth_error_propagates_and_prevents_authority_marker() -> None:
+def test_real_writer_evidence_in_doubt_never_blindly_reappends_and_reconciles() -> None:
     calls: list[str] = []
-    error = TruthDecisionAppendInDoubtError("controlled truth ambiguity")
+    in_doubt = AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "controlled")
+    store = _ControlledAvailabilityStore(
+        calls,
+        append_errors={AvailabilityKind.EVIDENCE: in_doubt},
+    )
+    composition = _real_writer_composition(calls, store=store)
+    calls.clear()
+
+    first = composition.record_market(cast(VerifiedMarketIdentity, object()), object())
+    evidence_key = AvailabilityKey(AvailabilityKind.EVIDENCE, "capture-1", None)
+    evidence_candidate = store.attempted[evidence_key]
+    before_recovery = store.append_count[evidence_key]
+    assert first.evidence_availability_error is AvailabilitySupportErrorCode.IN_DOUBT
+    calls.clear()
+
+    unresolved = composition.recover_fact(_fact())
+
+    assert calls[:2] == ["read_back:capture-1", "find:evidence"]
+    assert unresolved.evidence_proven is True
+    assert unresolved.evidence_availability_error is AvailabilitySupportErrorCode.IN_DOUBT
+    assert store.append_count[evidence_key] == before_recovery
+
+    store.visible[evidence_key] = evidence_candidate
+    calls.clear()
+    reconciled = composition.recover_fact(_fact())
+
+    assert calls[:2] == ["read_back:capture-1", "find:evidence"]
+    assert reconciled.evidence_availability == evidence_candidate
+    assert store.append_count[evidence_key] == before_recovery
+
+
+def test_real_writer_authority_in_doubt_never_blindly_reappends_and_reconciles() -> None:
+    calls: list[str] = []
+    in_doubt = AvailabilitySupportError(AvailabilitySupportErrorCode.IN_DOUBT, "controlled")
+    store = _ControlledAvailabilityStore(
+        calls,
+        append_errors={AvailabilityKind.AUTHORITY: in_doubt},
+    )
+    composition = _real_writer_composition(calls, store=store)
+    calls.clear()
+
+    first = composition.record_market(cast(VerifiedMarketIdentity, object()), object())
+    authority_key = AvailabilityKey(
+        AvailabilityKind.AUTHORITY, "capture-1", "data-truth/v1"
+    )
+    authority_candidate = store.attempted[authority_key]
+    before_recovery = store.append_count[authority_key]
+    assert first.authority_availability_error is AvailabilitySupportErrorCode.IN_DOUBT
+    calls.clear()
+
+    unresolved = composition.recover_fact(_fact())
+
+    assert calls[:2] == ["read_back:capture-1", "find:evidence"]
+    assert unresolved.authority_availability_error is AvailabilitySupportErrorCode.IN_DOUBT
+    assert store.append_count[authority_key] == before_recovery
+
+    store.visible[authority_key] = authority_candidate
+    calls.clear()
+    reconciled = composition.recover_fact(_fact())
+
+    assert calls[:2] == ["read_back:capture-1", "find:evidence"]
+    assert reconciled.authority_availability == authority_candidate
+    assert store.append_count[authority_key] == before_recovery
+
+
+def test_real_writer_definite_evidence_failure_allows_one_explicit_recovery_attempt() -> None:
+    calls: list[str] = []
+    store = _ControlledAvailabilityStore(
+        calls,
+        append_errors={
+            AvailabilityKind.EVIDENCE: AvailabilitySupportError(
+                AvailabilitySupportErrorCode.DEFINITE_PREPUBLICATION_FAILURE,
+                "controlled",
+            )
+        },
+    )
+    composition = _real_writer_composition(calls, store=store)
+    calls.clear()
+
+    first = composition.record_market(cast(VerifiedMarketIdentity, object()), object())
+    evidence_key = AvailabilityKey(AvailabilityKind.EVIDENCE, "capture-1", None)
+    assert first.evidence_availability_error is (
+        AvailabilitySupportErrorCode.DEFINITE_PREPUBLICATION_FAILURE
+    )
+    assert store.append_count[evidence_key] == 1
+    store.set_append_error(AvailabilityKind.EVIDENCE, None)
+    calls.clear()
+
+    recovered = composition.recover_fact(_fact())
+
+    assert calls[:3] == [
+        "read_back:capture-1",
+        "find:evidence",
+        "append:evidence",
+    ]
+    assert recovered.evidence_availability is not None
+    assert store.append_count[evidence_key] == 2
+
+
+def test_cross_restart_marker_ambiguity_is_not_automatically_retried() -> None:
+    """A restarted writer is inert until an upper caller supplies new proof."""
+
+    calls: list[str] = []
+    store = _ControlledAvailabilityStore(calls)
+    _real_writer_composition(calls, store=store)
+
+    assert store.append_count == {}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        TruthDecisionAppendRejectedError("rejected"),
+        TruthDecisionAppendInDoubtError("in doubt"),
+        TruthDecisionVerificationError("verification"),
+        TruthDecisionInvariantError("invariant"),
+        UnsupportedDataTruthInputError("unsupported"),
+    ],
+)
+def test_data_truth_error_propagates_and_prevents_authority_marker(
+    error: Exception,
+) -> None:
+    calls: list[str] = []
     composition, _ = _composition(calls, truth_error=error)
 
-    with pytest.raises(TruthDecisionAppendInDoubtError) as raised:
+    with pytest.raises(type(error)) as raised:
         composition.record_market(object(), object())
 
     assert raised.value is error
@@ -467,6 +676,60 @@ def test_missing_evidence_marker_is_excluded_by_existing_replay_semantics() -> N
     )
     request = AsOfRequest(
         20,
+        "data-truth/v1",
+        SelectionWindow(SelectionAxis.ARRIVAL_TIME, 0, 10),
+        ReplayOrdering.ARRIVAL,
+        (AssetId.BTC,),
+        ("trade",),
+        10,
+        None,
+    )
+
+    view = ReplayAsOf(source, max_page_size=10).read(request)
+
+    assert view.records == ()
+    assert [exclusion.capture_id for exclusion in view.exclusions] == ["capture-1"]
+
+
+@pytest.mark.parametrize(
+    "missing_kind",
+    [AvailabilityKind.EVIDENCE, AvailabilityKind.AUTHORITY],
+)
+def test_replay_excludes_marker_failure_from_actual_composition_result(
+    missing_kind: AvailabilityKind,
+) -> None:
+    calls: list[str] = []
+    store = _ControlledAvailabilityStore(
+        calls,
+        append_errors={
+            missing_kind: AvailabilitySupportError(
+                AvailabilitySupportErrorCode.DEFINITE_REJECTION,
+                "controlled",
+            )
+        },
+    )
+    composition = _real_writer_composition(calls, store=store)
+    result = composition.record_market(cast(VerifiedMarketIdentity, object()), object())
+    assert result.truth_decision is not None
+
+    def reference(record: AvailabilityRecord | None) -> AvailabilityReference:
+        if record is None:
+            return AvailabilityReference(None, None)
+        return AvailabilityReference(record.available_at_ns, record.kind.value)
+
+    source = InMemoryReplaySource(
+        [
+            ReplaySourceRecord(
+                result.capture_fact,
+                result.truth_decision,
+                reference(result.evidence_availability),
+                reference(result.authority_availability),
+            )
+        ],
+        SourceAuthorityIdentities("evidence/v1", "truth/v1", "availability/v1"),
+    )
+    request = AsOfRequest(
+        2_000,
         "data-truth/v1",
         SelectionWindow(SelectionAxis.ARRIVAL_TIME, 0, 10),
         ReplayOrdering.ARRIVAL,

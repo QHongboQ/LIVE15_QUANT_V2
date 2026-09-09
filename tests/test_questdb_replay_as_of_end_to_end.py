@@ -75,12 +75,17 @@ def _reference_message() -> CFBenchmarksValueMessage:
     )
 
 
-def _count(server: _TaskQuestDB, table: str, capture_id: str) -> int:
+def _semantic_count(
+    server: _TaskQuestDB,
+    table: str,
+    predicate: str,
+    binds: list[str],
+) -> int:
     database = server.database
     assert database is not None
     rows = database.query(
-        f"SELECT count() AS row_count FROM {table} WHERE capture_id = $1",
-        [capture_id],
+        f"SELECT count() AS row_count FROM {table} WHERE {predicate}",
+        binds,
     ).to_pandas().to_dict(orient="records")
     return int(rows[0]["row_count"])
 
@@ -163,8 +168,38 @@ def test_recorder_composition_publishes_one_replayable_proven_pair_and_recovers(
         assert recovered.evidence_availability.available_at_ns < (
             recovered.authority_availability.available_at_ns
         )
-        assert _count(server, evidence_table, recorded.capture_fact.capture_id) == 1
-        assert _count(server, availability_table, recorded.capture_fact.capture_id) == 2
+
+        reentered = composition.recover_fact(recorded.capture_fact)
+
+        assert reentered.persistence_result is None
+        assert reentered.capture_fact == recorded.capture_fact
+        assert reentered.evidence_availability == recovered.evidence_availability
+        assert reentered.truth_decision == recovered.truth_decision
+        assert reentered.authority_availability == recovered.authority_availability
+        assert _semantic_count(
+            server,
+            evidence_table,
+            "capture_id = $1",
+            [recorded.capture_fact.capture_id],
+        ) == 1
+        assert _semantic_count(
+            server,
+            truth_table,
+            "policy_version = $1 AND subject_capture_id = $2",
+            ["data-truth/v1", recorded.capture_fact.capture_id],
+        ) == 1
+        assert _semantic_count(
+            server,
+            availability_table,
+            "kind = $1 AND capture_id = $2 AND policy_version IS NULL",
+            ["evidence", recorded.capture_fact.capture_id],
+        ) == 1
+        assert _semantic_count(
+            server,
+            availability_table,
+            "kind = $1 AND capture_id = $2 AND policy_version = $3",
+            ["authority", recorded.capture_fact.capture_id, "data-truth/v1"],
+        ) == 1
 
         source = QuestDBReplaySource(
             server.connection_string,
