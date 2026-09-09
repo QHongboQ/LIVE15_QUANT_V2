@@ -1,5 +1,65 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-REMOTE-REVIEW-FIX-001
+
+**Change:** Corrected the snapshot-membership POC after ChatGPT's
+GitHub-visible `CHANGES_REQUIRED` review of head
+`48f56d7751ef02e886bac5fdf1554ad722e6461d`. EVENT_TIME now selects with
+`provider_timestamp` after the qualified-scope null check, all valid recorded
+TruthDecision categories participate in membership, and selection axis is
+independent from output ordering and cursor keys.
+
+**Reason:** The prior POC used arrival time for EVENT_TIME filtering, treated
+semantic categories other than ACCEPTED as ineligible, and represented
+selection and ordering with one overloaded axis. These model defects could
+hide contract violations despite an otherwise viable snapshot approach.
+
+**Validation / result:** A corrected real disposable QuestDB POC passed the
+event-time anti-false-pass window, both cross-combinations of selection and
+ordering, all four valid TruthDecision categories, normal late append and
+recovery, reader recreation, contained task-server restart, and exact keyset
+continuation. The clock rollback adversary again proved
+`max(200, 100 + 1) = 200 <= cutoff 900`; changed membership and duplicate
+physical authority both failed closed. Result:
+`PASS_WITH_FAIL_CLOSED_DRIFT`; clock policy:
+`MEMBERSHIP_FINGERPRINT_FAIL_CLOSED_SUFFICIENT`.
+
+**Safety:** POC-only test and changelog change. The real run used only fresh
+UUID-named task root, ports, tables, and Job Object-contained processes; no
+canonical runtime, service, table, or production data was changed.
+
+**Next:** Keep PR #42 Draft for exact-head ChatGPT POC re-audit. Replay
+implementation planning remains unauthorized.
+
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-001
+
+**Change:** Added one opt-in, disposable Windows QuestDB POC that tests a
+candidate source-snapshot membership fingerprint and keyset continuation for
+Replay & As-Of. This is POC evidence only; it does not add Replay production
+code, an availability mechanism, or a contract change.
+
+**Reason:** Availability-mechanism fit identified source snapshot identity and
+paged membership stability as the remaining pre-plan technical blocker.
+
+**Validation / result:** A real task-owned QuestDB 10.0.1 run using Python
+client 5.0.0 passed normal late-append and late-recovery-marker continuation,
+reader recreation, and a task-owned contained server restart. Page 1 bound
+`[A, B]` with fingerprint
+`1cac25e5b0cf95c6295abf93e303865c82733c6c3586262861faff645d3798c2`.
+The explicit clock rollback adversary proved the last-marker floor alone is
+insufficient: `max(200, 100 + 1) = 200 <= cutoff 900`. The changed membership
+and a duplicate physical TruthDecision authority both failed closed before a
+mixed continuation page. Result: `PASS_WITH_FAIL_CLOSED_DRIFT`; clock policy:
+`MEMBERSHIP_FINGERPRINT_FAIL_CLOSED_SUFFICIENT` for this POC.
+
+**Safety:** The POC used UUID-named task root, ports, tables, and a Windows Job
+Object with `KILL_ON_JOB_CLOSE`; it made no canonical runtime, service, table,
+or production-data change. The root, listeners, and contained Java process
+were verified absent after cleanup.
+
+**Next:** Independent POC review is required. The Replay implementation plan
+remains unauthorized pending that review.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-CONTRACT-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed Replay & As-Of contract authority as FINAL CLOSED. The
