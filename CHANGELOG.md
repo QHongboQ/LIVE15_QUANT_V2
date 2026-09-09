@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REAL-ACCEPTANCE-CLOSEOUT-001
+
+**Prior head:** `6c9c61df5c3ec381cac987a3aa87d3487cde34c9`.
+
+**Reason:** The controlled matrix and core real QuestDB path passed, while the
+remaining real-server duplicate, source-drift, future, and backdated cases
+remained open.
+
+**Closeout evidence:** Task-owned real QuestDB acceptance now proves
+fail-closed duplicate evidence, TruthDecision authority, and availability
+markers; source-table reconfiguration drift; future-after-cutoff stability;
+backdated eligible-membership drift; malformed-row bounded mapping; and clean
+task-owned teardown.
+
+**Safety / next:** Slice 3 remains an implementation candidate. No canonical
+activation, runtime, table, or production-data change occurred; Slice 4 has not
+started. The next step is the mandatory ChatGPT exact-head Slice 3 re-audit.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-REMOTE-REVIEW-FIX-002
 
 **Review:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head

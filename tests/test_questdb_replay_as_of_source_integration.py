@@ -1137,3 +1137,438 @@ def test_real_task_owned_questdb_source_drives_arrival_replay(tmp_path: Any) -> 
         ]
         restarted.close()
     _assert_lifecycle(server)
+
+
+def _real_tables(database: Any, suffix: str) -> tuple[str, str, str]:
+    evidence, truth, availability = (
+        f"replay_evidence_{suffix}",
+        f"replay_truth_{suffix}",
+        f"replay_availability_{suffix}",
+    )
+    database.execute(
+        f"CREATE TABLE {evidence} (capture_id VARCHAR, asset SYMBOL, provider SYMBOL, source_id VARCHAR, channel SYMBOL, message_type VARCHAR, event_subtype VARCHAR, sid LONG, seq LONG, provider_timestamp TIMESTAMP_NS, schema_version VARCHAR, payload VARCHAR, received_timestamp TIMESTAMP_NS) TIMESTAMP(received_timestamp) PARTITION BY DAY WAL DEDUP UPSERT KEYS(received_timestamp, capture_id)"
+    )
+    database.execute(
+        f"CREATE TABLE {truth} (policy_version VARCHAR, subject_capture_id VARCHAR, category VARCHAR, contributing_capture_ids VARCHAR, reason VARCHAR, event_provider VARCHAR, event_source_id VARCHAR, event_message_type VARCHAR, event_trade_id VARCHAR, physical_written_at TIMESTAMP_NS) TIMESTAMP(physical_written_at) PARTITION BY DAY WAL"
+    )
+    database.execute(
+        f"CREATE TABLE {availability} (kind VARCHAR, capture_id VARCHAR, policy_version VARCHAR, available_at_ns TIMESTAMP_NS, proof_schema_version VARCHAR, source_authority_identity VARCHAR, written_at_ns TIMESTAMP_NS) TIMESTAMP(written_at_ns) PARTITION BY DAY WAL"
+    )
+    return evidence, truth, availability
+
+
+def _real_append_pair(
+    database: Any,
+    questdb_module: Any,
+    tables: tuple[str, str, str],
+    capture_id: str,
+    *,
+    received_timestamp: int,
+    available_at_ns: int = 10,
+    category: str = "accepted",
+) -> None:
+    evidence, truth, availability = tables
+    with database.sender() as sender:
+        sender.row(
+            evidence,
+            columns={
+                "capture_id": capture_id,
+                "asset": "BTC",
+                "provider": "kalshi",
+                "source_id": "KXBTC",
+                "channel": "trade",
+                "message_type": "trade",
+                "event_subtype": None,
+                "sid": 1,
+                "seq": None,
+                "provider_timestamp": questdb_module.TimestampNanos(received_timestamp),
+                "schema_version": "market-ingress/v1",
+                "payload": "{}",
+            },
+            at=questdb_module.TimestampNanos(received_timestamp),
+        )
+        sender.row(
+            truth,
+            columns={
+                "policy_version": "data-truth/v1",
+                "subject_capture_id": capture_id,
+                "category": category,
+                "contributing_capture_ids": f'["{capture_id}"]',
+                "reason": None,
+                "event_provider": None,
+                "event_source_id": None,
+                "event_message_type": None,
+                "event_trade_id": None,
+            },
+            at=questdb_module.TimestampNanos(received_timestamp + 100),
+        )
+        fsn = sender.flush_and_get_fsn()
+        assert fsn is not None and sender.await_acked_fsn(fsn, timeout_millis=15_000)
+    with database.sender() as sender:
+        sender.row(
+            availability,
+            columns={
+                "kind": "evidence",
+                "capture_id": capture_id,
+                "policy_version": None,
+                "available_at_ns": questdb_module.TimestampNanos(available_at_ns),
+                "proof_schema_version": "replay-availability-proof/v1",
+                "source_authority_identity": _LOGICAL_EVIDENCE_AUTHORITY,
+            },
+            at=questdb_module.TimestampNanos(received_timestamp + 200),
+        )
+        sender.row(
+            availability,
+            columns={
+                "kind": "authority",
+                "capture_id": capture_id,
+                "policy_version": "data-truth/v1",
+                "available_at_ns": questdb_module.TimestampNanos(available_at_ns),
+                "proof_schema_version": "replay-availability-proof/v1",
+                "source_authority_identity": _LOGICAL_TRUTH_AUTHORITY,
+            },
+            at=questdb_module.TimestampNanos(received_timestamp + 300),
+        )
+        fsn = sender.flush_and_get_fsn()
+        assert fsn is not None and sender.await_acked_fsn(fsn, timeout_millis=15_000)
+    for table in tables:
+        assert (
+            database.query(f"SELECT wait_wal_table('{table}')", [])
+            .to_pandas()
+            .to_dict(orient="records")[0]
+        )
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    os.getenv("LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION") != "1",
+    reason="set LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION=1 to run task-owned QuestDB",
+)
+def test_real_duplicate_physical_rows_fail_closed(tmp_path: Any) -> None:
+    import questdb
+    from test_questdb_truth_history_integration import _assert_lifecycle, _server
+
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.questdb_source import QuestDBReplaySource
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    with _server(tmp_path) as server:
+        assert server.database is not None
+        database = server.database
+        tables = _real_tables(database, uuid4().hex)
+        _real_append_pair(database, questdb, tables, "duplicate", received_timestamp=1)
+        with database.sender() as sender:
+            sender.row(
+                tables[0],
+                columns={
+                    "capture_id": "duplicate",
+                    "asset": "BTC",
+                    "provider": "kalshi",
+                    "source_id": "KXBTC",
+                    "channel": "trade",
+                    "message_type": "trade",
+                    "event_subtype": None,
+                    "sid": 1,
+                    "seq": None,
+                    "provider_timestamp": questdb.TimestampNanos(2),
+                    "schema_version": "market-ingress/v1",
+                    "payload": "{}",
+                },
+                at=questdb.TimestampNanos(2),
+            )
+            fsn = sender.flush_and_get_fsn()
+            assert fsn is not None and sender.await_acked_fsn(
+                fsn, timeout_millis=15_000
+            )
+        assert (
+            database.query(f"SELECT wait_wal_table('{tables[0]}')", [])
+            .to_pandas()
+            .to_dict(orient="records")[0]
+        )
+        source = QuestDBReplaySource(
+            server.connection_string,
+            evidence_table=tables[0],
+            truth_decision_table=tables[1],
+            availability_table=tables[2],
+            evidence_authority_identity=_LOGICAL_EVIDENCE_AUTHORITY,
+            truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
+            availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
+        )
+        with pytest.raises(ReplayAsOfError) as raised:
+            ReplayAsOf(source, max_page_size=10).read(_request())
+        assert raised.value.code is ReplayErrorCode.MALFORMED_EVIDENCE
+        source.close()
+    _assert_lifecycle(server)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    os.getenv("LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION") != "1",
+    reason="set LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION=1 to run task-owned QuestDB",
+)
+def test_real_duplicate_authority_and_availability_fail_closed(tmp_path: Any) -> None:
+    import questdb
+    from test_questdb_truth_history_integration import _assert_lifecycle, _server
+
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.questdb_source import QuestDBReplaySource
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    def source_for(server: Any, tables: tuple[str, str, str]) -> Any:
+        return QuestDBReplaySource(
+            server.connection_string,
+            evidence_table=tables[0],
+            truth_decision_table=tables[1],
+            availability_table=tables[2],
+            evidence_authority_identity=_LOGICAL_EVIDENCE_AUTHORITY,
+            truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
+            availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
+        )
+
+    with _server(tmp_path) as server:
+        assert server.database is not None
+        database = server.database
+        authority_tables = _real_tables(database, uuid4().hex)
+        _real_append_pair(
+            database,
+            questdb,
+            authority_tables,
+            "authority-duplicate",
+            received_timestamp=1,
+        )
+        with database.sender() as sender:
+            sender.row(
+                authority_tables[1],
+                columns={
+                    "policy_version": "data-truth/v1",
+                    "subject_capture_id": "authority-duplicate",
+                    "category": "accepted",
+                    "contributing_capture_ids": '["authority-duplicate"]',
+                    "reason": None,
+                    "event_provider": None,
+                    "event_source_id": None,
+                    "event_message_type": None,
+                    "event_trade_id": None,
+                },
+                at=questdb.TimestampNanos(102),
+            )
+            fsn = sender.flush_and_get_fsn()
+            assert fsn is not None and sender.await_acked_fsn(
+                fsn, timeout_millis=15_000
+            )
+        assert (
+            database.query(f"SELECT wait_wal_table('{authority_tables[1]}')", [])
+            .to_pandas()
+            .to_dict(orient="records")[0]
+        )
+        authority_source = source_for(server, authority_tables)
+        with pytest.raises(ReplayAsOfError) as authority_error:
+            ReplayAsOf(authority_source, max_page_size=10).read(_request())
+        assert authority_error.value.code is ReplayErrorCode.AUTHORITY_CONFLICT
+        authority_source.close()
+
+        availability_tables = _real_tables(database, uuid4().hex)
+        _real_append_pair(
+            database,
+            questdb,
+            availability_tables,
+            "availability-duplicate",
+            received_timestamp=1,
+        )
+        with database.sender() as sender:
+            sender.row(
+                availability_tables[2],
+                columns={
+                    "kind": "evidence",
+                    "capture_id": "availability-duplicate",
+                    "policy_version": None,
+                    "available_at_ns": questdb.TimestampNanos(10),
+                    "proof_schema_version": "replay-availability-proof/v1",
+                    "source_authority_identity": _LOGICAL_EVIDENCE_AUTHORITY,
+                },
+                at=questdb.TimestampNanos(999),
+            )
+            fsn = sender.flush_and_get_fsn()
+            assert fsn is not None and sender.await_acked_fsn(
+                fsn, timeout_millis=15_000
+            )
+        assert (
+            database.query(f"SELECT wait_wal_table('{availability_tables[2]}')", [])
+            .to_pandas()
+            .to_dict(orient="records")[0]
+        )
+        availability_source = source_for(server, availability_tables)
+        with pytest.raises(ReplayAsOfError) as availability_error:
+            ReplayAsOf(availability_source, max_page_size=10).read(_request())
+        assert (
+            availability_error.value.code
+            is ReplayErrorCode.AVAILABILITY_EVIDENCE_MISSING
+        )
+        availability_source.close()
+    _assert_lifecycle(server)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    os.getenv("LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION") != "1",
+    reason="set LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION=1 to run task-owned QuestDB",
+)
+def test_real_source_reconfiguration_and_membership_drift(tmp_path: Any) -> None:
+    import questdb
+    from test_questdb_truth_history_integration import _assert_lifecycle, _server
+
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.questdb_source import QuestDBReplaySource
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    def source_for(server: Any, tables: tuple[str, str, str]) -> Any:
+        return QuestDBReplaySource(
+            server.connection_string,
+            evidence_table=tables[0],
+            truth_decision_table=tables[1],
+            availability_table=tables[2],
+            evidence_authority_identity=_LOGICAL_EVIDENCE_AUTHORITY,
+            truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
+            availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
+        )
+
+    with _server(tmp_path) as server:
+        assert server.database is not None
+        database = server.database
+        first_tables = _real_tables(database, uuid4().hex)
+        second_tables = _real_tables(database, uuid4().hex)
+        for tables in (first_tables, second_tables):
+            _real_append_pair(
+                database, questdb, tables, "capture-a", received_timestamp=1
+            )
+            _real_append_pair(
+                database, questdb, tables, "capture-b", received_timestamp=2
+            )
+        first_source = source_for(server, first_tables)
+        first_page = ReplayAsOf(first_source, max_page_size=10).read(
+            _request(page_size=1)
+        )
+        assert first_page.next_cursor is not None
+        reconfigured = source_for(server, second_tables)
+        with pytest.raises(ReplayAsOfError) as reconfigured_error:
+            ReplayAsOf(reconfigured, max_page_size=10).read(
+                _request(page_size=1, cursor=first_page.next_cursor)
+            )
+        assert reconfigured_error.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+        reconfigured.close()
+
+        _real_append_pair(
+            database,
+            questdb,
+            first_tables,
+            "capture-future",
+            received_timestamp=3,
+            available_at_ns=21,
+        )
+        continued = ReplayAsOf(first_source, max_page_size=10).read(
+            _request(page_size=1, cursor=first_page.next_cursor)
+        )
+        assert [record.capture_fact.capture_id for record in continued.records] == [
+            "capture-b"
+        ]
+        assert continued.source_snapshot_identity == first_page.source_snapshot_identity
+
+        _real_append_pair(
+            database, questdb, first_tables, "capture-backdated", received_timestamp=4
+        )
+        with pytest.raises(ReplayAsOfError) as drift_error:
+            ReplayAsOf(first_source, max_page_size=10).read(
+                _request(page_size=1, cursor=first_page.next_cursor)
+            )
+        assert drift_error.value.code is ReplayErrorCode.SOURCE_UNAVAILABLE
+        first_source.close()
+    _assert_lifecycle(server)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    os.getenv("LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION") != "1",
+    reason="set LIVE15_RUN_REPLAY_SOURCE_QUESTDB_INTEGRATION=1 to run task-owned QuestDB",
+)
+def test_real_malformed_truth_row_has_bounded_error(tmp_path: Any) -> None:
+    import questdb
+    from test_questdb_truth_history_integration import _assert_lifecycle, _server
+
+    from live15_quant_v2.data.replay_as_of.models import (
+        ReplayAsOfError,
+        ReplayErrorCode,
+    )
+    from live15_quant_v2.data.replay_as_of.questdb_source import QuestDBReplaySource
+    from live15_quant_v2.data.replay_as_of.service import ReplayAsOf
+
+    with _server(tmp_path) as server:
+        assert server.database is not None
+        database = server.database
+        tables = _real_tables(database, uuid4().hex)
+        with database.sender() as sender:
+            sender.row(
+                tables[0],
+                columns={
+                    "capture_id": "malformed-authority",
+                    "asset": "BTC",
+                    "provider": "kalshi",
+                    "source_id": "KXBTC",
+                    "channel": "trade",
+                    "message_type": "trade",
+                    "event_subtype": None,
+                    "sid": 1,
+                    "seq": None,
+                    "provider_timestamp": questdb.TimestampNanos(1),
+                    "schema_version": "market-ingress/v1",
+                    "payload": "{}",
+                },
+                at=questdb.TimestampNanos(1),
+            )
+            sender.row(
+                tables[1],
+                columns={
+                    "policy_version": "data-truth/v1",
+                    "subject_capture_id": "malformed-authority",
+                    "category": "not-a-truth-decision-category",
+                    "contributing_capture_ids": '["malformed-authority"]',
+                    "reason": None,
+                    "event_provider": None,
+                    "event_source_id": None,
+                    "event_message_type": None,
+                    "event_trade_id": None,
+                },
+                at=questdb.TimestampNanos(2),
+            )
+            fsn = sender.flush_and_get_fsn()
+            assert fsn is not None and sender.await_acked_fsn(
+                fsn, timeout_millis=15_000
+            )
+        for table in tables[:2]:
+            assert (
+                database.query(f"SELECT wait_wal_table('{table}')", [])
+                .to_pandas()
+                .to_dict(orient="records")[0]
+            )
+        source = QuestDBReplaySource(
+            server.connection_string,
+            evidence_table=tables[0],
+            truth_decision_table=tables[1],
+            availability_table=tables[2],
+            evidence_authority_identity=_LOGICAL_EVIDENCE_AUTHORITY,
+            truth_decision_authority_identity=_LOGICAL_TRUTH_AUTHORITY,
+            availability_authority_identity=_LOGICAL_AVAILABILITY_AUTHORITY,
+        )
+        with pytest.raises(ReplayAsOfError) as raised:
+            ReplayAsOf(source, max_page_size=10).read(_request())
+        assert raised.value.code is ReplayErrorCode.MALFORMED_AUTHORITY
+        source.close()
+    _assert_lifecycle(server)
