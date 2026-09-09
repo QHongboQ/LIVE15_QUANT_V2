@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-FINAL-STATUS-CLOSURE-001
+
+**Change:** Closed the Slice 2 Availability Support engineering implementation
+as FINAL CLOSED.
+
+**Evidence:** PR #48's initial reviewed head
+`f2361333d8c3b231a53feca3128e64119f12e814` required changes; final approved
+head `5119271b71450fa83a15de4b709fb07034a837e4` passed ChatGPT exact-head
+re-audit and CI. Normal merge `a78b731a8c24879b0da41ec4d6f28bb43ebe2daf` has
+parents `cd456aaba643a201809bdd360fc4fec31d1efe24` and
+`5119271b71450fa83a15de4b709fb07034a837e4`; merge-SHA CI, exact merged-main
+technical seal, clock engineering tests, real task-owned QuestDB acceptance,
+and teardown passed. Remote branches are main-only.
+
+**Engineering result:** Append-only availability authority support with
+conservative clock semantics, exact `IN_DOUBT` reconciliation, no blind
+reappend, WAL/no-DEDUP/no-UPSERT QuestDB mechanics, and strict physical
+validation.
+
+**Safety / next:** No canonical availability activation, runtime or
+production-data change, Slice 3 implementation, or Recorder composition
+occurred. Current NEXT is Slice 3 — QuestDB Replay Source, through a separately
+reviewed implementation task; the production `CLOCK_SAFETY` gate remains open.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-AVAILABILITY-SUPPORT-REMOTE-REVIEW-FIX-001
 
 **Review result:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head

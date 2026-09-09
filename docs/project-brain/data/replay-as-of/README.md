@@ -6,11 +6,12 @@
 **Implementation-plan authority:** FINAL CLOSED.
 **Implementation:** IN PROGRESS / PARTIALLY IMPLEMENTED.
 **Slice 1 — Pure Replay Core:** FINAL CLOSED.
-**Slice 2 — Availability Support:** NOT IMPLEMENTED.
+**Slice 2 — Availability Support:** FINAL CLOSED.
 **Slice 3 — QuestDB Replay Source:** NOT IMPLEMENTED.
 **Slice 4 — Recorder Composition:** NOT IMPLEMENTED.
 **Availability-mechanism fit preparation:** COMPLETED.
-**Availability production implementation:** NOT IMPLEMENTED.
+**Availability Support engineering implementation:** FINAL CLOSED.
+**Canonical availability activation:** NOT AUTHORIZED / NOT PERFORMED.
 **Recorder production composition:** NOT IMPLEMENTED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
 DDL and production activation remain undecided and unauthorized. The candidate
@@ -44,6 +45,29 @@ re-audit and Ubuntu, Windows, and CI Gate checks. PR #46 merged normally as
 `fe097c1a5d112619f3949a92a341604f1760072b` and
 `9779c99ef79f1815ee5c4d51cad225599a94d120`; its merge-SHA CI and exact-merge
 technical seal passed. No QuestDB, runtime, table, or data change occurred.
+
+**Slice 2 closure evidence:** PR #48's initial reviewed head
+`f2361333d8c3b231a53feca3128e64119f12e814` received ChatGPT
+`CHANGES_REQUIRED`; final approved head
+`5119271b71450fa83a15de4b709fb07034a837e4` passed the exact-head re-audit and
+Ubuntu, Windows, and CI Gate checks. PR #48 merged normally as
+`a78b731a8c24879b0da41ec4d6f28bb43ebe2daf` with parents
+`cd456aaba643a201809bdd360fc4fec31d1efe24` and
+`5119271b71450fa83a15de4b709fb07034a837e4`; merge-SHA CI, exact-merge
+technical seal, and task-owned QuestDB teardown passed. No canonical runtime,
+table, or data change occurred.
+
+**Accepted Slice 2 engineering result:** immutable semantic availability
+records under `replay-availability-proof/v1`; a narrow provider-neutral
+recording port and one ordered writer; post-proof monotonic wall projection,
+strict committed-floor/last-issued advancement, and monotonic-regression
+fail-closed behavior; exact immutable `IN_DOUBT` reconciliation with no blind
+reappend; bounded append outcomes; and a disposable explicit-table QuestDB
+adapter using WAL, no DEDUP, no UPSERT, physical `written_at_ns` separate from
+semantic `available_at_ns`, exact verification, duplicate-key fail-closed, and
+incompatible-schema no-repair fail-closed behavior. Clock engineering tests
+passed, but `LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains explicit and the
+canonical `CLOCK_SAFETY` operational gate remains NOT AUTHORIZED / NOT CLOSED.
 
 **Accepted Slice 1 engineering result:** provider-neutral immutable request and
 view models; the complete FINAL CLOSED error vocabulary; deterministic request
@@ -331,17 +355,25 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** a separately reviewed Slice 2 — Availability Support
-implementation task.
+**Current NEXT:** a separately reviewed Slice 3 — QuestDB Replay Source
+implementation task. `SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_3_IMPLEMENTATION = YES`
+because Slice 1 and Slice 2 engineering prerequisites are FINAL CLOSED. This
+status record does not authorize Slice 3 implementation.
 
-`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_2_IMPLEMENTATION = YES` means the Slice 1
-prerequisite and contract/plan authorities are closed. It does not implement or
-authorize Slice 2 outside its own separately reviewed task, and it does not
-authorize Slice 3, Slice 4, canonical activation, Canonical Dataset,
-Model/training, or Trading work.
+Slice 3 owns only the Replay-owned physical read adapter
+`src/live15_quant_v2/data/replay_as_of/questdb_source.py`, with planned
+integration coverage in `tests/test_questdb_replay_as_of_source_integration.py`.
+It reconstructs the approved provider-neutral `ReplaySource.candidate_records(scope)`
+input from physical evidence, TruthDecision, and availability authorities
+without widening HotStore, CaptureRange, TruthDecisionHistory, DataTruth,
+CaptureFact, or TruthDecision. It preserves the exact requested-policy and
+provider-neutral source seam; fail-closed malformed/source-drift mappings;
+matching availability proof schema/source identity; Slice 1 snapshot semantics;
+no `OFFSET`, latest-row selection, fabricated baseline, or completeness claim.
+It does not include Recorder composition, canonical activation, production
+deployment, Canonical Dataset, Model/training, or Trading.
 
 `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because Replay & As-Of
 contract authority is FINAL CLOSED, availability-mechanism fit preparation is
 COMPLETED, and the required snapshot-membership POC gate is FINAL CLOSED and
-accepted. The implementation-plan authority and Slice 1 are FINAL CLOSED;
-Slice 2 remains NOT IMPLEMENTED.
+accepted. The implementation-plan authority and Slices 1–2 are FINAL CLOSED.

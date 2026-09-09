@@ -43,11 +43,13 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   plan authority is FINAL CLOSED following PR #44 normal merge
   `13af6e1cea4c087c547bfc9f6a25311ab6690b6b`. Slice 1 Pure Replay Core is
   FINAL CLOSED following PR #46 normal merge
-  `62f8c2f672ca3627d9690727ff47b80d805266d5`; overall Replay implementation is
-  IN PROGRESS. Slice 2 Availability Support, Slice 3 QuestDB Replay Source,
-  Slice 4 Recorder Composition, availability production implementation, and
-  recorder production composition remain NOT IMPLEMENTED; canonical activation
-  remains NOT AUTHORIZED. Canonical Dataset, Model, Trading, and broad
+  `62f8c2f672ca3627d9690727ff47b80d805266d5`. Slice 2 Availability Support is
+  FINAL CLOSED following PR #48 normal merge
+  `a78b731a8c24879b0da41ec4d6f28bb43ebe2daf`; overall Replay implementation is
+  IN PROGRESS. Slice 3 QuestDB Replay Source, Slice 4 Recorder Composition,
+  and recorder production composition remain NOT IMPLEMENTED. Canonical
+  availability activation and canonical Replay activation remain NOT AUTHORIZED.
+  Canonical Dataset, Model, Trading, and broad
   Operations functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
@@ -55,31 +57,27 @@ implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of → Slice 2 — Availability Support
-implementation**. `SLICE_1_PURE_REPLAY_CORE = FINAL CLOSED` at merge
-`62f8c2f672ca3627d9690727ff47b80d805266d5`.
-`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_2_IMPLEMENTATION = YES` because the Slice 1
-prerequisite plus Replay contract and implementation-plan authorities are
-closed. Slice 2 still requires its own separately reviewed implementation task.
+Current NEXT: **Data System → Replay & As-Of → Slice 3 — QuestDB Replay Source
+implementation**. `SLICE_2_AVAILABILITY_SUPPORT = FINAL CLOSED` at merge
+`a78b731a8c24879b0da41ec4d6f28bb43ebe2daf`.
+`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_3_IMPLEMENTATION = YES` because Slice 1 and
+Slice 2 engineering prerequisites are closed. Slice 3 still requires its own
+separately reviewed implementation task.
 
-Slice 2 owns `AvailabilityKind` / `AvailabilityRecord`, semantic availability
-keys, a provider-neutral recording port (`find`, `read_committed_floor`, and
-`append`), conservative post-proof timing, process-lifetime monotonic wall
-projection, committed-floor startup behavior, one ordered writer, append-only
-semantics, definite-prepublication failure, `IN_DOUBT`,
-`INVARIANT_CONFLICT`, exact-key reconciliation, no blind reappend, a disposable
-QuestDB availability adapter, and `CLOCK_SAFETY` acceptance. Its planned
-production files are `src/live15_quant_v2/data/replay_as_of/availability.py`
-and `src/live15_quant_v2/data/replay_as_of/questdb_availability.py`; its
-planned tests are `tests/test_replay_as_of_availability.py` and
-`tests/test_questdb_replay_as_of_availability_integration.py`.
+Slice 3 owns only Replay's physical read adapter
+`src/live15_quant_v2/data/replay_as_of/questdb_source.py` and planned test
+`tests/test_questdb_replay_as_of_source_integration.py`. It reconstructs the
+approved provider-neutral `ReplaySource.candidate_records(scope)` input from
+physical evidence, TruthDecision, and availability authorities. It may push
+down only semantics-preserving bounds; keeps exact policy, replayable valid
+TruthDecision categories, availability schema/source-identity validation, and
+Slice 1 snapshot semantics; fails closed for malformed evidence/authority and
+source unavailability/drift; and uses no `OFFSET`, latest-row selection,
+fabricated baseline, or completeness claim. It must not widen HotStore,
+CaptureRange, TruthDecisionHistory, DataTruth, CaptureFact, or TruthDecision.
 
-`LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains preserved. Slice 2 must prove
-post-trigger proof sampling, in-process rollback safety and monotonic
-projection, committed-floor startup and strict advancement or fail-closed
-behavior, restart below the committed floor, non-decreasing timestamps, no
-backdating, and no claim of arbitrary distributed clock correctness.
-
-Slice 2 excludes `questdb_source.py`, `recorder_composition.py`, canonical
-availability-table or runtime activation, Slices 3–4, Canonical Dataset,
-Model/training, and Trading.
+Slice 3 excludes `recorder_composition.py`, Slice 4, canonical availability or
+Replay activation, production Recorder deployment, Canonical Dataset,
+Model/training, and Trading. `LAST_MARKER_FLOOR_ALONE_INSUFFICIENT` remains
+preserved, and the canonical `CLOCK_SAFETY` operational gate remains NOT
+AUTHORIZED / NOT CLOSED.
