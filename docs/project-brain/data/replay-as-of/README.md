@@ -4,8 +4,7 @@
 
 **Contract authority:** FINAL CLOSED.
 **Implementation:** NOT IMPLEMENTED.
-**Implementation-plan authority:** DRAFT CANDIDATE / PENDING INDEPENDENT
-REVIEW. Implementation remains unauthorized.
+**Implementation-plan authority:** FINAL CLOSED.
 **Availability-mechanism fit preparation:** COMPLETED.
 **Availability mechanism implementation:** NOT IMPLEMENTED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
@@ -20,6 +19,16 @@ Data System composition through sealed public Storage/Data Truth seams.
 exact-head CI. Normal merge `528815ef2883b3757515b9b9d8e3dcadc92981b6` and
 its Ubuntu, Windows, and CI Gate checks passed; the local docs seal passed. No
 runtime, code, or data change occurred.
+
+**Implementation-plan closure evidence:** PR #44's first reviewed head
+`86d51d89f02f7c3bc5e5c15a2260848c8f5d4dfb` received ChatGPT
+`CHANGES_REQUIRED`; corrected head
+`af87756b1a948aee41253b9507c552f31df93bfc` passed ChatGPT exact-head
+re-audit and exact-head CI. Normal merge
+`13af6e1cea4c087c547bfc9f6a25311ab6690b6b` has parents
+`752c57e3c262e006ff127f1436e435d40376d7ee` and
+`af87756b1a948aee41253b9507c552f31df93bfc`; its merge-SHA CI and local docs
+seal passed. No source, runtime, table, or data change occurred.
 
 ## Snapshot-membership POC gate
 
@@ -295,17 +304,18 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** independent review of the Replay & As-Of implementation-plan
-candidate.
+**Current NEXT:** a separately reviewed Slice 1 — Pure Replay Core
+implementation task.
 
-This candidate plans exact module responsibility, availability-marker
-failure/reconciliation, recorder composition, disposable QuestDB slices, and a
-test matrix. It does not authorize production Replay implementation, a
-production availability table, canonical activation, Canonical Dataset,
+`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_1_IMPLEMENTATION = YES` means prerequisite
+authorities are closed; it does not mean Slice 1 is implemented. Slice 1 may
+only implement the provider-neutral core planned in `implementation-plan.md`.
+It does not authorize Slice 2, Slice 3, Slice 4, availability production
+storage, recorder deployment, canonical activation, Canonical Dataset,
 Model/training, or Trading work.
 
 `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because Replay & As-Of
 contract authority is FINAL CLOSED, availability-mechanism fit preparation is
 COMPLETED, and the required snapshot-membership POC gate is FINAL CLOSED and
-accepted. It authorizes this candidate's independent review only, not
-implementation.
+accepted. The implementation-plan authority is now FINAL CLOSED; Slice 1 still
+requires its own reviewed implementation task.
