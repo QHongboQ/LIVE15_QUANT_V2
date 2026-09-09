@@ -65,6 +65,8 @@ definition**. `REPLAY_AS_OF_ENGINEERING_IMPLEMENTATION = FINAL CLOSED` at merge
 `306924cae59dc5a2ec9f5737e7c4103a0c5e7227`.
 `CANONICAL_DATASET = CURRENT NEXT / UNIMPLEMENTED`.
 `SAFE_TO_BEGIN_CANONICAL_DATASET_CONTRACT_DEFINITION = YES`.
+`CANONICAL_DATASET_CONTRACT = CANDIDATE / PENDING REVIEW`.
+`CANONICAL_DATASET_IMPLEMENTATION = NOT IMPLEMENTED / NOT AUTHORIZED`.
 
 The bounded next task is contract/responsibility definition only: determine
 responsibility and non-responsibility; input authority from final Replay and
