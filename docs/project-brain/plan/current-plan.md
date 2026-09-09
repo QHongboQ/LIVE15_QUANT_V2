@@ -34,17 +34,20 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   TruthDecision history is limited to the approved single-writer constraint;
   concurrent `decide()` and multi-process/multi-writer authority are not
   supported. Canonical TruthDecision-table creation and canonical runtime
-  activation remain NOT AUTHORIZED / NOT PERFORMED. Replay & As-Of, Canonical
-  Dataset, Model, Trading, and broad Operations functionality remain
-  unimplemented.
+  activation remain NOT AUTHORIZED / NOT PERFORMED. Replay & As-Of contract
+  authority is a DRAFT CANDIDATE pending independent review; its implementation
+  is NOT IMPLEMENTED. Canonical Dataset, Model, Trading, and broad Operations
+  functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of authority / planning preparation**.
-This is planning and authority preparation only: it does not authorize Replay
-implementation, runtime deployment, Canonical Dataset work, Model/training
-work, or Trading work. Replay & As-Of requires its own contract/plan
-authorization before code. Canonical runtime activation remains unauthorized.
+Current NEXT: **Data System → Replay & As-Of contract independent review**.
+The candidate contract defines a strict two-dimensional As-Of authority but
+does not authorize Replay implementation, runtime deployment, Canonical
+Dataset work, Model/training work, or Trading work. After contract closure, the
+next gate is Replay & As-Of implementation-plan / availability-mechanism fit
+preparation only; code remains unauthorized. Canonical runtime activation
+remains unauthorized.
