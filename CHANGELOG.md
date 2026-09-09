@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-1-FINAL-STATUS-CLOSURE-001
+
+**Change:** Closed Replay & As-Of Slice 1 Pure Replay Core as FINAL CLOSED.
+
+**Evidence:** PR #46's first head
+`e2e0426628e5999733ee678729c350f6a582899f` required changes; corrected
+approved head `9779c99ef79f1815ee5c4d51cad225599a94d120` passed ChatGPT
+exact-head review and CI. Normal merge
+`62f8c2f672ca3627d9690727ff47b80d805266d5` has parents
+`fe097c1a5d112619f3949a92a341604f1760072b` and
+`9779c99ef79f1815ee5c4d51cad225599a94d120`; merge-SHA CI and the merged-main
+technical seal passed, and remote branches are main-only.
+
+**Engineering result:** A request-bounded provider-neutral Replay core with
+deterministic snapshot/cursor mechanics, complete error taxonomy, keyset
+pagination, and deterministic exclusions is merged.
+
+**Safety / next:** No Slice 2, QuestDB availability storage, Recorder
+composition, canonical runtime, table, or production-data change occurred.
+Slice 2 — Availability Support remains separately reviewed implementation work.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SLICE-1-PURE-CORE-REMOTE-REVIEW-FIX-001
 
 **Review result:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head

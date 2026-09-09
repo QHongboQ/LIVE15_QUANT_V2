@@ -3,10 +3,15 @@
 ## Status and responsibility
 
 **Contract authority:** FINAL CLOSED.
-**Implementation:** NOT IMPLEMENTED.
 **Implementation-plan authority:** FINAL CLOSED.
+**Implementation:** IN PROGRESS / PARTIALLY IMPLEMENTED.
+**Slice 1 — Pure Replay Core:** FINAL CLOSED.
+**Slice 2 — Availability Support:** NOT IMPLEMENTED.
+**Slice 3 — QuestDB Replay Source:** NOT IMPLEMENTED.
+**Slice 4 — Recorder Composition:** NOT IMPLEMENTED.
 **Availability-mechanism fit preparation:** COMPLETED.
-**Availability mechanism implementation:** NOT IMPLEMENTED.
+**Availability production implementation:** NOT IMPLEMENTED.
+**Recorder production composition:** NOT IMPLEMENTED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
 DDL and production activation remain undecided and unauthorized. The candidate
 direction is Replay-owned availability support observed and recorded from upper
@@ -29,6 +34,28 @@ re-audit and exact-head CI. Normal merge
 `752c57e3c262e006ff127f1436e435d40376d7ee` and
 `af87756b1a948aee41253b9507c552f31df93bfc`; its merge-SHA CI and local docs
 seal passed. No source, runtime, table, or data change occurred.
+
+**Slice 1 closure evidence:** PR #46's initial reviewed head
+`e2e0426628e5999733ee678729c350f6a582899f` received ChatGPT
+`CHANGES_REQUIRED`. Corrected approved head
+`9779c99ef79f1815ee5c4d51cad225599a94d120` passed ChatGPT exact-head
+re-audit and Ubuntu, Windows, and CI Gate checks. PR #46 merged normally as
+`62f8c2f672ca3627d9690727ff47b80d805266d5` with parents
+`fe097c1a5d112619f3949a92a341604f1760072b` and
+`9779c99ef79f1815ee5c4d51cad225599a94d120`; its merge-SHA CI and exact-merge
+technical seal passed. No QuestDB, runtime, table, or data change occurred.
+
+**Accepted Slice 1 engineering result:** provider-neutral immutable request and
+view models; the complete FINAL CLOSED error vocabulary; deterministic request
+and source-snapshot identities; independent selection and ordering; ARRIVAL /
+EVENT semantics and deterministic ARRIVAL / STRICT_EVENT ordering; bounded
+two-dimensional availability qualification and deterministic exclusions; a
+request-bounded `ReplayCandidateScope` and narrow `ReplaySource`; in-memory
+support; strict Cursor V1 structural validation with distinct request/snapshot
+failures; lexicographic keyset pagination without `OFFSET`; and
+`COMPLETENESS_STATE = NOT_ASSERTED`. The reviewed corrections established the
+request-bounded source seam, strict cursor schema, deterministic exclusions,
+and empty-availability-reference fail-closed behavior.
 
 ## Snapshot-membership POC gate
 
@@ -304,18 +331,17 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** a separately reviewed Slice 1 — Pure Replay Core
+**Current NEXT:** a separately reviewed Slice 2 — Availability Support
 implementation task.
 
-`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_1_IMPLEMENTATION = YES` means prerequisite
-authorities are closed; it does not mean Slice 1 is implemented. Slice 1 may
-only implement the provider-neutral core planned in `implementation-plan.md`.
-It does not authorize Slice 2, Slice 3, Slice 4, availability production
-storage, recorder deployment, canonical activation, Canonical Dataset,
+`SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_2_IMPLEMENTATION = YES` means the Slice 1
+prerequisite and contract/plan authorities are closed. It does not implement or
+authorize Slice 2 outside its own separately reviewed task, and it does not
+authorize Slice 3, Slice 4, canonical activation, Canonical Dataset,
 Model/training, or Trading work.
 
 `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because Replay & As-Of
 contract authority is FINAL CLOSED, availability-mechanism fit preparation is
 COMPLETED, and the required snapshot-membership POC gate is FINAL CLOSED and
-accepted. The implementation-plan authority is now FINAL CLOSED; Slice 1 still
-requires its own reviewed implementation task.
+accepted. The implementation-plan authority and Slice 1 are FINAL CLOSED;
+Slice 2 remains NOT IMPLEMENTED.
