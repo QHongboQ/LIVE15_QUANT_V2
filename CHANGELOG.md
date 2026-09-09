@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-REMOTE-REVIEW-FIX-001
+
+**Change:** Corrected the snapshot-membership POC after ChatGPT's
+GitHub-visible `CHANGES_REQUIRED` review of head
+`48f56d7751ef02e886bac5fdf1554ad722e6461d`. EVENT_TIME now selects with
+`provider_timestamp` after the qualified-scope null check, all valid recorded
+TruthDecision categories participate in membership, and selection axis is
+independent from output ordering and cursor keys.
+
+**Reason:** The prior POC used arrival time for EVENT_TIME filtering, treated
+semantic categories other than ACCEPTED as ineligible, and represented
+selection and ordering with one overloaded axis. These model defects could
+hide contract violations despite an otherwise viable snapshot approach.
+
+**Validation / result:** A corrected real disposable QuestDB POC passed the
+event-time anti-false-pass window, both cross-combinations of selection and
+ordering, all four valid TruthDecision categories, normal late append and
+recovery, reader recreation, contained task-server restart, and exact keyset
+continuation. The clock rollback adversary again proved
+`max(200, 100 + 1) = 200 <= cutoff 900`; changed membership and duplicate
+physical authority both failed closed. Result:
+`PASS_WITH_FAIL_CLOSED_DRIFT`; clock policy:
+`MEMBERSHIP_FINGERPRINT_FAIL_CLOSED_SUFFICIENT`.
+
+**Safety:** POC-only test and changelog change. The real run used only fresh
+UUID-named task root, ports, tables, and Job Object-contained processes; no
+canonical runtime, service, table, or production data was changed.
+
+**Next:** Keep PR #42 Draft for exact-head ChatGPT POC re-audit. Replay
+implementation planning remains unauthorized.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-001
 
 **Change:** Added one opt-in, disposable Windows QuestDB POC that tests a

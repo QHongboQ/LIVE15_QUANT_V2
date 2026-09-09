@@ -6,6 +6,7 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import json
+import math
 import os
 import shutil
 import socket
@@ -15,7 +16,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from ctypes import wintypes
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Literal
 from urllib.request import urlopen
@@ -27,6 +28,7 @@ import questdb
 from live15_quant_v2.data.asset import AssetId
 from live15_quant_v2.data.data_truth.models import (
     EventIdentity,
+    TradeNotAcceptedReason,
     TruthDecision,
     TruthDecisionCategory,
 )
@@ -485,6 +487,14 @@ def _ns(value: object) -> int | None:
     raise TypeError(f"expected timestamp nanoseconds, got {type(value).__name__}")
 
 
+def _optional_text(value: object) -> str | None:
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    if not isinstance(value, str):
+        raise TypeError("expected optional text")
+    return value
+
+
 @dataclass(frozen=True)
 class _Marker:
     kind: Literal["evidence", "authority"]
@@ -496,11 +506,13 @@ class _Marker:
 @dataclass(frozen=True)
 class _Request:
     request_id: str
-    axis: Literal["arrival", "event"]
+    selection_axis: Literal["arrival_time", "event_time"]
+    ordering: Literal["arrival", "strict_event"]
     window_start_ns: int
     window_end_ns: int
     asset: AssetId
     channel: str | None
+    authority_policy_version: str = _POLICY
 
 
 @dataclass(frozen=True)
@@ -593,7 +605,7 @@ class _SnapshotSource:
         records = _rows(
             self.database,
             "SELECT policy_version, subject_capture_id, category, "
-            "contributing_capture_ids, event_provider, event_source_id, "
+            "contributing_capture_ids, reason, event_provider, event_source_id, "
             f"event_message_type, event_trade_id FROM {self.tables['truth']}",
         )
         grouped: dict[tuple[str, str], list[dict[str, object]]] = defaultdict(list)
@@ -617,8 +629,9 @@ class _SnapshotSource:
                     isinstance(value, str) for value in contributing
                 ):
                     raise TypeError("invalid contributing IDs")
+                reason = _optional_text(row.get("reason"))
                 event_fields = tuple(
-                    row.get(column)
+                    _optional_text(row.get(column))
                     for column in (
                         "event_provider",
                         "event_source_id",
@@ -626,7 +639,7 @@ class _SnapshotSource:
                         "event_trade_id",
                     )
                 )
-                if any(value is None for value in event_fields):
+                if all(value is None for value in event_fields):
                     event = None
                 elif all(isinstance(value, str) for value in event_fields):
                     event = EventIdentity(*event_fields)
@@ -637,7 +650,7 @@ class _SnapshotSource:
                     TruthDecisionCategory(category),
                     key[0],
                     tuple(contributing),
-                    None,
+                    None if reason is None else TradeNotAcceptedReason(reason),
                     event,
                 )
             except (TypeError, ValueError, json.JSONDecodeError) as error:
@@ -687,12 +700,13 @@ class _SnapshotSource:
                 request.channel is not None and fact.channel != request.channel
             ):
                 continue
-            decision = decisions.get((_POLICY, capture_id))
+            decision = decisions.get((request.authority_policy_version, capture_id))
             evidence_marker = markers.get(("evidence", None, capture_id))
-            authority_marker = markers.get(("authority", _POLICY, capture_id))
+            authority_marker = markers.get(
+                ("authority", request.authority_policy_version, capture_id)
+            )
             if (
                 decision is None
-                or decision.category is not TruthDecisionCategory.ACCEPTED
                 or decision.subject_capture_id != capture_id
                 or evidence_marker is None
                 or authority_marker is None
@@ -704,33 +718,43 @@ class _SnapshotSource:
             if facts.get(capture_id) != fact:
                 raise _SourceUnavailable("configured evidence read is not exact")
             qualified.append(fact)
-        if request.axis == "event" and any(
+        if request.selection_axis == "event_time" and any(
             fact.provider_timestamp is None for fact in qualified
         ):
             raise _UnsupportedEventTime("qualified evidence has null provider timestamp")
         selected = [
             fact
             for fact in qualified
-            if request.window_start_ns <= fact.received_timestamp < request.window_end_ns
+            if request.window_start_ns
+            <= self._selection_timestamp(request.selection_axis, fact)
+            < request.window_end_ns
         ]
-        return tuple(sorted(selected, key=lambda fact: self._key(request.axis, fact)))
+        if request.ordering == "strict_event" and any(
+            fact.provider_timestamp is None for fact in selected
+        ):
+            raise _UnsupportedEventTime("selected evidence has null provider timestamp")
+        return tuple(sorted(selected, key=lambda fact: self._key(request.ordering, fact)))
 
     def fingerprint(self, request: _Request, cutoff_ns: int) -> tuple[str, tuple[CaptureFact, ...]]:
         membership = self.membership(request, cutoff_ns)
         payload = {
             "asset": request.asset.value,
-            "authority_policy_version": _POLICY,
+            "authority_policy_version": request.authority_policy_version,
             "availability_source_authority_identity": self.tables["availability"],
             "configured_channel": request.channel,
             "cutoff_ns": cutoff_ns,
             "evidence_source_authority_identity": self.tables["evidence"],
             "ordering_rule_version": self.ordering_version,
+            "ordering": request.ordering,
             "scheme_version": self.scheme_version,
-            "selection_axis": request.axis,
+            "selection_axis": request.selection_axis,
             "selection_window_ns": [request.window_start_ns, request.window_end_ns],
             "sorted_eligible_semantic_membership_keys": [
-                [_POLICY, fact.capture_id]
-                for fact in sorted(membership, key=lambda fact: (_POLICY, fact.capture_id))
+                [request.authority_policy_version, fact.capture_id]
+                for fact in sorted(
+                    membership,
+                    key=lambda fact: (request.authority_policy_version, fact.capture_id),
+                )
             ],
             "truth_decision_source_authority_identity": self.tables["truth"],
         }
@@ -738,8 +762,19 @@ class _SnapshotSource:
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest(), membership
 
     @staticmethod
-    def _key(axis: Literal["arrival", "event"], fact: CaptureFact) -> tuple[int | str, ...]:
-        if axis == "arrival":
+    def _selection_timestamp(
+        selection_axis: Literal["arrival_time", "event_time"], fact: CaptureFact
+    ) -> int:
+        if selection_axis == "arrival_time":
+            return fact.received_timestamp
+        assert fact.provider_timestamp is not None
+        return fact.provider_timestamp
+
+    @staticmethod
+    def _key(
+        ordering: Literal["arrival", "strict_event"], fact: CaptureFact
+    ) -> tuple[int | str, ...]:
+        if ordering == "arrival":
             return (fact.received_timestamp, fact.capture_id)
         assert fact.provider_timestamp is not None
         return (fact.provider_timestamp, fact.received_timestamp, fact.capture_id)
@@ -748,7 +783,7 @@ class _SnapshotSource:
         snapshot_id, membership = self.fingerprint(request, cutoff_ns)
         page = membership[:size]
         cursor = (
-            _Cursor(request.request_id, snapshot_id, self._key(request.axis, page[-1]))
+            _Cursor(request.request_id, snapshot_id, self._key(request.ordering, page[-1]))
             if page and len(page) < len(membership)
             else None
         )
@@ -763,11 +798,13 @@ class _SnapshotSource:
         if snapshot_id != cursor.snapshot_id:
             raise _SnapshotMismatch("SOURCE_SNAPSHOT_IDENTITY mismatch")
         page = tuple(
-            fact for fact in membership if self._key(request.axis, fact) > cursor.last_key
+            fact for fact in membership if self._key(request.ordering, fact) > cursor.last_key
         )[:size]
         next_cursor = (
-            _Cursor(request.request_id, snapshot_id, self._key(request.axis, page[-1]))
-            if page and self._key(request.axis, page[-1]) != self._key(request.axis, membership[-1])
+            _Cursor(request.request_id, snapshot_id, self._key(request.ordering, page[-1]))
+            if page
+            and self._key(request.ordering, page[-1])
+            != self._key(request.ordering, membership[-1])
             else None
         )
         return _Page(tuple(fact.capture_id for fact in page), next_cursor)
@@ -791,7 +828,7 @@ def _create_tables(server: _TaskQuestDB) -> dict[str, str]:
     server.database.execute(
         f"CREATE TABLE {tables['truth']} (policy_version VARCHAR, "
         "subject_capture_id VARCHAR, category VARCHAR, contributing_capture_ids VARCHAR, "
-        "event_provider VARCHAR, event_source_id VARCHAR, event_message_type VARCHAR, "
+        "reason VARCHAR, event_provider VARCHAR, event_source_id VARCHAR, event_message_type VARCHAR, "
         "event_trade_id VARCHAR, physical_written_at TIMESTAMP_NS) "
         "TIMESTAMP(physical_written_at) PARTITION BY DAY WAL"
     )
@@ -821,14 +858,26 @@ def _fact(capture_id: str, *, received: int, provider: int | None, channel: str)
     )
 
 
-def _accepted(fact: CaptureFact) -> TruthDecision:
+def _decision(
+    fact: CaptureFact, category: TruthDecisionCategory = TruthDecisionCategory.ACCEPTED
+) -> TruthDecision:
+    reason = (
+        TradeNotAcceptedReason.INVALID_TRADE_EVIDENCE
+        if category is TruthDecisionCategory.NOT_ACCEPTED
+        else None
+    )
+    event = (
+        None
+        if category is TruthDecisionCategory.NOT_ACCEPTED
+        else EventIdentity("kalshi", "KXBTC", "trade", f"trade-{fact.capture_id}")
+    )
     return TruthDecision(
         fact.capture_id,
-        TruthDecisionCategory.ACCEPTED,
+        category,
         _POLICY,
         (fact.capture_id,),
-        None,
-        EventIdentity("kalshi", "KXBTC", "trade", f"trade-{fact.capture_id}"),
+        reason,
+        event,
     )
 
 
@@ -867,6 +916,7 @@ def _append_decision(
             "contributing_capture_ids": json.dumps(
                 decision.contributing_capture_ids, separators=(",", ":")
             ),
+            "reason": None if decision.reason is None else decision.reason.value,
             "event_provider": None if event is None else event.provider,
             "event_source_id": None if event is None else event.source_id,
             "event_message_type": None if event is None else event.message_type,
@@ -906,9 +956,12 @@ def _append_eligible(
     *,
     available_at: int,
     written_at: int,
+    category: TruthDecisionCategory = TruthDecisionCategory.ACCEPTED,
 ) -> None:
     _append_fact(server, tables["evidence"], fact)
-    _append_decision(server, tables["truth"], _accepted(fact), written_at=written_at)
+    _append_decision(
+        server, tables["truth"], _decision(fact, category), written_at=written_at
+    )
     _append_marker(
         server,
         tables["availability"],
@@ -945,16 +998,51 @@ def test_snapshot_membership_pagination_poc() -> None:
         _append_eligible(server, tables, a, available_at=100, written_at=101)
         _append_eligible(server, tables, b, available_at=100, written_at=103)
         _append_fact(server, tables["evidence"], u)
-        _append_decision(server, tables["truth"], _accepted(u), written_at=105)
+        _append_decision(server, tables["truth"], _decision(u), written_at=105)
         _append_eligible(server, tables, null_event, available_at=100, written_at=107)
+        category_facts = (
+            (_fact("CATEGORY_ACCEPTED", received=600, provider=61, channel="categories"), TruthDecisionCategory.ACCEPTED),
+            (_fact("CATEGORY_DUPLICATE", received=601, provider=62, channel="categories"), TruthDecisionCategory.DUPLICATE),
+            (_fact("CATEGORY_CONFLICT", received=602, provider=63, channel="categories"), TruthDecisionCategory.CONFLICT),
+            (_fact("CATEGORY_NOT_ACCEPTED", received=603, provider=64, channel="categories"), TruthDecisionCategory.NOT_ACCEPTED),
+        )
+        for index, (fact, category) in enumerate(category_facts, start=1):
+            _append_eligible(
+                server,
+                tables,
+                fact,
+                available_at=100,
+                written_at=110 + index * 2,
+                category=category,
+            )
 
-        request = _Request("page-request-1", "arrival", 400, 700, AssetId.BTC, "trade")
+        request = _Request(
+            "page-request-1", "arrival_time", "arrival", 400, 700, AssetId.BTC, "trade"
+        )
         source = _SnapshotSource(server.connection_string, tables)
         try:
+            categories_request = _Request(
+                "all-categories", "arrival_time", "arrival", 400, 700, AssetId.BTC, "categories"
+            )
+            assert source.first_page(categories_request, _CUTOFF, size=10).capture_ids == (
+                "CATEGORY_ACCEPTED",
+                "CATEGORY_DUPLICATE",
+                "CATEGORY_CONFLICT",
+                "CATEGORY_NOT_ACCEPTED",
+            )
             page1 = source.first_page(request, _CUTOFF, size=1)
             assert page1.capture_ids == ("A",)
             assert page1.cursor is not None
             assert source.fingerprint(request, _CUTOFF)[1] == (a, b)
+            for changed_request in (
+                replace(request, selection_axis="event_time"),
+                replace(request, ordering="strict_event"),
+                replace(request, window_end_ns=701),
+                replace(request, channel="categories"),
+                replace(request, authority_policy_version="data-truth/other"),
+            ):
+                with pytest.raises(_SnapshotMismatch):
+                    source.next_page(changed_request, _CUTOFF, page1.cursor, size=1)
 
             c_new = _fact("C_NEW", received=510, provider=55, channel="trade")
             _append_eligible(server, tables, c_new, available_at=901, written_at=901)
@@ -995,21 +1083,64 @@ def test_snapshot_membership_pagination_poc() -> None:
             restart_page2 = source.next_page(request, _CUTOFF, page1.cursor, size=1)
             assert restart_page2 == page2
 
-            strict_event = _Request("event-keyset", "event", 400, 700, AssetId.BTC, "trade")
-            event_page = source.first_page(strict_event, _CUTOFF, size=1)
+            event_arrival = _Request(
+                "event-arrival", "event_time", "arrival", 40, 70, AssetId.BTC, "trade"
+            )
+            event_page = source.first_page(event_arrival, _CUTOFF, size=1)
             assert event_page.capture_ids == ("A",)
             assert event_page.cursor is not None
-            assert source.next_page(strict_event, _CUTOFF, event_page.cursor, size=1).capture_ids == ("B",)
+            assert source.next_page(event_arrival, _CUTOFF, event_page.cursor, size=1).capture_ids == ("B",)
+            event_strict = _Request(
+                "event-strict", "event_time", "strict_event", 40, 70, AssetId.BTC, "trade"
+            )
+            assert source.first_page(event_strict, _CUTOFF, size=10).capture_ids == ("A", "B")
+            assert source.fingerprint(event_arrival, _CUTOFF)[0] != source.fingerprint(
+                event_strict, _CUTOFF
+            )[0]
+            assert source.first_page(
+                _Request(
+                    "event-discriminator", "event_time", "arrival", 400, 700, AssetId.BTC, "trade"
+                ),
+                _CUTOFF,
+                size=10,
+            ).capture_ids == ()
+            assert source.fingerprint(event_arrival, _CUTOFF)[0] != source.fingerprint(
+                _Request(
+                    "arrival-selection-binding",
+                    "arrival_time",
+                    "arrival",
+                    40,
+                    70,
+                    AssetId.BTC,
+                    "trade",
+                ),
+                _CUTOFF,
+            )[0]
+
+            arrival_strict_event = _Request(
+                "arrival-strict-event", "arrival_time", "strict_event", 400, 700, AssetId.BTC, "trade"
+            )
+            strict_event_page = source.first_page(arrival_strict_event, _CUTOFF, size=1)
+            assert strict_event_page.capture_ids == ("A",)
+            assert strict_event_page.cursor is not None
+            assert source.next_page(
+                arrival_strict_event, _CUTOFF, strict_event_page.cursor, size=1
+            ).capture_ids == ("B",)
 
             arrival_null = _Request(
-                "arrival-null", "arrival", 1_000, 2_000, AssetId.BTC, "arrival-null"
+                "arrival-null", "arrival_time", "arrival", 1_000, 2_000, AssetId.BTC, "arrival-null"
             )
             assert source.first_page(arrival_null, _CUTOFF, size=1).capture_ids == ("N",)
             event_null = _Request(
-                "event-null", "event", 1_000, 1_200, AssetId.BTC, "arrival-null"
+                "event-null", "event_time", "arrival", 1_000, 1_200, AssetId.BTC, "arrival-null"
             )
             with pytest.raises(_UnsupportedEventTime):
                 source.first_page(event_null, _CUTOFF, size=1)
+            strict_event_null = _Request(
+                "strict-event-null", "arrival_time", "strict_event", 1_000, 2_000, AssetId.BTC, "arrival-null"
+            )
+            with pytest.raises(_UnsupportedEventTime):
+                source.first_page(strict_event_null, _CUTOFF, size=1)
 
             # Explicit rollback adversary: a last-marker floor alone permits 200 <= C.
             last_marker, bind_wall_time, rolled_back_now = 100, 1_000, 200
@@ -1021,7 +1152,7 @@ def test_snapshot_membership_pagination_poc() -> None:
             with pytest.raises(_SnapshotMismatch):
                 source.next_page(request, _CUTOFF, page1.cursor, size=1)
 
-            _append_decision(server, tables["truth"], _accepted(b), written_at=905)
+            _append_decision(server, tables["truth"], _decision(b), written_at=905)
             with pytest.raises(_SourceUnavailable, match="ambiguous physical TruthDecision"):
                 source.next_page(request, _CUTOFF, page1.cursor, size=1)
 
