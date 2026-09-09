@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-CONTRACT-FINAL-STATUS-CLOSURE-001
+
+**Change:** Closed Replay & As-Of contract authority as FINAL CLOSED. The
+implementation remains NOT IMPLEMENTED, its availability evidence mechanism
+remains NOT SELECTED / NOT IMPLEMENTED, and canonical activation remains NOT
+AUTHORIZED.
+
+**Reason:** The required contract lifecycle completed: PR #40's first reviewed
+head required changes; corrected reviewed head
+`a838ebfd6d0bd9cc427e0ec90ce08c952d794d61` passed ChatGPT re-audit and
+exact-head CI; normal merge
+`528815ef2883b3757515b9b9d8e3dcadc92981b6` had the exact authorized parents;
+merge-SHA Ubuntu, Windows, and CI Gate checks passed; and the local docs seal
+passed.
+
+**Validation / evidence:** PR #40 contains status/contract documentation only.
+No source, test, configuration, dependency, canonical runtime/table/data, or
+production change occurred; remote branch state is main only.
+
+**Next:** Data System → Replay & As-Of implementation-plan /
+availability-mechanism fit preparation only. This is planning and upstream-fit
+work only; it does not authorize Replay implementation, availability storage,
+Canonical Dataset, Model/training, or Trading work.
+
+**Safety:** No Replay implementation, availability storage, canonical
+runtime/table/data change, Canonical Dataset, Model/training, or Trading work
+occurred.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-CONTRACT-REMOTE-REVIEW-FIX-001
 
 **Change:** Corrected the Replay & As-Of contract after independent

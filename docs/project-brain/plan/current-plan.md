@@ -35,8 +35,10 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   concurrent `decide()` and multi-process/multi-writer authority are not
   supported. Canonical TruthDecision-table creation and canonical runtime
   activation remain NOT AUTHORIZED / NOT PERFORMED. Replay & As-Of contract
-  authority is a DRAFT CANDIDATE pending independent review; its implementation
-  is NOT IMPLEMENTED. Canonical Dataset, Model, Trading, and broad Operations
+  authority = FINAL CLOSED following PR #40 normal merge
+  `528815ef2883b3757515b9b9d8e3dcadc92981b6`; its implementation is NOT
+  IMPLEMENTED, and its availability evidence mechanism is NOT SELECTED / NOT
+  IMPLEMENTED. Canonical Dataset, Model, Trading, and broad Operations
   functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
@@ -44,10 +46,9 @@ implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of contract independent review**.
-The candidate contract defines a strict two-dimensional As-Of authority but
-does not authorize Replay implementation, runtime deployment, Canonical
-Dataset work, Model/training work, or Trading work. After contract closure, the
-next gate is Replay & As-Of implementation-plan / availability-mechanism fit
-preparation only; code remains unauthorized. Canonical runtime activation
-remains unauthorized.
+Current NEXT: **Data System → Replay & As-Of implementation-plan /
+availability-mechanism fit preparation**. This is authority, planning, and
+upstream-fit work only. No production Replay code is authorized. Availability
+mechanism selection/implementation, runtime deployment, Canonical Dataset
+work, Model/training work, and Trading work remain unauthorized. Canonical
+runtime activation remains unauthorized.
