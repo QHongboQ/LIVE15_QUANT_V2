@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-CONTRACT-DRAFT-001
+
+**Change:** Added Replay & As-Of as a direct Data System child and drafted its
+bounded contract authority. The draft defines historical evidence replay,
+recorded TruthDecision authority replay, strict two-dimensional As-Of
+qualification, deterministic ordering, paired output, provenance, and an
+explicit NOT_ASSERTED completeness state.
+
+**Reason:** The prior authority preparation identified that exact historical
+system-knowledge reconstruction requires separately recorded physical evidence
+availability and recorded authority availability. The existing timestamps do
+not supply either semantics, so this contract records the boundary without
+reinterpreting them or selecting an availability storage mechanism.
+
+**Validation / result:** Documentation-only candidate. `git diff --check` and
+the targeted semantic-contradiction audit are required before publication.
+Replay implementation, availability-ledger implementation, canonical runtime
+or table activation, and canonical dataset work remain NOT AUTHORIZED.
+
+**Commit / PR:** Contract draft commit and Draft PR pending independent review.
+
+**Next:** Independent review of the Replay & As-Of contract. After contract
+closure, prepare only the implementation plan and availability-mechanism fit;
+no implementation code is authorized by this entry.
+
+**Safety:** No source, test, dependency, CI, runtime, canonical data/table,
+service, model, or trading change occurred.
+
 ## 2026-09-08 — LIVE15-V2-DATA-TRUTH-SLICE-2-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed the Data Truth Slice 2 Persistent History implementation as
