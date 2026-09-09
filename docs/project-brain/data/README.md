@@ -10,7 +10,7 @@ Data System
 ├─ Market Ingress — FINAL CLOSED
 ├─ Storage — FINAL CLOSED
 ├─ Data Truth — FINAL CLOSED
-├─ Replay & As-Of — SLICES 1–2 FINAL CLOSED; IMPLEMENTATION IN PROGRESS
+├─ Replay & As-Of — SLICES 1–3 FINAL CLOSED; IMPLEMENTATION IN PROGRESS
 └─ Canonical Dataset — FUTURE / UNIMPLEMENTED
 ```
 
@@ -20,8 +20,8 @@ Boundary, and Durable Persistence](storage/README.md) responsibilities.
 Data Truth contract and engineering implementation authority are FINAL CLOSED
 after Slice 1, the accepted reconciliation POC, and Slice 2 Persistent History
 closure. Replay & As-Of contract authority and implementation-plan authority
-are FINAL CLOSED; Slices 1–2 are FINAL CLOSED; overall Replay implementation
-is IN PROGRESS; and Slices 3–4 remain NOT IMPLEMENTED. It owns
+are FINAL CLOSED; Slices 1–3 are FINAL CLOSED; Slice 4 is NOT IMPLEMENTED; and
+overall Replay implementation is IN PROGRESS. It owns
 historical evidence replay, recorded-authority replay, and strict bounded
 As-Of views; it does not own transport replay, physical replay, ingress
 recovery, or Data Truth adjudication. Canonical Dataset remains FUTURE /
