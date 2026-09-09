@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-IMPLEMENTATION-PLAN-FINAL-STATUS-CLOSURE-001
+
+**Change:** Closed Replay & As-Of implementation-plan authority as FINAL
+CLOSED.
+
+**Evidence:** PR #44's rejected first head
+`86d51d89f02f7c3bc5e5c15a2260848c8f5d4dfb` was corrected at reviewed head
+`af87756b1a948aee41253b9507c552f31df93bfc`, which passed ChatGPT re-audit and
+exact-head CI. Normal merge `13af6e1cea4c087c547bfc9f6a25311ab6690b6b` has
+parents `752c57e3c262e006ff127f1436e435d40376d7ee` and
+`af87756b1a948aee41253b9507c552f31df93bfc`; merge-SHA CI and local docs seal
+passed, and the remote branch state is main-only.
+
+**Safety:** No implementation, source, test, config, dependency, runtime,
+table, or data change occurred. Replay, availability production, and recorder
+composition remain NOT IMPLEMENTED; canonical activation remains unauthorized.
+
+**Next:** Replay & As-Of Slice 1 — Pure Replay Core implementation, through a
+separately reviewed implementation task.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-IMPLEMENTATION-PLAN-REMOTE-REVIEW-FIX-001
 
 **Change:** Corrected the Replay & As-Of implementation-plan candidate after

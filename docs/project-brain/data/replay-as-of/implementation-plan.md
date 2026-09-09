@@ -2,8 +2,7 @@
 
 ## Status and authority
 
-**Implementation-plan authority:** DRAFT CANDIDATE / PENDING INDEPENDENT
-REVIEW.
+**Implementation-plan authority:** FINAL CLOSED.
 **Implementation:** NOT IMPLEMENTED.
 **Canonical activation:** NOT AUTHORIZED.
 
@@ -12,6 +11,20 @@ implementation convenience conflicts with the contract, implementation must
 change; the contract must not be silently weakened. This plan is the next
 planning gate, not authorization for a source change, a production table, a
 runtime change, Canonical Dataset work, Model/training, or Trading.
+
+### Final-status closure evidence
+
+PR #44's initial reviewed head
+`86d51d89f02f7c3bc5e5c15a2260848c8f5d4dfb` received ChatGPT
+`CHANGES_REQUIRED`; the corrected approved head
+`af87756b1a948aee41253b9507c552f31df93bfc` passed the ChatGPT exact-head
+re-audit and its Ubuntu, Windows, and CI Gate checks. PR #44 then merged
+normally as `13af6e1cea4c087c547bfc9f6a25311ab6690b6b` with parents
+`752c57e3c262e006ff127f1436e435d40376d7ee` and
+`af87756b1a948aee41253b9507c552f31df93bfc`. Its separate merge-SHA Ubuntu,
+Windows, and CI Gate checks passed; the local docs seal passed; and the remote
+branch state became main-only. No source, runtime, table, or data change
+occurred.
 
 ## Scope, ownership, and seams
 

@@ -41,20 +41,37 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   merge `b76d10b0bc480a7f84a0cd6e97dd896a2f24d124`.
   Availability-mechanism fit preparation is COMPLETED. Replay implementation
   and availability production mechanism implementation remain NOT IMPLEMENTED;
-  implementation-plan authority is DRAFT CANDIDATE / PENDING INDEPENDENT
-  REVIEW, and canonical activation remains NOT AUTHORIZED. Canonical Dataset,
-  Model, Trading, and broad Operations functionality remain unimplemented.
+  recorder production composition remains NOT IMPLEMENTED; implementation-plan
+  authority is FINAL CLOSED following PR #44 normal merge
+  `13af6e1cea4c087c547bfc9f6a25311ab6690b6b`; and canonical activation remains
+  NOT AUTHORIZED. Canonical Dataset, Model, Trading, and broad Operations
+  functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of implementation-plan independent
-review**. `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because
-Replay & As-Of contract authority is FINAL CLOSED, availability-mechanism fit
-preparation is COMPLETED, and the snapshot-membership POC gate is FINAL CLOSED
-/ `PASS_WITH_FAIL_CLOSED_DRIFT`. The candidate is pending independent review;
-production Replay code, production availability storage, runtime deployment,
-canonical activation, Canonical Dataset work, Model/training, and Trading
-remain unauthorized.
+Current NEXT: **Data System → Replay & As-Of → Slice 1 — Pure Replay Core
+implementation**. `SAFE_TO_BEGIN_REPLAY_AS_OF_SLICE_1_IMPLEMENTATION = YES`
+because Replay & As-Of contract authority and implementation-plan authority
+are FINAL CLOSED, availability-mechanism fit preparation is COMPLETED, and the
+snapshot-membership POC gate is FINAL CLOSED /
+`PASS_WITH_FAIL_CLOSED_DRIFT`. This authorizes only a separately reviewed Slice
+1 implementation task; it does not mean Slice 1 is already implemented.
+
+Slice 1 owns only provider-neutral request/result models, validation,
+`REQUEST_IDENTITY`, selection and ordering semantics, keyset mechanics, cursor
+encoding/binding, `SOURCE_SNAPSHOT_IDENTITY` semantics, an in-memory
+source/protocol, and the contract error taxonomy. Its planned files are
+`src/live15_quant_v2/data/replay_as_of/__init__.py`,
+`src/live15_quant_v2/data/replay_as_of/models.py`,
+`src/live15_quant_v2/data/replay_as_of/service.py`, and
+`src/live15_quant_v2/data/replay_as_of/source.py`; planned tests are
+`tests/test_replay_as_of.py` and `tests/test_replay_as_of_architecture.py`.
+
+Slice 1 does not authorize `questdb_source.py`, `availability.py`,
+`questdb_availability.py`, `recorder_composition.py`, QuestDB table creation,
+real availability persistence, Slice 2/3/4, runtime activation, canonical
+activation, availability production storage, recorder deployment, Canonical
+Dataset work, Model/training, or Trading.
