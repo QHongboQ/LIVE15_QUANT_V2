@@ -1,5 +1,42 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SLICE-1-PURE-CORE-REMOTE-REVIEW-FIX-001
+
+**Review result:** ChatGPT recorded `CHANGES_REQUIRED` on reviewed head
+`e2e0426628e5999733ee678729c350f6a582899f`.
+
+**Change:** Added a request-bounded, provider-neutral `ReplayCandidateScope`
+to the source seam; made Cursor V1 schema and field types exact before
+semantic cursor binding checks; canonicalized public exclusions by
+`(capture_id, exclusion_code)`; and fail-closed availability evidence with an
+empty reference.
+
+**Status / safety:** Slice 1 remains an implementation candidate. No Slice 2
+has started, and this change contains no QuestDB, runtime, table, or data
+change.
+
+**Validation:** Slice 1 and architecture tests, full pytest, Ruff, MyPy, and
+the diff check are required before the same draft PR receives an exact-head
+re-audit.
+
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SLICE-1-PURE-CORE-IMPLEMENTATION-001
+
+**Change:** Created the Slice 1 Replay & As-Of Pure Replay Core implementation
+candidate: provider-neutral request/result models, validation, deterministic
+identity/snapshot/cursor/keyset semantics, a narrow source protocol, and an
+in-memory source with its authorized unit and architecture tests.
+
+**Authority / safety:** Replay & As-Of contract and implementation-plan
+authority remain FINAL CLOSED. This change contains no QuestDB code, no
+availability persistence, no recorder composition, no canonical activation,
+and no Slice 2/3/4 implementation.
+
+**Validation:** Slice 1 tests, architecture tests, Ruff, and MyPy passed
+locally. Independent ChatGPT code review remains required before merge.
+
+**Next:** Review this Slice 1 implementation candidate only; do not begin
+availability support, a QuestDB source, or recorder composition.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-IMPLEMENTATION-PLAN-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed Replay & As-Of implementation-plan authority as FINAL
