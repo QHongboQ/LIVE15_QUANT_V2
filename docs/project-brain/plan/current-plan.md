@@ -51,31 +51,31 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   overall Replay & As-Of engineering implementation are FINAL CLOSED following
   PR #52 normal merge `306924cae59dc5a2ec9f5737e7c4103a0c5e7227`. Production
   Recorder deployment, canonical availability activation, and canonical Replay
-  activation remain NOT AUTHORIZED / NOT PERFORMED. Canonical Dataset is CURRENT
-  NEXT / UNIMPLEMENTED; Model, Trading, and broad
-  Operations functionality remain unimplemented.
+  activation remain NOT AUTHORIZED / NOT PERFORMED. Canonical Dataset contract
+  authority is FINAL CLOSED; its implementation-plan design is CURRENT NEXT /
+  NOT STARTED, while implementation remains NOT AUTHORIZED. Model, Trading,
+  and broad Operations functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Canonical Dataset → Contract / responsibility
-definition**. `REPLAY_AS_OF_ENGINEERING_IMPLEMENTATION = FINAL CLOSED` at merge
+Current NEXT: **Data System → Canonical Dataset → Implementation-plan design**.
+`REPLAY_AS_OF_ENGINEERING_IMPLEMENTATION = FINAL CLOSED` at merge
 `306924cae59dc5a2ec9f5737e7c4103a0c5e7227`.
-`CANONICAL_DATASET = CURRENT NEXT / UNIMPLEMENTED`.
-`SAFE_TO_BEGIN_CANONICAL_DATASET_CONTRACT_DEFINITION = YES`.
-`CANONICAL_DATASET_CONTRACT = CANDIDATE / PENDING REVIEW`.
+`CANONICAL_DATASET_CONTRACT = FINAL CLOSED` at merge
+`3d61a4d8dac4a35c91dec314b5eaeb2098878a6d`.
+`CANONICAL_DATASET_IMPLEMENTATION_PLAN = CURRENT NEXT / NOT STARTED`.
+`SAFE_TO_BEGIN_CANONICAL_DATASET_IMPLEMENTATION_PLAN_DESIGN = YES`.
 `CANONICAL_DATASET_IMPLEMENTATION = NOT IMPLEMENTED / NOT AUTHORIZED`.
+`CANONICAL_DATASET_PHYSICAL_MATERIALIZATION = NOT AUTHORIZED / NOT PERFORMED`.
 
-The bounded next task is contract/responsibility definition only: determine
-responsibility and non-responsibility; input authority from final Replay and
-Data Truth; admissible `TruthDecision` categories and filtering; identity,
-version, and provenance; deterministic research/training materialization;
-strict As-Of behavior; future-information leakage prevention; completeness
-nonclaims; and revision/rebuild behavior. It does not authorize Canonical
-Dataset implementation, canonical Replay/runtime activation, Model/training,
-or Trading.
+The bounded next task is implementation-plan design only. It may plan a future
+implementation against the FINAL CLOSED contract, but does not authorize
+Canonical Dataset source implementation, a physical backend or format,
+materialization, canonical Replay/runtime activation, Model/training, or
+Trading.
 
 `LOCAL_REPLAY_TEST_HYGIENE = PASS_WITH_HYGIENE`.
 `EMPTY_TASK_PYTEST_BASE_RESIDUES = 2`.
