@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-FINAL-STATUS-CLOSURE-001
+
+**Change:** Closed the Replay & As-Of snapshot-membership POC gate as FINAL
+CLOSED with technical result `PASS_WITH_FAIL_CLOSED_DRIFT`.
+
+**Evidence:** PR #42 corrected reviewed head
+`cb1d285a46abb6ba725eaf0a3287a339f85ae76c` passed ChatGPT exact-head
+re-audit and hosted CI; normal merge
+`b76d10b0bc480a7f84a0cd6e97dd896a2f24d124`, merge-SHA CI, and the exact
+merged-main real disposable POC passed. The remote branch state is main only.
+
+**Accepted findings:** Conservative proof time is compatible without claiming
+earliest visibility; evidence proof requires exact immutable CaptureFact
+read-back; DataTruth authority proof is sealed verified return; recovery never
+backdates availability; the marker floor alone is insufficient under clock
+rollback; a canonical fingerprint/recompute/fail-closed candidate preserves
+membership safety; all valid TruthDecision categories remain authority; and
+selection and ordering are independent.
+
+**Safety:** No production Replay implementation, availability storage, runtime,
+table, canonical data, Canonical Dataset, Model/training, or Trading change
+occurred. Task Java process, ports, and root were clean after the real POC.
+
+**Next:** Data System → Replay & As-Of implementation-plan authority drafting
+only. The availability production mechanism remains NOT IMPLEMENTED and
+canonical activation remains unauthorized.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-REMOTE-REVIEW-FIX-001
 
 **Change:** Corrected the snapshot-membership POC after ChatGPT's

@@ -4,9 +4,13 @@
 
 **Contract authority:** FINAL CLOSED.
 **Implementation:** NOT IMPLEMENTED.
-**Implementation plan:** NOT YET AUTHORIZED; the next gate after contract
-closure is implementation-plan / availability-mechanism fit preparation.
-**Availability evidence mechanism:** NOT SELECTED / NOT IMPLEMENTED.
+**Implementation-plan authority:** NOT YET CLOSED. Drafting is now safe, but
+plan drafting does not authorize implementation.
+**Availability mechanism implementation:** NOT IMPLEMENTED.
+**Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
+DDL and production activation remain undecided and unauthorized. The candidate
+direction is Replay-owned availability support observed and recorded from upper
+Data System composition through sealed public Storage/Data Truth seams.
 **Canonical activation:** NOT AUTHORIZED.
 
 **Closure evidence:** PR #40 first reviewed head
@@ -15,6 +19,40 @@ closure is implementation-plan / availability-mechanism fit preparation.
 exact-head CI. Normal merge `528815ef2883b3757515b9b9d8e3dcadc92981b6` and
 its Ubuntu, Windows, and CI Gate checks passed; the local docs seal passed. No
 runtime, code, or data change occurred.
+
+## Snapshot-membership POC gate
+
+**Gate:** FINAL CLOSED.
+**Technical result:** `PASS_WITH_FAIL_CLOSED_DRIFT`.
+**Clock result:** `LAST_MARKER_FLOOR_ALONE_INSUFFICIENT`.
+
+**Evidence:** PR #42's first head
+`48f56d7751ef02e886bac5fdf1554ad722e6461d` required changes; corrected
+reviewed head `cb1d285a46abb6ba725eaf0a3287a339f85ae76c` passed the ChatGPT
+exact-head re-audit and hosted CI. Normal merge
+`b76d10b0bc480a7f84a0cd6e97dd896a2f24d124`, its merge-SHA CI, and an
+exact-merged-main real disposable POC all passed. The POC left no task
+Java-process, listener-port, or root residue and made no canonical runtime,
+service, table, or data change.
+
+**Accepted planning candidate:** deterministic canonical membership
+serialization plus a cryptographic fingerprint of source authority identities
+and fixed request/cutoff semantics; recompute it after reader or task-server
+restart and fail closed if membership drifts. This is sufficient input to
+implementation-plan design only. It does not implement a production snapshot
+mechanism or select production physical DDL.
+
+**Accepted findings:** conservative proof time need not claim earliest
+visibility; evidence proof is exact public immutable `CaptureFact` read-back,
+not `PersistenceStatus` alone; authority proof is successful
+`DataTruth.decide(fact)` return after sealed same-authority verification; and
+the semantic availability keys are `capture_id` and
+`(policy_version, subject_capture_id)`. Late recovery records a fresh later
+proof time and never backdates it. V1 planning assumes one ordered availability
+writer, with neither distributed coordination nor last-write-wins history.
+All valid recorded `TruthDecision` categories are Replay authority, while
+Canonical Dataset filtering remains future/out of scope. Selection and ordering
+remain independent.
 
 Replay & As-Of is a direct Data System child. It owns a research-facing,
 read-only projection of already persisted immutable evidence and already
@@ -256,10 +294,16 @@ Dataset is a future consumer, not an owner or prerequisite.
 
 ## Current next
 
-**Current NEXT:** Replay & As-Of implementation-plan / availability-mechanism
-fit preparation.
+**Current NEXT:** Data System → Replay & As-Of implementation-plan authority
+drafting.
 
-This NEXT authorizes planning and upstream-fit investigation only. It does not
-authorize Replay implementation. Implementation code, availability storage,
-canonical runtime or table activation, and Canonical Dataset work require
-separate authorization.
+This NEXT authorizes implementation-plan documentation, exact module
+responsibility, availability-marker failure/reconciliation, recorder
+composition, disposable QuestDB implementation-slice, and test-matrix
+planning. It does not authorize production Replay implementation, a production
+availability table, canonical activation, Canonical Dataset, Model/training,
+or Trading work.
+
+`SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because the contract,
+availability fit, and required snapshot-membership POC gate are FINAL CLOSED.
+That status authorizes plan drafting only, not implementation.

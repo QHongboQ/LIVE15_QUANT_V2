@@ -36,19 +36,25 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   supported. Canonical TruthDecision-table creation and canonical runtime
   activation remain NOT AUTHORIZED / NOT PERFORMED. Replay & As-Of contract
   authority = FINAL CLOSED following PR #40 normal merge
-  `528815ef2883b3757515b9b9d8e3dcadc92981b6`; its implementation is NOT
-  IMPLEMENTED, and its availability evidence mechanism is NOT SELECTED / NOT
-  IMPLEMENTED. Canonical Dataset, Model, Trading, and broad Operations
-  functionality remain unimplemented.
+  `528815ef2883b3757515b9b9d8e3dcadc92981b6`. Its snapshot-membership POC
+  gate is FINAL CLOSED / `PASS_WITH_FAIL_CLOSED_DRIFT` following PR #42 normal
+  merge `b76d10b0bc480a7f84a0cd6e97dd896a2f24d124`. Replay implementation and
+  availability production mechanism implementation remain NOT IMPLEMENTED;
+  implementation-plan authority is NOT YET CLOSED, and canonical activation
+  remains NOT AUTHORIZED. Canonical Dataset, Model, Trading, and broad
+  Operations functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Replay & As-Of implementation-plan /
-availability-mechanism fit preparation**. This is authority, planning, and
-upstream-fit work only. No production Replay code is authorized. Availability
-mechanism selection/implementation, runtime deployment, Canonical Dataset
-work, Model/training work, and Trading work remain unauthorized. Canonical
-runtime activation remains unauthorized.
+Current NEXT: **Data System → Replay & As-Of implementation-plan authority
+drafting**. `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because the
+contract, availability fit, and snapshot-membership POC gate are FINAL CLOSED.
+This authorizes implementation-plan documentation, module and recorder
+composition planning, availability-marker failure/reconciliation planning,
+disposable QuestDB implementation-slice planning, and test-matrix planning
+only. Production Replay code, production availability storage, runtime
+deployment, canonical activation, Canonical Dataset work, Model/training, and
+Trading remain unauthorized.
