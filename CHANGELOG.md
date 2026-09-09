@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-ENGINEERING-FINAL-STATUS-REMOTE-REVIEW-FIX-001
+
+**Reviewed head:** `7229f9a9a7ae12430e3511e79050760df7f5927b` received
+ChatGPT `CHANGES_REQUIRED`.
+
+**Fix:** Removed the stale statement that the Replay implementation plan is the
+next planning gate and clarified that FINAL CLOSED applies to Replay engineering
+implementation while canonical activation remains unauthorized.
+
+**Safety:** No source, test, runtime, data, or activation change occurred.
+Canonical Dataset remains CURRENT NEXT / UNIMPLEMENTED.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-4-AND-ENGINEERING-FINAL-STATUS-CLOSURE-001
 
 **Status:** Closed Slice 4 Recorder Composition and the overall Replay & As-Of

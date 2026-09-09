@@ -4,7 +4,7 @@
 
 **Contract authority:** FINAL CLOSED.
 **Implementation-plan authority:** FINAL CLOSED.
-**Implementation:** FINAL CLOSED.
+**Engineering implementation:** FINAL CLOSED.
 **Slice 1 — Pure Replay Core:** FINAL CLOSED.
 **Slice 2 — Availability Support:** FINAL CLOSED.
 **Slice 3 — QuestDB Replay Source:** FINAL CLOSED.

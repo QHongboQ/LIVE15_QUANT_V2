@@ -3,14 +3,14 @@
 ## Status and authority
 
 **Implementation-plan authority:** FINAL CLOSED.
-**Implementation:** FINAL CLOSED.
+**Engineering implementation:** FINAL CLOSED.
 **Canonical activation:** NOT AUTHORIZED / NOT PERFORMED.
 
 The FINAL CLOSED Replay & As-Of contract outranks this plan. If an
 implementation convenience conflicts with the contract, implementation must
-change; the contract must not be silently weakened. This plan is the next
-planning gate, not authorization for a source change, a production table, a
-runtime change, Canonical Dataset work, Model/training, or Trading.
+change; the contract must not be silently weakened. This plan does not
+authorize production tables/runtime activation, Canonical Dataset
+implementation, Model/training, or Trading.
 
 ### Final-status closure evidence
 
