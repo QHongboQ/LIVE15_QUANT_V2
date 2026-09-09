@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-3-QUESTDB-SOURCE-IMPLEMENTATION-001
+
+**Change:** Added a read-only, explicitly configured QuestDB Replay source
+candidate. It verifies the physical CaptureFact, TruthDecision, and
+Availability schemas; decodes their immutable records; binds deterministic
+source identities without connection details; and provides no schema creation,
+writer, or composition path.
+
+**Safety:** The adapter is not activated in canonical composition and creates
+no canonical table or runtime change. Controlled tests and an opt-in,
+Job-Object-contained UUID-table QuestDB acceptance test cover the candidate;
+Slice 4 Recorder composition remains out of scope.
+
+**Next:** Run the full bounded validation matrix, then obtain independent
+exact-head review before any merge decision.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed the Slice 2 Availability Support engineering implementation
