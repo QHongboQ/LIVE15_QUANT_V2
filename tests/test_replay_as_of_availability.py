@@ -420,6 +420,13 @@ def test_post_barrier_zero_mismatch_exact_duplicate_and_existing_paths_fail_clos
     with pytest.raises(AvailabilitySupportError) as error:
         zero.append(record)
     assert error.value.code is AvailabilitySupportErrorCode.IN_DOUBT
+    row_calls_before_retry = len(zero_sender.row_calls)
+    flush_calls_before_retry = zero_sender.flush_calls
+    with pytest.raises(AvailabilitySupportError) as retry:
+        zero.append(record)
+    assert retry.value.code is AvailabilitySupportErrorCode.IN_DOUBT
+    assert len(zero_sender.row_calls) == row_calls_before_retry
+    assert zero_sender.flush_calls == flush_calls_before_retry
     mismatch = _adapter_for(monkeypatch, _Database(sender=_Sender(), post_visibility_records=[_row(_record(available_at_ns=999))]))
     with pytest.raises(AvailabilitySupportError) as error:
         mismatch.append(record)
