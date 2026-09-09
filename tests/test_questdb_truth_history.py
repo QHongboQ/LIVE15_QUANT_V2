@@ -234,9 +234,20 @@ def _capture(capture_id: str = "capture-1") -> CaptureFact:
     return CaptureFact(capture_id, AssetId.BTC, "kalshi", "KXBTC", "trade", "trade", None, 1, None, None, 2, "market-ingress/v1", "{}")
 
 
-def _history_for(monkeypatch: pytest.MonkeyPatch, database: _Database, hot_store: _HotStore | None = None) -> QuestDBTruthDecisionHistory:
+def _history_for(
+    monkeypatch: pytest.MonkeyPatch,
+    database: _Database,
+    hot_store: _HotStore | None = None,
+    connect_kwargs: list[dict[str, object]] | None = None,
+) -> QuestDBTruthDecisionHistory:
     from live15_quant_v2.data.data_truth import questdb_history
-    monkeypatch.setattr(questdb_history.questdb, "connect", lambda _: database)
+
+    def _connect(_: str, **kwargs: object) -> _Database:
+        if connect_kwargs is not None:
+            connect_kwargs.append(kwargs)
+        return database
+
+    monkeypatch.setattr(questdb_history.questdb, "connect", _connect)
     return QuestDBTruthDecisionHistory("ws::addr=127.0.0.1:9000;", table_name="truth_history_test", hot_store=hot_store or _HotStore(), acknowledgement_timeout_millis=10)
 
 
@@ -249,6 +260,17 @@ def test_subject_lookup_returns_none_when_authority_is_absent(
     history: QuestDBTruthDecisionHistory,
 ) -> None:
     assert history.find_subject_decision("data-truth/v1", "missing") is None
+
+
+def test_connection_disables_auto_flush_for_the_explicit_fsn_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connect_kwargs: list[dict[str, object]] = []
+    history = _history_for(monkeypatch, _Database(), connect_kwargs=connect_kwargs)
+
+    history.find_subject_decision("data-truth/v1", "missing")
+
+    assert connect_kwargs == [{"auto_flush": False}]
 
 
 def test_subject_lookup_decodes_the_exact_stored_decision(monkeypatch: pytest.MonkeyPatch) -> None:

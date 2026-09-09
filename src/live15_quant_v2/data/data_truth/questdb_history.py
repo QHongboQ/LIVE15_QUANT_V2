@@ -205,7 +205,7 @@ class QuestDBTruthDecisionHistory:
 
     def _database_for_use(self) -> questdb.QuestDB:
         if self._database is None:
-            self._database = questdb.connect(self._connection_string)
+            self._database = questdb.connect(self._connection_string, auto_flush=False)
         if not self._schema_ready:
             if not self._table_exists():
                 self._database.execute(self._create_table_sql())

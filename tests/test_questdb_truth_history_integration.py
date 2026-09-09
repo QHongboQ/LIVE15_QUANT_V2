@@ -19,6 +19,9 @@ from uuid import uuid4
 import pytest
 import questdb
 
+if os.name != "nt":
+    pytest.skip("QuestDB TruthDecision integration is Windows-only", allow_module_level=True)
+
 from live15_quant_v2.data.asset import AssetId
 from live15_quant_v2.data.data_truth import (
     DataTruth,
@@ -321,6 +324,13 @@ class _TaskQuestDB:
             self._close_launcher_handles()
             raise
 
+        try:
+            self._wait_until_ready()
+        except BaseException:
+            self._cleanup_contained_processes()
+            raise
+
+    def _wait_until_ready(self) -> None:
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             try:
@@ -342,30 +352,38 @@ class _TaskQuestDB:
         raise RuntimeError("task-owned QuestDB did not become ready")
 
     def stop(self) -> None:
+        self._cleanup_contained_processes()
+
+    def _cleanup_contained_processes(self) -> None:
         self._close_database()
         self._close_job()
-        assert self.launcher is not None
-        assert self.java_handle is not None
         self.lifecycle["job_close_used"] = True
-        self.lifecycle["launcher_exited"] = _wait_for_exit(
-            self.launcher.process, timeout_seconds=15
-        )
-        self.lifecycle["java_exited"] = _wait_for_exit(
-            self.java_handle, timeout_seconds=15
-        )
-        self.lifecycle["all_four_ports_closed"] = _wait_until(
-            lambda: not any(_port_open(port) for port in self.ports.values()),
-            timeout_seconds=10,
-        )
-        assert all(
-            self.lifecycle[key]
-            for key in ("launcher_exited", "java_exited", "all_four_ports_closed")
-        )
-        self._close_java_handle()
-        self._close_launcher_handles()
-        shutil.rmtree(self.root)
-        self.lifecycle["root_delete"] = not self.root.exists()
-        assert self.lifecycle["root_delete"]
+        try:
+            self.lifecycle["launcher_exited"] = (
+                self.launcher is None
+                or _wait_for_exit(self.launcher.process, timeout_seconds=15)
+            )
+            self.lifecycle["java_exited"] = (
+                self.java_handle is None
+                or _wait_for_exit(self.java_handle, timeout_seconds=15)
+            )
+            self.lifecycle["all_four_ports_closed"] = _wait_until(
+                lambda: not any(_port_open(port) for port in self.ports.values()),
+                timeout_seconds=10,
+            )
+            if not all(
+                self.lifecycle[key]
+                for key in ("launcher_exited", "java_exited", "all_four_ports_closed")
+            ):
+                raise RuntimeError("task-owned QuestDB did not stop safely")
+            if self.root.exists():
+                shutil.rmtree(self.root)
+            self.lifecycle["root_delete"] = not self.root.exists()
+            if not self.lifecycle["root_delete"]:
+                raise RuntimeError("task-owned QuestDB root remains after cleanup")
+        finally:
+            self._close_java_handle()
+            self._close_launcher_handles()
 
     def _close_database(self) -> None:
         if self.database is not None:
@@ -392,8 +410,8 @@ class _TaskQuestDB:
 @contextmanager
 def _server(tmp_path: Path) -> Iterator[_TaskQuestDB]:
     server = _TaskQuestDB(tmp_path / f"questdb-{uuid4().hex}")
-    server.start()
     try:
+        server.start()
         yield server
     finally:
         server.stop()
@@ -512,3 +530,26 @@ def test_metadata_conflicts_event_evidence_and_in_doubt_contract(tmp_path: Path)
         assert _count(server, reconciliation_table) == 1
         reconciliation.close()
     _assert_lifecycle(server)
+
+
+def test_post_containment_startup_failure_cleans_task_owned_resources(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    original_wait_until_ready = _TaskQuestDB._wait_until_ready
+
+    def _fail_after_containment(server: _TaskQuestDB) -> None:
+        original_wait_until_ready(server)
+        raise RuntimeError("injected post-containment startup failure")
+
+    monkeypatch.setattr(_TaskQuestDB, "_wait_until_ready", _fail_after_containment)
+    server = _TaskQuestDB(tmp_path / f"questdb-{uuid4().hex}")
+
+    with pytest.raises(RuntimeError, match="injected post-containment"):
+        server.start()
+
+    _assert_lifecycle(server)
+    assert server.database is None
+    assert server.job is None
+    assert server.launcher is None
+    assert server.java_handle is None
+    assert not server.root.exists()
