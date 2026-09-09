@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-2-AVAILABILITY-SUPPORT-IMPLEMENTATION-001
+
+**Change:** Created the Slice 2 Availability Support implementation candidate:
+provider-neutral immutable availability models, narrow recording port and
+writer, conservative monotonic proof clock, no-blind-reappend behavior, and a
+disposable QuestDB availability adapter with WAL enabled and no DEDUP or
+UPSERT.
+
+**Safety:** Task-owned disposable QuestDB acceptance only. No canonical
+runtime, table, or production-data change occurred; Slice 3 and Slice 4 remain
+unauthorized. The production `CLOCK_SAFETY` operational gate remains open.
+
+**Next:** Independent ChatGPT implementation review is required before merge.
+
 ## 2026-09-09 — LIVE15-V2-REPLAY-AS-OF-SLICE-1-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed Replay & As-Of Slice 1 Pure Replay Core as FINAL CLOSED.

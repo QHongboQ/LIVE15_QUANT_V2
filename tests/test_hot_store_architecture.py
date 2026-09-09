@@ -109,6 +109,7 @@ def test_questdb_imports_are_contained_inside_provider_specific_adapters() -> No
 
     assert imports == [
         "src/live15_quant_v2/data/data_truth/questdb_history.py",
+        "src/live15_quant_v2/data/replay_as_of/questdb_availability.py",
         "src/live15_quant_v2/data/storage/durable_persistence/questdb_sf.py",
         "src/live15_quant_v2/data/storage/hot_store/questdb_adapter.py",
     ]
