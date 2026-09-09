@@ -29,7 +29,9 @@ multi-process/multi-writer authority are NOT SUPPORTED.
 
 **Canonical Replay activation:** NOT AUTHORIZED / NOT PERFORMED.
 
-**Canonical Dataset:** CURRENT NEXT / UNIMPLEMENTED.
+**Canonical Dataset contract:** FINAL CLOSED.
+**Canonical Dataset implementation-plan design:** CURRENT NEXT / NOT STARTED.
+**Canonical Dataset implementation:** NOT IMPLEMENTED / NOT AUTHORIZED.
 
 **Model:** UNIMPLEMENTED.
 
@@ -192,10 +194,11 @@ multi-writer authority remain unsupported. Replay & As-Of engineering
 implementation is FINAL CLOSED; canonical Replay/runtime activation remains
 NOT AUTHORIZED / NOT PERFORMED.
 
-Current NEXT is Data System → Canonical Dataset → Contract / responsibility
-definition. Canonical Dataset is CURRENT NEXT / UNIMPLEMENTED.
-`SAFE_TO_BEGIN_CANONICAL_DATASET_CONTRACT_DEFINITION = YES` permits only a
-separately reviewed contract/responsibility-definition task. It does not
-authorize Canonical Dataset implementation, canonical Replay activation,
-canonical TruthDecision activation, production Recorder deployment,
-Model/training, or Trading.
+Current NEXT is Data System → Canonical Dataset → Implementation-plan design.
+Canonical Dataset contract authority is FINAL CLOSED;
+`CANONICAL_DATASET_IMPLEMENTATION_PLAN = CURRENT NEXT / NOT STARTED`.
+`SAFE_TO_BEGIN_CANONICAL_DATASET_IMPLEMENTATION_PLAN_DESIGN = YES` permits
+only a separately reviewed implementation-plan-design task. Canonical Dataset
+implementation remains NOT IMPLEMENTED / NOT AUTHORIZED; this does not
+authorize canonical Replay activation, canonical TruthDecision activation,
+production Recorder deployment, Model/training, or Trading.
