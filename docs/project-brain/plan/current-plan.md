@@ -26,28 +26,25 @@ This document records only approved V2 direction. It is not a V1 roadmap.
 - QuestDB Runtime Platform = FINAL CLOSED. The canonical official QuestDB
   `10.0.1` runtime is operational; independent review, PR #20, hosted CI,
   merge, post-merge CI, and final local seal passed.
-- Data Truth contract authority = FINAL CLOSED. Implementation-plan authority
-  = FINAL CLOSED. Overall implementation remains NOT IMPLEMENTED. The Slice 1
-  semantic library is FINAL CLOSED after PR #33 merge
-  `f80c786307fe5e2c2092a0f2955f62ca03c9c7bb`, merge-SHA hosted CI PASS, and
-  final local seal PASS. It provides no persistent TruthDecision authority.
-  QuestDB TruthDecision-history persistence/reconciliation fit is PROVEN under
-  the approved single-writer constraint: POC PR #36 merged as
-  `249144de204247bd7a0589d8ba67116c48b8dcc7`, its ChatGPT remote review PASS,
-  merge-SHA hosted CI PASS, and merge-SHA local opt-in POC A-L PASS (12
-  passed). The POC gate is FINAL CLOSED / PASS / accepted. Persistent
-  TruthDecision authority remains NOT IMPLEMENTED; Slice 2 remains NOT
-  AUTHORIZED. Replay & As-Of, Canonical Dataset, Model, Trading, and broad
-  Operations functionality remain unimplemented. Canonical runtime activation
-  remains unauthorized.
+- Data Truth contract authority, implementation-plan authority, and engineering
+  implementation are FINAL CLOSED. Slice 1 is FINAL CLOSED; the QuestDB
+  reconciliation POC gate is FINAL CLOSED / PASS / ACCEPTED; and Slice 2
+  Persistent History is FINAL CLOSED following PR #38 merge
+  `abc4bdbd52150ab33ec60c0c6902235042d199f6`. The implemented persistent
+  TruthDecision history is limited to the approved single-writer constraint;
+  concurrent `decide()` and multi-process/multi-writer authority are not
+  supported. Canonical TruthDecision-table creation and canonical runtime
+  activation remain NOT AUTHORIZED / NOT PERFORMED. Replay & As-Of, Canonical
+  Dataset, Model, Trading, and broad Operations functionality remain
+  unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Data Truth Slice 2 authorization preparation**.
-Slice 1 and the QuestDB reconciliation POC gate are FINAL CLOSED. Overall Data
-Truth implementation and persistent TruthDecision authority remain NOT
-IMPLEMENTED. Slice 2 remains NOT AUTHORIZED. Replay & As-Of and Canonical
-Dataset remain unimplemented; canonical runtime activation remains unauthorized.
+Current NEXT: **Data System → Replay & As-Of authority / planning preparation**.
+This is planning and authority preparation only: it does not authorize Replay
+implementation, runtime deployment, Canonical Dataset work, Model/training
+work, or Trading work. Replay & As-Of requires its own contract/plan
+authorization before code. Canonical runtime activation remains unauthorized.

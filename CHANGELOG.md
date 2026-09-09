@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-DATA-TRUTH-SLICE-2-FINAL-STATUS-CLOSURE-001
+
+**Change:** Closed the Data Truth Slice 2 Persistent History implementation as
+FINAL CLOSED under the approved single-writer constraint.
+
+**Reason:** The complete required lifecycle passed: independent review of
+corrected head `8d43a2b0a603e0276bc580cf66414967bde567dc`, exact-head CI, normal
+PR #38 merge `abc4bdbd52150ab33ec60c0c6902235042d199f6`, merge-SHA CI, and the
+exact merged-tree local seal.
+
+**Validation / evidence:** Postmerge Ubuntu, Windows, and CI Gate checks
+passed. The local merge-SHA seal passed 39 history units, 18 architecture
+tests, 4 real integrations, and 223 ordinary tests with 27 skipped; Ruff,
+MyPy, and diff checks passed. Current-run task Java, launcher, port, and root
+residue were zero, and the remote retained main only.
+
+**Next:** Data System → Replay & As-Of authority / planning preparation only.
+This does not authorize Replay implementation, runtime deployment, Canonical
+Dataset work, Model/training work, or Trading work.
+
+**Safety:** No runtime restart, canonical TruthDecision table, canonical
+activation, production-data change, or sealed semantic change occurred.
+
 ## 2026-09-08 — LIVE15-V2-DATA-TRUTH-SLICE-2-PERSISTENT-HISTORY-PUBLISH-CANDIDATE-001
 
 **Change:** Added the private `QuestDBTruthDecisionHistory` persistent Data

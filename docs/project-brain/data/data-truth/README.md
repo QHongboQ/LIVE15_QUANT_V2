@@ -7,7 +7,7 @@
 **Implementation-plan authority:** FINAL CLOSED; see
 [implementation-plan.md](implementation-plan.md).
 
-**Implementation:** NOT IMPLEMENTED.
+**Implementation:** FINAL CLOSED.
 
 **Slice 1 semantic-library implementation:** FINAL CLOSED. It provides no
 persistent `TruthDecision` authority.
@@ -15,12 +15,22 @@ persistent `TruthDecision` authority.
 **QuestDB reconciliation POC gate:** FINAL CLOSED. The technical result is
 PASS / ACCEPTED under the approved single-writer constraint.
 
-**Persistent `TruthDecision` authority:** NOT IMPLEMENTED. **Slice 2:** NOT
-AUTHORIZED. Canonical runtime activation remains NOT AUTHORIZED.
+**Slice 2 Persistent History implementation:** FINAL CLOSED.
 
-This sealed authority records the approved semantic boundary. The FINAL CLOSED
-Slice 1 semantic library creates no schema, table, runtime component, canonical
-activation, or implementation authority beyond its bounded semantic library.
+**Persistent `TruthDecision` history implementation:** IMPLEMENTED / FINAL
+CLOSED under the approved single-writer constraint. Concurrent `decide()` and
+multi-process/multi-writer authority are NOT SUPPORTED.
+
+**Canonical TruthDecision table:** NOT CREATED.
+
+**Canonical Data Truth runtime activation:** NOT AUTHORIZED / NOT PERFORMED.
+
+**Replay & As-Of, Canonical Dataset, Model, and Trading:** UNIMPLEMENTED.
+
+This sealed authority records the approved semantic boundary and final
+implementation state. Slice 1 created no persistent authority by itself; the
+separately reviewed Slice 2 adapter completed only the approved single-writer
+implementation boundary, not canonical activation.
 
 ## Closure evidence
 
@@ -42,6 +52,14 @@ activation, or implementation authority beyond its bounded semantic library.
   `a4fd011586289ede142d7d087f682898aef18530` passed ChatGPT direct remote POC
   review. Merge-SHA Windows, Ubuntu, and CI Gate checks passed, as did the
   merge-SHA local opt-in POC A-L (12 passed).
+- Slice 2 Persistent History PR #38 reviewed head
+  `8d43a2b0a603e0276bc580cf66414967bde567dc` passed ChatGPT GitHub-visible
+  review and exact-head Ubuntu, Windows, and CI Gate checks. It merged as
+  `abc4bdbd52150ab33ec60c0c6902235042d199f6`; its merge-SHA Ubuntu, Windows,
+  and CI Gate checks passed, as did the local seal: 39 history units, 18
+  architecture tests, 4 real integrations, and 223 ordinary tests passed with
+  27 skipped; Ruff, MyPy, and diff checks passed. Task-owned Java, launcher,
+  port, and root residue were zero, and the remote retained main only.
 
 ## Responsibility
 
@@ -140,7 +158,7 @@ invariant, not a future refactoring preference.
 - [Observation Facts](observation-facts.md) owns acceptance of provider
   observations without inventing logical event identity.
 
-## Implementation gate
+## Implementation closure and current boundary
 
 The implementation-plan authority is FINAL CLOSED. Slice 1 is FINAL CLOSED.
 The QuestDB TruthDecision-history persistence/reconciliation fit is **PROVEN
@@ -151,12 +169,19 @@ ambiguous absence remaining in-doubt, no blind reappend, fail-closed
 conflicting/multiple authority, and append-only operation without DEDUP or
 UPSERT.
 
-It does not implement a production `questdb_history.py`, production
-`find_accepted_event` behavior, Hot Store evidence-resolution integration,
-multi-writer or concurrent-`decide()` safety, a canonical TruthDecision table,
-or canonical runtime activation. Overall Data Truth implementation and
-persistent `TruthDecision` authority remain NOT IMPLEMENTED; Slice 2 remains
-NOT AUTHORIZED. Current NEXT is Data Truth Slice 2 authorization preparation.
-Any newly identified generic mechanical need must first undergo upstream-fit
-review before custom infrastructure is introduced. This authority does not
-authorize persistent TruthDecision authority or canonical runtime activation.
+The POC alone did not implement a production `questdb_history.py`, production
+`find_accepted_event` behavior, or Hot Store evidence resolution. Slice 2 was
+subsequently authorized, implemented, independently reviewed, merged as PR
+#38, and is FINAL CLOSED under the approved single-writer constraint. It adds a
+private `QuestDBTruthDecisionHistory` adapter with provider-neutral HotStore
+evidence resolution, append-only WAL history without DEDUP or UPSERT,
+`auto_flush=False` explicit-FSN handling, an upstream `wait_wal_table`
+visibility barrier, and no blind write retry.
+
+Canonical TruthDecision-table creation and canonical runtime activation remain
+NOT AUTHORIZED / NOT PERFORMED. Concurrent `decide()`, multi-process and
+multi-writer authority, Replay & As-Of, Canonical Dataset, Model, and Trading
+remain unsupported or unimplemented as stated above. Current NEXT is Data
+System → Replay & As-Of authority / planning preparation only; it does not
+authorize Replay implementation, runtime deployment, Canonical Dataset work,
+Model/training work, or Trading work.
