@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-CONTRACT-POSTMERGE-AUTHORITY-SEAL-001
+
+**Closure provenance:** PR #56 approved head
+`c4319f9d62f83f5d59bbd35617e72e0465412f54` received ChatGPT exact-head
+closure-review `PASS`. Its normal merge was
+`0b1f5788aa09859aaa24b499a452ce7acfc02c3f`, with parents
+`3d61a4d8dac4a35c91dec314b5eaeb2098878a6d` and
+`c4319f9d62f83f5d59bbd35617e72e0465412f54`; merge-SHA Ubuntu, Windows, and
+CI Gate passed.
+
+**Clarification:** PR #55 merge `3d61a4d8dac4a35c91dec314b5eaeb2098878a6d`
+placed accepted contract content on main. PR #56 merge
+`0b1f5788aa09859aaa24b499a452ce7acfc02c3f` is the actual FINAL CLOSED status
+authority merge. Current NEXT remains Canonical Dataset implementation-plan
+design only.
+
+**Safety:** No contract semantic, code, runtime, physical-format, or data
+change occurred.
+
 ## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-CONTRACT-FINAL-STATUS-CLOSURE-001
 
 **Closure evidence:** PR #55 initial head
