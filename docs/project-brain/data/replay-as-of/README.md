@@ -6,6 +6,7 @@
 **Implementation:** NOT IMPLEMENTED.
 **Implementation-plan authority:** NOT YET CLOSED. Drafting is now safe, but
 plan drafting does not authorize implementation.
+**Availability-mechanism fit preparation:** COMPLETED.
 **Availability mechanism implementation:** NOT IMPLEMENTED.
 **Planning candidate:** ACCEPTED FOR IMPLEMENTATION-PLAN DESIGN; its physical
 DDL and production activation remain undecided and unauthorized. The candidate
@@ -304,6 +305,7 @@ planning. It does not authorize production Replay implementation, a production
 availability table, canonical activation, Canonical Dataset, Model/training,
 or Trading work.
 
-`SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because the contract,
-availability fit, and required snapshot-membership POC gate are FINAL CLOSED.
-That status authorizes plan drafting only, not implementation.
+`SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN = YES` because Replay & As-Of
+contract authority is FINAL CLOSED, availability-mechanism fit preparation is
+COMPLETED, and the required snapshot-membership POC gate is FINAL CLOSED and
+accepted. That status authorizes plan drafting only, not implementation.

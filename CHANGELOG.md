@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-FINAL-STATUS-REVIEW-FIX-001
+
+**Change:** Corrected the POC final-status classification after ChatGPT
+`CHANGES_REQUIRED` review of head
+`a966e794e1ce036274a5d19f52ca31f48ec09426`.
+
+**Reason:** The prior status wording over-classified availability-mechanism fit
+preparation as FINAL CLOSED. The corrected classification is COMPLETED; only
+Replay contract authority and the accepted snapshot-membership POC gate are
+FINAL CLOSED.
+
+**Safety / next:** `SAFE_TO_DRAFT_REPLAY_AS_OF_IMPLEMENTATION_PLAN` remains
+YES for plan drafting only. No runtime, source, test, configuration, or
+dependency change occurred; implementation and availability production remain
+NOT IMPLEMENTED.
+
 ## 2026-09-08 — LIVE15-V2-REPLAY-AS-OF-SNAPSHOT-MEMBERSHIP-POC-FINAL-STATUS-CLOSURE-001
 
 **Change:** Closed the Replay & As-Of snapshot-membership POC gate as FINAL
