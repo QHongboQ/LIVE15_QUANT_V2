@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-CONTRACT-REMOTE-REVIEW-FIX-001
+
+**Reviewed head:** `5a48b8e0ae1c2b2e99590b0f7bb1b088772abf13` received
+ChatGPT `CHANGES_REQUIRED`.
+
+**Accepted:** Ownership, Replay-only authority input, ACCEPTED-only membership,
+no-extra-dedup, complete pagination, strict As-Of, `NOT_ASSERTED`
+completeness, immutability, and no physical-format selection remain unchanged.
+
+**Fixes:** Dataset identity now binds complete semantic/audit provenance,
+including included availability references and both exclusion layers; the
+undefined `dataset_contract_version` was removed; `canonical-dataset/v1`
+remains the single V1 semantic/identity/manifest policy version; and one
+dataset identity now implies one complete semantic manifest core.
+
+**Safety:** No implementation or runtime authorization changed.
+
 ## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-CONTRACT-DEFINITION-001
 
 **Change:** Created the Canonical Dataset Data System child contract candidate.

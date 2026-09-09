@@ -61,10 +61,13 @@ page 1 → next_cursor → page 2 → … → next_cursor = None
 Every page must preserve the same `request_identity`,
 `source_snapshot_identity`, `authority_policy_version`, As-Of cutoff,
 selection window and axis, ordering and ordering-rule version, and completeness
-state. Replay exclusion provenance must also be consistent for the shared
-snapshot. A Replay cursor failure, source-unavailable result, snapshot drift,
-or malformed/inconsistent page fails the entire dataset build. There is no
-partial Canonical Dataset snapshot and no mixed-source recovery to "latest."
+state, including the same canonical asset and channel filters bound by the
+request. Replay exclusions returned on subsequent pages must be semantically
+identical after deterministic canonicalization. A difference is a malformed or
+inconsistent Replay view and fails the entire dataset build. A Replay cursor
+failure, source-unavailable result, or snapshot drift also fails the build.
+There is no partial Canonical Dataset snapshot and no mixed-source recovery to
+"latest."
 
 `page_size` is delivery mechanics only. The same Replay semantic request,
 source snapshot, and authoritative records must describe the same Canonical
@@ -75,8 +78,9 @@ dataset identity, dataset policy version, or canonical membership policy.
 
 The semantic policy version is `canonical-dataset/v1`. It owns admissibility,
 dataset-identity semantics, manifest semantics, and deterministic rebuild
-rules. Any later change to category-admissibility semantics requires a new
-policy version.
+rules. It is the single Canonical Dataset semantic/identity/manifest version in
+V1; there is no separate `dataset_contract_version`. Any later incompatible
+semantic change requires a new policy version.
 
 | Recorded `TruthDecisionCategory` | Canonical row membership | Manifest treatment |
 | --- | --- | --- |
@@ -120,26 +124,41 @@ storage implementation. Its semantic metadata includes at least:
 - deterministic Replay and Canonical Dataset exclusion provenance; and
 - `completeness = NOT_ASSERTED`.
 
-Its identity is deterministic and cryptographic, conceptually:
+First define a deterministic `semantic_manifest_core`. Then derive
+`dataset_identity = SHA-256(canonical JSON(semantic_manifest_core))`. The final
+manifest may expose `dataset_identity`, but the core never contains its own
+identity and therefore has no circular hash definition. At minimum the core
+binds:
 
-```text
-SHA-256(canonical JSON({
-  dataset_contract_version,
-  dataset_policy_version,
-  replay_request_identity,
-  replay_source_snapshot_identity,
-  authority_policy_version,
-  ordered_included_record_semantic_digests,
-}))
-```
+- `dataset_policy_version` (`canonical-dataset/v1`);
+- Replay request and source-snapshot identities;
+- authority policy and completeness state;
+- ordered included authoritative-record semantic digests;
+- deterministic Canonical Dataset category-exclusion provenance; and
+- deterministic Replay-exclusion provenance.
 
-Each included record's semantic digest binds more than `capture_id`: it binds
-the immutable `CaptureFact` content and immutable `TruthDecision` content,
-including decision policy, subject, category, contributing capture IDs, reason,
-and optional EventIdentity. Replay availability proofs and source provenance
-remain in snapshot provenance. Python `hash()`, random UUIDs, wall-clock build
-time, physical row number, database order, paths, file modification times,
-machine identity, and connection strings are never semantic identity inputs.
+One authoritative-record semantic digest applies to every
+`AuthoritativeReplayRecord`, whether it is included or category-excluded. It
+binds all immutable `CaptureFact` content, all immutable `TruthDecision`
+content (including decision policy, subject, category, contributing capture
+IDs, reason, and optional EventIdentity), and both opaque Replay provenance
+values: `evidence_availability_reference` and
+`authority_availability_reference`. Canonical Dataset does not decode,
+reinterpret, or infer availability from those references.
+
+For `ACCEPTED` records, the core binds the ordered authoritative-record digests.
+For `DUPLICATE`, `CONFLICT`, and `NOT_ACCEPTED`, the core binds deterministic
+category-exclusion provenance: `capture_id`, decision category,
+authoritative-record semantic digest, and the canonical exclusion disposition.
+For a Replay exclusion, the core binds exactly the public `capture_id` and
+`ReplayExclusionCode`, canonicalized deterministically; it does not invent
+missing `CaptureFact` or `TruthDecision` data. Thus a change to either
+availability reference, either exclusion layer, or an excluded authoritative
+record's meaning produces a new identity.
+
+Python `hash()`, random UUIDs, wall-clock build time, physical row number,
+database order, paths, file modification times, machine identity, connection
+strings, page size, and cursors are never semantic identity inputs.
 
 Canonical Dataset preserves the explicit Replay order from the request:
 `ARRIVAL` or `STRICT_EVENT`. It must not silently re-sort by provider timestamp,
@@ -165,14 +184,15 @@ Replay's `COMPLETENESS = NOT_ASSERTED` is preserved as Canonical Dataset
 market coverage, all events, no gaps, or 100% coverage.
 
 A snapshot is immutable once identified. There is no update-current, replace
-latest, silent append, or last-write-wins dataset behavior. With the same
-contract version, dataset policy, Replay request identity, Replay source
-snapshot identity, and authoritative record content, rebuilds across process
-restarts, page sizes, and materialization runs yield the exact same identity and
-ordered membership. A different cutoff, selection, asset/channel filter,
-ordering, Replay source snapshot, Data Truth policy, dataset policy, or
-included authoritative content yields a new dataset identity. Old snapshots
-remain immutable historical artifacts.
+latest, silent append, or last-write-wins dataset behavior. The same complete
+`semantic_manifest_core` produces the same identity, ordered membership, and
+exclusion provenance across process restarts, page sizes, and materialization
+runs. Conversely, the same identity means the same complete semantic/audit
+manifest core. A different Replay request or source snapshot, authority or
+dataset policy, completeness state, included authoritative content, included
+availability reference, Canonical Dataset category-exclusion provenance, or
+Replay-exclusion provenance yields a new identity. Old snapshots remain
+immutable historical artifacts.
 
 If Replay cannot reproduce the bound source snapshot while paging, the build
 fails closed. It must not merge records from snapshots, restart from latest,
@@ -181,16 +201,18 @@ discard a cursor, or return a partial dataset.
 ## Manifest, exclusions, and failure boundary
 
 A deterministic build manifest is required conceptually, without choosing a
-file or database format. It records dataset identity and policy; Replay request
-and source-snapshot identities; authority policy; cutoff; selection, ordering,
-assets, and channels; included count and ordered semantic membership/digests;
-Replay exclusions; Canonical Dataset category exclusions; and completeness
-`NOT_ASSERTED`.
+file or database format. Its `semantic_manifest_core` records dataset policy;
+Replay request and source-snapshot identities; authority policy; completeness;
+ordered included authoritative-record digests; deterministic Replay exclusions;
+and deterministic Canonical Dataset category exclusions. The final manifest
+adds its derived dataset identity plus redundant audit fields such as cutoff,
+selection, ordering, assets, channels, included count, and ordered membership.
 
 Exclusion provenance must deterministically answer which capture was excluded
-and why. It includes both Replay-produced exclusions (for example, evidence or
-authority unavailable by cutoff) and Canonical Dataset exclusions for
-`DUPLICATE`, `CONFLICT`, and `NOT_ACCEPTED`. Non-accepted authority cannot
+and why. It includes both Replay-produced exclusions (the public capture ID and
+code, such as evidence or authority unavailable by cutoff) and Canonical Dataset
+exclusions for `DUPLICATE`, `CONFLICT`, and `NOT_ACCEPTED` with their
+authoritative-record digest and disposition. Non-accepted authority cannot
 silently disappear.
 
 The bounded fail-closed classes are invalid dataset request/policy, Replay
@@ -243,4 +265,7 @@ page-size-independent identity; no mixed or partial build on source drift; no
 silent duplicate/conflict inclusion; no accepted-observation hash deduplication;
 no invented EventIdentity; no completeness claim; no physical metadata in
 semantic identity; no in-place snapshot mutation; and no research bypass of
-bounded Replay authority while calling the result canonical.
+bounded Replay authority while calling the result canonical. It also requires:
+a changed evidence availability reference, Replay exclusion code, or excluded
+category/disposition produces a new identity; page-size-only and restart-only
+changes preserve identity when the complete semantic manifest core is unchanged.
