@@ -108,6 +108,7 @@ def test_questdb_imports_are_contained_inside_provider_specific_adapters() -> No
             imports.append(source.relative_to(ROOT).as_posix())
 
     assert imports == [
+        "src/live15_quant_v2/data/data_truth/questdb_history.py",
         "src/live15_quant_v2/data/storage/durable_persistence/questdb_sf.py",
         "src/live15_quant_v2/data/storage/hot_store/questdb_adapter.py",
     ]
