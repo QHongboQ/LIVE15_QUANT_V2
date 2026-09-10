@@ -52,16 +52,17 @@ This document records only approved V2 direction. It is not a V1 roadmap.
   PR #52 normal merge `306924cae59dc5a2ec9f5737e7c4103a0c5e7227`. Production
   Recorder deployment, canonical availability activation, and canonical Replay
   activation remain NOT AUTHORIZED / NOT PERFORMED. Canonical Dataset contract
-  authority is FINAL CLOSED; its implementation-plan design is CURRENT NEXT /
-  NOT STARTED, while implementation remains NOT AUTHORIZED. Model, Trading,
-  and broad Operations functionality remain unimplemented.
+  authority is FINAL CLOSED; its implementation-plan candidate is pending
+  independent review, while implementation remains NOT AUTHORIZED. Model,
+  Trading, and broad Operations functionality remain unimplemented.
 
 Durable Persistence contract authority = FINAL CLOSED. Durable Persistence
 implementation = FINAL CLOSED. Its code, contract, tests, and failure-mode
 acceptance are sealed; canonical table materialization, canonical DEDUP runtime
 activation, and SF activation remain separate unauthorized runtime actions.
 
-Current NEXT: **Data System → Canonical Dataset → Implementation-plan design**.
+Current NEXT: **Data System → Canonical Dataset → Implementation-plan
+exact-head independent review**.
 `REPLAY_AS_OF_ENGINEERING_IMPLEMENTATION = FINAL CLOSED` at merge
 `306924cae59dc5a2ec9f5737e7c4103a0c5e7227`.
 `CANONICAL_DATASET_CONTRACT = FINAL CLOSED`.
@@ -69,16 +70,15 @@ Current NEXT: **Data System → Canonical Dataset → Implementation-plan design
 `3d61a4d8dac4a35c91dec314b5eaeb2098878a6d` (PR #55).
 `CANONICAL_DATASET_CONTRACT_FINAL_CLOSURE_MERGE =`
 `0b1f5788aa09859aaa24b499a452ce7acfc02c3f` (PR #56).
-`CANONICAL_DATASET_IMPLEMENTATION_PLAN = CURRENT NEXT / NOT STARTED`.
-`SAFE_TO_BEGIN_CANONICAL_DATASET_IMPLEMENTATION_PLAN_DESIGN = YES`.
+`CANONICAL_DATASET_IMPLEMENTATION_PLAN = CANDIDATE / PENDING INDEPENDENT REVIEW`.
+`CANONICAL_DATASET_IMPLEMENTATION_PLAN_NEXT_GATE = ChatGPT exact-head independent review`.
 `CANONICAL_DATASET_IMPLEMENTATION = NOT IMPLEMENTED / NOT AUTHORIZED`.
 `CANONICAL_DATASET_PHYSICAL_MATERIALIZATION = NOT AUTHORIZED / NOT PERFORMED`.
 
-The bounded next task is implementation-plan design only. It may plan a future
-implementation against the FINAL CLOSED contract, but does not authorize
-Canonical Dataset source implementation, a physical backend or format,
-materialization, canonical Replay/runtime activation, Model/training, or
-Trading.
+The bounded next gate is independent implementation-plan review only. The
+candidate does not authorize Canonical Dataset source implementation, a
+physical backend or format, materialization, canonical Replay/runtime
+activation, Model/training, or Trading.
 
 `LOCAL_REPLAY_TEST_HYGIENE = PASS_WITH_HYGIENE`.
 `EMPTY_TASK_PYTEST_BASE_RESIDUES = 2`.

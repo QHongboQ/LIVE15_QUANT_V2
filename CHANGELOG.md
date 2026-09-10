@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-IMPLEMENTATION-PLAN-DESIGN-001
+
+**Change:** Added a Canonical Dataset implementation-plan candidate against the
+FINAL CLOSED contract. It defines a small pure semantic core, one deep builder
+over the public Replay seam, canonical UTF-8 JSON identity bytes, complete
+pagination, V1 admissibility/exclusions, immutable manifest/snapshot behavior,
+and fail-closed invariants.
+
+**Physical gate:** No physical format was selected. A small read-only or
+synthetic format-fit POC is required before any adapter; Parquet + ZSTD via
+PyArrow is reference-informed candidate mechanics only.
+
+**Status and safety:** Current NEXT is ChatGPT exact-head implementation-plan
+review. No implementation, dependency, runtime, physical data, activation,
+Model/training, or Trading change occurred.
+
 ## 2026-09-09 — LIVE15-V2-CANONICAL-DATASET-CONTRACT-POSTMERGE-AUTHORITY-SEAL-001
 
 **Closure provenance:** PR #56 approved head
