@@ -414,8 +414,8 @@ Dataset is a future consumer, not an owner or prerequisite.
 **Replay & As-Of engineering implementation:** FINAL CLOSED.
 **Canonical runtime activation:** NOT AUTHORIZED / NOT PERFORMED.
 
-Current NEXT is Data System → Canonical Dataset → Implementation-plan design.
-That authorizes planning only: Canonical Dataset implementation remains
-NOT IMPLEMENTED / NOT AUTHORIZED, and it does not authorize canonical
-availability or Replay activation, production Recorder deployment, or
-production `CLOCK_SAFETY` closure.
+Current NEXT is Data System → Canonical Dataset → Implementation-plan exact-head
+independent review. The implementation-plan candidate authorizes no
+implementation: Canonical Dataset remains NOT IMPLEMENTED / NOT AUTHORIZED,
+and it does not authorize canonical availability or Replay activation,
+production Recorder deployment, or production `CLOCK_SAFETY` closure.

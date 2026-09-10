@@ -4,7 +4,7 @@
 
 **Contract authority:** FINAL CLOSED.
 **Engineering implementation:** NOT IMPLEMENTED / NOT AUTHORIZED.
-**Implementation plan:** CURRENT NEXT / NOT STARTED.
+**Implementation plan:** CANDIDATE / PENDING INDEPENDENT REVIEW.
 **Canonical physical materialization:** NOT AUTHORIZED / NOT PERFORMED.
 **Model/training:** NOT STARTED / NOT AUTHORIZED.
 **Trading:** NOT STARTED / NOT AUTHORIZED.
@@ -252,11 +252,13 @@ Canonical Dataset inherits the Data System `AssetId` authority: BTC, ETH, GOLD,
 SILVER, XRP, SOL, HYPE, DOGE, and BNB. WTI does not exist. It creates no second
 asset registry; bounded Replay request filters remain snapshot provenance.
 
-The contract authority is FINAL CLOSED. The current next task is
-implementation-plan design only; it does not authorize source code, physical
-dataset materialization, Canonical Dataset activation, canonical
+The contract authority is FINAL CLOSED. The implementation-plan candidate is
+pending independent review; its next gate is ChatGPT exact-head
+implementation-plan review. It does not authorize source code, physical dataset
+materialization, Canonical Dataset activation, canonical
 Replay/availability/TruthDecision activation, production Recorder deployment,
-`CLOCK_SAFETY` closure, Model/training, or Trading.
+`CLOCK_SAFETY` closure, Model/training, or Trading. See the
+[implementation plan](implementation-plan.md).
 
 ### Contract review and closure evidence
 
